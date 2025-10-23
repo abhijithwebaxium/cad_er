@@ -1,10 +1,13 @@
 import { Box, Stack, Typography } from '@mui/material';
-import LandingImg from '../../assets/landing.png';
-import OutlinedCard from '../../components/OutlinedCard';
+import LandingImg from '../../assets/landing.jpg';
 import BasicButtons from '../../components/BasicButton';
 import { FaRoad } from 'react-icons/fa6';
 import { FaWater } from 'react-icons/fa';
 import { useState } from 'react';
+import SimpleAlert from '../../components/SimpleAlert';
+import { GoAlert } from 'react-icons/go';
+import { useNavigate } from 'react-router-dom';
+import OutlinedCard from './components/OutlinedCard';
 
 const cardData = [
   {
@@ -23,20 +26,41 @@ const cardData = [
   },
 ];
 
+const alertData = {
+  icon: <GoAlert fontSize="inherit" />,
+  severity: 'error',
+  message: 'Work in progress!',
+};
+
 const Index = () => {
+  const navigate = useNavigate();
+
   const [active, setActive] = useState(0);
+
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleChangeActive = (value) => setActive(value);
 
+  const handleSubmit = () => {
+    if (active === 1) {
+      return setShowAlert(true);
+    }
+
+    if (showAlert) setShowAlert(false);
+    navigate('/survey/road-survey');
+  };
+
   return (
     <Box>
+      {showAlert && <SimpleAlert {...alertData} />}
       <Stack spacing={5}>
         <Box className="landing-img-wrapper">
           <img
-            srcSet={`${LandingImg}?w=248&fit=crop&auto=format&dpr=2 2x`}
-            src={`${LandingImg}?w=248&fit=crop&auto=format`}
+            src={LandingImg}
+            srcSet={`${LandingImg}?w=800 800w, ${LandingImg}?w=1600 1600w, ${LandingImg}?w=2400 2400w`}
+            sizes="100vw"
             alt="landing"
-            loading="lazy"
+            // loading="lazy"
             className="landing-img"
           />
         </Box>
@@ -61,11 +85,12 @@ const Index = () => {
           ))}
         </Stack>
 
-        <Box px={'24px'}>
+        <Box px={'24px'} className="landing-btn">
           <BasicButtons
             value={'Continue'}
             sx={{ backgroundColor: '#0059E7', height: '45px' }}
             fullWidth={true}
+            onClick={handleSubmit}
           />
         </Box>
       </Stack>
