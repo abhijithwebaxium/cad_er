@@ -3,7 +3,7 @@ import FollowingValues from '../../../assets/following_values.jpg';
 import BasicTextFields from '../../../components/BasicTextFields';
 import BasicButtons from '../../../components/BasicButton';
 
-const SetFollowingValues = () => {
+const SetFollowingValues = ({ setTab }) => {
   return (
     <Stack alignItems={'center'} spacing={5}>
       <Box className="set-chainage-img-wrapper">
@@ -45,7 +45,7 @@ const SetFollowingValues = () => {
           value={'Continue'}
           sx={{ backgroundColor: '#0059E7', height: '45px' }}
           fullWidth={true}
-          onClick={() => setTab(2)}
+          onClick={() => setTab(3)}
         />
       </Box>
     </Stack>

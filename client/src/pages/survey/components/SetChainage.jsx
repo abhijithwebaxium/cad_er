@@ -3,7 +3,19 @@ import Chainage from '../../../assets/chainage.png';
 import BasicTextFields from '../../../components/BasicTextFields';
 import BasicButtons from '../../../components/BasicButton';
 
-const SetChainage = ({ setTab }) => {
+const SetChainage = ({ setTab, formValues, setFormValues, onSubmit }) => {
+  const handleSubmit = () => {
+    if (!formValues) {
+      setTab(2);
+    } else {
+      setTab(3);
+    }
+
+    const inputBasic = document.querySelector('#input-basic');
+
+    onSubmit(inputBasic.value, 'Chainage');
+  };
+
   return (
     <Stack alignItems={'center'} spacing={5}>
       <Box className="set-chainage-img-wrapper">
@@ -26,8 +38,9 @@ const SetChainage = ({ setTab }) => {
         </Typography>
       </Stack>
 
-      <Box width={'100%'} className='input-wrapper'>
+      <Box width={'100%'} className="input-wrapper">
         <BasicTextFields
+          id={'input-basic'}
           label={'Number'}
           variant={'filled'}
           sx={{ width: '100%', borderRadius: '15px !important' }}
@@ -39,7 +52,7 @@ const SetChainage = ({ setTab }) => {
           value={'Continue'}
           sx={{ backgroundColor: '#0059E7', height: '45px' }}
           fullWidth={true}
-          onClick={() => setTab(2)}
+          onClick={handleSubmit}
         />
       </Box>
     </Stack>

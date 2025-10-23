@@ -2,7 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 
-export default function BasicTextFields({ label, variant, sx }) {
+export default function BasicTextFields({ id, label, variant, sx }) {
   return (
     <Box
       noValidate
@@ -13,7 +13,7 @@ export default function BasicTextFields({ label, variant, sx }) {
         },
       }}
     >
-      <TextField id="filled-basic" label={label} variant={variant} sx={sx} />
+      <TextField id={id} label={label} variant={variant} sx={sx} />
     </Box>
   );
 }
