@@ -2,22 +2,47 @@ import { Box, Stack, Typography } from '@mui/material';
 import BasicTextFields from '../../../components/BasicTextFields';
 import BasicButtons from '../../../components/BasicButton';
 import { useState } from 'react';
+import { IoAdd } from 'react-icons/io5';
+
+const initialIs = { id: 1, value: 0 };
 
 const IntermediateSight = ({ setTab, formValues, setFormValues, onSubmit }) => {
   const [show, setShow] = useState(false);
+  const [iS, setIs] = useState([initialIs]);
+
+  const handleInputChange = ({ target: { value, id } }) => {
+    const updateIs = iS.map((entry) => {
+      if (entry.id == id) {
+        return {
+          ...entry,
+          value,
+        };
+      }
+
+      return entry;
+    });
+
+    setIs(updateIs);
+  };
 
   const addChainage = () => {
     setTab(1);
 
-    const inputBasic = document.querySelector('#input-basic');
+    const values = iS.map((entry) => entry.value);
 
-    onSubmit(inputBasic.value, 'Intermediate Sight');
+    onSubmit(values, 'Intermediate Sight');
+  };
+
+  const handleClickAddNew = () => {
+    const newRow = { ...initialIs, id: iS.length + 1 };
+
+    setIs((prev) => [...prev, newRow]);
   };
 
   const handleSubmit = () => {
-    const inputBasic = document.querySelector('#input-basic');
+    const values = iS.map((entry) => entry.value);
 
-    onSubmit(inputBasic.value, 'Intermediate Sight');
+    onSubmit(values, 'Intermediate Sight');
     setShow(true);
   };
 
@@ -55,12 +80,30 @@ const IntermediateSight = ({ setTab, formValues, setFormValues, onSubmit }) => {
       </Stack>
 
       <Box width={'100%'} className="input-wrapper">
-        <BasicTextFields
-          id={'input-basic'}
-          label={'0'}
-          variant={'filled'}
-          sx={{ width: '100%', borderRadius: '15px !important' }}
-        />
+        <Stack spacing={2}>
+          {iS?.map((entry, idx) => (
+            <Stack
+              key={idx}
+              direction={'row'}
+              alignItems={'center'}
+              spacing={1}
+            >
+              <BasicTextFields
+                id={entry.id}
+                variant={'filled'}
+                sx={{ width: '100%', borderRadius: '15px !important' }}
+                value={entry.value}
+                onChange={(e) => handleInputChange(e)}
+              />
+
+              {iS.length - 1 === idx && (
+                <Box className="add-new-sight" onClick={handleClickAddNew}>
+                  <IoAdd fontSize={'24px'} color="#0059E7" />
+                </Box>
+              )}
+            </Stack>
+          ))}
+        </Stack>
       </Box>
 
       <Box px={'24px'} className="landing-btn" width={'100%'}>
@@ -76,7 +119,7 @@ const IntermediateSight = ({ setTab, formValues, setFormValues, onSubmit }) => {
         Object.entries(formValues).map(([key, value], index) => {
           return (
             <div key={index}>
-              {value.chainage}: {value.values}
+              {value.chainage}: {value.values?.join(', ')}
             </div>
           );
         })}

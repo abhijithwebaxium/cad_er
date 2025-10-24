@@ -72,6 +72,7 @@ const RoadSurveyForm = () => {
           justifyContent: 'center',
           alignItems: 'center',
           cursor: 'pointer',
+          mb: '24px'
         }}
         onClick={handleGoBack}
       >

@@ -67,7 +67,7 @@ const Index = () => {
 
         <Stack alignItems={'center'}>
           <Typography fontSize={'26px'} fontWeight={700}>
-            Welcome
+            Welcome To CADer
           </Typography>
           <Typography fontSize={'16px'} fontWeight={400} color="#434343">
             What type of survey do you want to perform?
