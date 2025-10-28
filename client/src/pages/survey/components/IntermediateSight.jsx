@@ -69,7 +69,7 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
 
       if (updatedRows[i]?.id) {
         updatedRows[i].offsetValue = offsetValue;
-        updatedRows[i].isValue = '';
+        updatedRows[i].isValue = updatedRows[i].isValue || '';
       } else {
         updatedRows[i] = {
           id: i + 1,
