@@ -1,10 +1,16 @@
 import { Box } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MdArrowBackIosNew } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import SetChainage from './components/SetChainage';
 import SetFollowingValues from './components/SetFollowingValues';
 import IntermediateSight from './components/IntermediateSight';
+import Output from './components/Output';
+import {
+  addChainage,
+  checkSurveyExists,
+  createSurvey,
+} from '../../services/surveyServices';
 
 const RoadSurveyForm = () => {
   const navigate = useNavigate();
@@ -13,21 +19,46 @@ const RoadSurveyForm = () => {
 
   const [formValues, setFormValues] = useState(null);
 
+  const [otherValues, setOtherValues] = useState(null);
+
   const handleGoBack = () => {
+    if (otherValues) return;
+
     setTab(tab - 1);
     if (tab === 1) {
       navigate('/');
     }
   };
 
-  const handleSubmit = (value, type) => {
+  const handleCreateSurvey = async (values) => {
+    try {
+      const { data } = await createSurvey(values);
+
+      if (data.success) {
+        return setTab(2);
+      }
+
+      throw Error('Something went wrong.');
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleSetOtherValues = (values) => {
+    setOtherValues(values);
+
+    handleCreateSurvey(values);
+  };
+
+  const handleSubmit = async (value, type, action) => {
     // if no form values yet, initialize safely depending on the type
     if (!formValues) {
       if (type === 'Chainage') {
-        setFormValues({ 1: { chainage: value, values: [] } });
-      } else {
-        setFormValues({ 1: { chainage: '', values: [value] } });
+        setFormValues({
+          1: { chainage: value.chainage, roadWidth: value.roadWidth, is: [] },
+        });
       }
+
       return;
     }
 
@@ -38,27 +69,74 @@ const RoadSurveyForm = () => {
       setFormValues((prev) => ({
         ...prev,
         [nextKey]: {
-          chainage: value,
-          values: [],
+          chainage: value.chainage,
+          roadWidth: value.roadWidth,
+          is: [],
         },
       }));
     } else {
       // append value immutably to the latest entry's values array
       const lastKey = length; // keys start at 1 and are consecutive
+      let lastChainage = null;
+
       setFormValues((prev) => {
         const updated = { ...prev };
-        const prevValues = Array.isArray(updated[lastKey].values)
-          ? updated[lastKey].values
-          : [];
+
         updated[lastKey] = {
           ...updated[lastKey],
-          values: [...prevValues, value],
+          is: [...value.iSValues],
+          offset: [...value.offsetValues],
         };
 
+        lastChainage = updated[lastKey];
         return updated;
       });
+
+      try {
+        const { data } = await addChainage({ ...lastChainage, action });
+
+        if (!data.success) throw Error('Something went wrong.');
+
+        if (action === 'finish') {
+          navigate(`/survey/road-survey-tbm/${data?.survey?._id}`);
+        } else {
+          setTab(2);
+        }
+      } catch (err) {
+        console.log(err);
+      }
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data } = await checkSurveyExists();
+
+      if (data) {
+        setOtherValues({
+          backSight: data?.backSight || 0,
+          reducedLevel: data?.reducedLevel || 0,
+          roadWidth: data?.roadWidth || 0,
+        });
+
+        if (data?.tbm?.length) {
+          const updatedData = data?.tbm?.map((entry, index) => {
+            return {
+              [index + 1]: {
+                entry,
+              },
+            };
+          });
+
+          setFormValues(...updatedData);
+        }
+
+        setTab(2);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <Box padding={'24px'}>
@@ -72,25 +150,19 @@ const RoadSurveyForm = () => {
           justifyContent: 'center',
           alignItems: 'center',
           cursor: 'pointer',
-          mb: '24px'
+          mb: '24px',
         }}
         onClick={handleGoBack}
       >
         <MdArrowBackIosNew />
       </Box>
       {tab === 1 && (
+        <SetFollowingValues setTab={setTab} onSubmit={handleSetOtherValues} />
+      )}
+      {tab === 2 && (
         <SetChainage
           setTab={setTab}
           formValues={formValues}
-          setFormValues={setFormValues}
-          onSubmit={handleSubmit}
-        />
-      )}
-      {tab === 2 && (
-        <SetFollowingValues
-          setTab={setTab}
-          formValues={formValues}
-          setFormValues={setFormValues}
           onSubmit={handleSubmit}
         />
       )}
@@ -98,7 +170,6 @@ const RoadSurveyForm = () => {
         <IntermediateSight
           setTab={setTab}
           formValues={formValues}
-          setFormValues={setFormValues}
           onSubmit={handleSubmit}
         />
       )}

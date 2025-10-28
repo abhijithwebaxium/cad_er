@@ -3,17 +3,19 @@ import Chainage from '../../../assets/chainage.png';
 import BasicTextFields from '../../../components/BasicTextFields';
 import BasicButtons from '../../../components/BasicButton';
 
-const SetChainage = ({ setTab, formValues, setFormValues, onSubmit }) => {
+const SetChainage = ({ setTab, formValues, onSubmit }) => {
   const handleSubmit = () => {
-    if (!formValues) {
-      setTab(2);
-    } else {
-      setTab(3);
-    }
+    setTab(3);
 
     const inputBasic = document.querySelector('#input-basic');
+    const inpRoadWidth = document.querySelector('#inp-road-width');
 
-    onSubmit(inputBasic.value, 'Chainage');
+    const values = {
+      chainage: inputBasic.value,
+      roadWidth: inpRoadWidth.value,
+    };
+
+    onSubmit(values, 'Chainage');
   };
 
   return (
@@ -38,14 +40,21 @@ const SetChainage = ({ setTab, formValues, setFormValues, onSubmit }) => {
         </Typography>
       </Stack>
 
-      <Box width={'100%'} className="input-wrapper">
+      <Stack width={'100%'} spacing={3} className="input-wrapper">
         <BasicTextFields
           id={'input-basic'}
           label={'Number'}
           variant={'filled'}
           sx={{ width: '100%', borderRadius: '15px !important' }}
         />
-      </Box>
+
+        <BasicTextFields
+          id={'inp-road-width'}
+          label={'Road width'}
+          variant={'filled'}
+          sx={{ width: '100%' }}
+        />
+      </Stack>
 
       <Box px={'24px'} className="landing-btn" width={'100%'}>
         <BasicButtons

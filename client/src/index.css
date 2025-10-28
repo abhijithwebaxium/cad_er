@@ -78,6 +78,16 @@
   cursor: pointer;
 }
 
+.remove-new-sight {
+  padding: 13px;
+  background-color: #ffefef;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  width: 26px;
+  cursor: pointer;
+}
+
 @media (width > 480px) {
   .input-wrapper {
     width: 440px !important;

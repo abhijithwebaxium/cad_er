@@ -3,7 +3,19 @@ import FollowingValues from '../../../assets/following_values.jpg';
 import BasicTextFields from '../../../components/BasicTextFields';
 import BasicButtons from '../../../components/BasicButton';
 
-const SetFollowingValues = ({ setTab }) => {
+const SetFollowingValues = ({ setTab, onSubmit }) => {
+  const handleSubmit = () => {
+    const inpBackSight = document.getElementById('inp-back-sight');
+    const inpReducedLevel = document.getElementById('inp-reduced-level');
+
+    const values = {
+      backSight: inpBackSight.value,
+      reducedLevel: inpReducedLevel.value,
+    };
+
+    onSubmit(values);
+  };
+
   return (
     <Stack alignItems={'center'} spacing={5}>
       <Box className="set-chainage-img-wrapper">
@@ -28,12 +40,14 @@ const SetFollowingValues = ({ setTab }) => {
 
       <Stack width={'100%'} spacing={3} className="input-wrapper">
         <BasicTextFields
+          id={'inp-back-sight'}
           label={'Backsight'}
           variant={'filled'}
           sx={{ width: '100%' }}
         />
 
         <BasicTextFields
+          id={'inp-reduced-level'}
           label={'Reduced level'}
           variant={'filled'}
           sx={{ width: '100%' }}
@@ -45,7 +59,7 @@ const SetFollowingValues = ({ setTab }) => {
           value={'Continue'}
           sx={{ backgroundColor: '#0059E7', height: '45px' }}
           fullWidth={true}
-          onClick={() => setTab(3)}
+          onClick={handleSubmit}
         />
       </Box>
     </Stack>

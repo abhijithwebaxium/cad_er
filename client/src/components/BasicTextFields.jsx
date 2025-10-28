@@ -2,7 +2,15 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 
-export default function BasicTextFields({ id, label, variant, sx, value, onChange }) {
+export default function BasicTextFields({
+  id,
+  label,
+  variant,
+  sx,
+  value,
+  onChange,
+  name,
+}) {
   return (
     <Box
       noValidate
@@ -21,6 +29,7 @@ export default function BasicTextFields({ id, label, variant, sx, value, onChang
         sx={sx}
         value={value}
         onChange={onChange}
+        name={name}
       />
     </Box>
   );
