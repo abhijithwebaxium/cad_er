@@ -4,9 +4,14 @@ import BasicButtons from '../../../components/BasicButton';
 import { useState } from 'react';
 import { IoAdd } from 'react-icons/io5';
 import { IoIosRemove } from 'react-icons/io';
+import BasicCheckbox from '../../../components/BasicCheckbox';
+
+const initialRow = [{ id: 1, isValue: '', offsetValue: '' }];
 
 const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
-  const [rows, setRows] = useState([{ id: 1, isValue: '', offsetValue: '' }]);
+  const [rows, setRows] = useState(initialRow);
+
+  const [autoOffset, setAutoOffset] = useState(false);
 
   const updateRow = (id, field, value) => {
     setRows((prev) =>
@@ -40,6 +45,43 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
   const handleAddChainage = () => getValues();
   const handleFinish = () => getValues('finish');
 
+  const handleChangeAutoOffset = (e) => {
+    const checked = e.target.checked;
+    setAutoOffset(checked);
+
+    if (!checked) return;
+
+    const length = Object.keys(formValues).length;
+    const roadWidth = Number(formValues[length]?.roadWidth || 0);
+    const offsetHalf = (roadWidth / 2).toFixed(3);
+
+    const lhs = `-${offsetHalf}`;
+    const pls = '0.000';
+    const rhs = offsetHalf;
+
+    const pattern = [lhs, pls, rhs];
+
+    const limit = rows.length;
+    const updatedRows = [...rows];
+
+    for (let i = 0; i < limit; i++) {
+      const offsetValue = pattern[i % 3];
+
+      if (updatedRows[i]?.id) {
+        updatedRows[i].offsetValue = offsetValue;
+        updatedRows[i].isValue = '';
+      } else {
+        updatedRows[i] = {
+          id: i + 1,
+          offsetValue,
+          isValue: '',
+        };
+      }
+    }
+
+    setRows(updatedRows);
+  };
+
   return (
     <Stack alignItems={'center'} spacing={5}>
       <Box px={'24px'} className="landing-btn" width={'100%'}>
@@ -67,6 +109,15 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
       </Stack>
 
       <Box width={'100%'} className="input-wrapper">
+        <Stack direction={'row'} alignItems={'center'}>
+          <BasicCheckbox
+            checked={autoOffset}
+            onChange={(e) => handleChangeAutoOffset(e)}
+          />
+          <Typography fontSize={'16px'} fontWeight={400} color="#434343">
+            Default offset
+          </Typography>
+        </Stack>
         <Stack spacing={2}>
           {rows.map((row, idx) => (
             <Stack

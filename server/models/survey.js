@@ -28,6 +28,7 @@ const SurveySchema = new mongoose.Schema(
       default: false,
       index: true,
     },
+    surveyFinishDate: Date,
     history: [
       {
         type: {

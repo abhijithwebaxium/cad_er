@@ -63,6 +63,7 @@ const addChainage = async (req, res, next) => {
 
     if (action === 'finish') {
       survey.isSurveyFinish = true;
+      survey.surveyFinishDate = new Date();
     }
 
     await survey.save();
