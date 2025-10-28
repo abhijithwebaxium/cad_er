@@ -1,22 +1,33 @@
 import { Box, Stack, Typography } from '@mui/material';
 import BasicTextFields from '../../../components/BasicTextFields';
 import BasicButtons from '../../../components/BasicButton';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IoAdd } from 'react-icons/io5';
 import { IoIosRemove } from 'react-icons/io';
 import BasicCheckbox from '../../../components/BasicCheckbox';
+import { GoAlert } from 'react-icons/go';
 
-const initialRow = [{ id: 1, isValue: '', offsetValue: '' }];
+const initialRow = [
+  { id: 1, isValue: '', offsetValue: '' },
+  { id: 2, isValue: '', offsetValue: '' },
+  { id: 3, isValue: '', offsetValue: '' },
+];
 
 const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
   const [rows, setRows] = useState(initialRow);
 
+  const [showInfo, setShowInfo] = useState(false);
+
   const [autoOffset, setAutoOffset] = useState(false);
+
+  const [resetOffset, setResetOffset] = useState(false);
 
   const updateRow = (id, field, value) => {
     setRows((prev) =>
       prev.map((row) => (row.id === id ? { ...row, [field]: value } : row))
     );
+
+    if (field === 'offsetValue' && showInfo) setShowInfo(false);
   };
 
   const handleAddRow = () => {
@@ -25,10 +36,23 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
       ...prev,
       { id: lastId + 1, isValue: '', offsetValue: '' },
     ]);
+
+    setResetOffset(!resetOffset);
   };
 
   const handleRemoveRow = (id) => {
-    setRows((prev) => prev.filter((row) => row.id !== id));
+    let isOffsetRemoved = false;
+
+    setRows((prev) =>
+      prev.filter((row) => {
+        if (row.offsetValue) isOffsetRemoved = true;
+
+        return row.id !== id;
+      })
+    );
+
+    isOffsetRemoved && setShowInfo(true);
+    setResetOffset(!resetOffset);
   };
 
   const getValues = (action) => {
@@ -45,27 +69,34 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
   const handleAddChainage = () => getValues();
   const handleFinish = () => getValues('finish');
 
-  const handleChangeAutoOffset = (e) => {
-    const checked = e.target.checked;
-    setAutoOffset(checked);
-
-    if (!checked) return;
-
+  const calculateOffset = () => {
     const length = Object.keys(formValues).length;
     const roadWidth = Number(formValues[length]?.roadWidth || 0);
-    const offsetHalf = (roadWidth / 2).toFixed(3);
+    const roadWidthDivision = Number(
+      formValues[length]?.roadWidthDivision || 0
+    );
 
-    const lhs = `-${offsetHalf}`;
-    const pls = '0.000';
-    const rhs = offsetHalf;
+    // Half width
+    const half = roadWidth / 2;
+    // Step size
+    const step = roadWidth / roadWidthDivision;
 
-    const pattern = [lhs, pls, rhs];
+    const pattern = [];
 
+    // 1) Generate LHS values (negative)
+    for (let i = 0; i <= roadWidthDivision; i++) {
+      const offset = -(half - i * step);
+      pattern.push(offset.toFixed(3));
+    }
+
+    // Now pattern looks like: [ -half, -(half-step), ..., half ]
+    // Sort to ensure correct ordering (negative to positive)
+    pattern.sort((a, b) => Number(a) - Number(b));
     const limit = rows.length;
     const updatedRows = [...rows];
 
     for (let i = 0; i < limit; i++) {
-      const offsetValue = pattern[i % 3];
+      const offsetValue = pattern[i % pattern.length];
 
       if (updatedRows[i]?.id) {
         updatedRows[i].offsetValue = offsetValue;
@@ -82,21 +113,38 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
     setRows(updatedRows);
   };
 
+  const handleChangeAutoOffset = (e) => {
+    const checked = e.target.checked;
+    setAutoOffset(checked);
+
+    if (!checked) return;
+
+    calculateOffset();
+  };
+
+  useEffect(() => {
+    if (autoOffset) {
+      calculateOffset();
+    }
+  }, [resetOffset]);
+
   return (
     <Stack alignItems={'center'} spacing={5}>
-      <Box px={'24px'} className="landing-btn" width={'100%'}>
-        <BasicButtons
-          value={'Add CP'}
-          sx={{
-            border: '1px solid #0059E7',
-            height: '45px',
-            color: '#0059E7',
-            fontWeight: '700',
-          }}
-          fullWidth={true}
-          variant={'outlined'}
-        />
-      </Box>
+      {Object.keys(formValues).length > 1 && (
+        <Box px={'24px'} className="landing-btn" width={'100%'}>
+          <BasicButtons
+            value={'Add CP'}
+            sx={{
+              border: '1px solid #0059E7',
+              height: '45px',
+              color: '#0059E7',
+              fontWeight: '700',
+            }}
+            fullWidth={true}
+            variant={'outlined'}
+          />
+        </Box>
+      )}
 
       {/* Heading */}
       <Stack alignItems={'center'}>
@@ -132,8 +180,9 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
                 sx={{ width: '100%', borderRadius: '15px !important' }}
                 value={row.isValue}
                 onChange={(e) => updateRow(row.id, 'isValue', e.target.value)}
-                label={'IS'}
+                label={`IS-${idx + 1}`}
                 name="is"
+                type={'number'}
               />
 
               <BasicTextFields
@@ -146,6 +195,7 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
                 }
                 label={'Offset'}
                 name="offset"
+                type={'number'}
               />
 
               {idx === rows.length - 1 ? (
@@ -164,6 +214,13 @@ const IntermediateSight = ({ setTab, formValues, onSubmit }) => {
           ))}
         </Stack>
       </Box>
+
+      {showInfo && (
+        <Box display={'flex'} gap={'4px'}>
+          <GoAlert fill="red" />
+          You might want to set the offset
+        </Box>
+      )}
 
       {/* Actions */}
       <Box px={'24px'} className="landing-btn" width={'100%'}>

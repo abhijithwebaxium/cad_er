@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import SetChainage from './components/SetChainage';
 import SetFollowingValues from './components/SetFollowingValues';
 import IntermediateSight from './components/IntermediateSight';
-import Output from './components/Output';
 import {
   addChainage,
   checkSurveyExists,
@@ -22,7 +21,7 @@ const RoadSurveyForm = () => {
   const [otherValues, setOtherValues] = useState(null);
 
   const handleGoBack = () => {
-    if (otherValues) return;
+    if (otherValues && tab === 2) return;
 
     setTab(tab - 1);
     if (tab === 1) {
@@ -55,7 +54,12 @@ const RoadSurveyForm = () => {
     if (!formValues) {
       if (type === 'Chainage') {
         setFormValues({
-          1: { chainage: value.chainage, roadWidth: value.roadWidth, is: [] },
+          1: {
+            chainage: value.chainage,
+            roadWidth: value.roadWidth,
+            roadWidthDivision: value.roadWidthDivision,
+            is: [],
+          },
         });
       }
 
@@ -71,6 +75,7 @@ const RoadSurveyForm = () => {
         [nextKey]: {
           chainage: value.chainage,
           roadWidth: value.roadWidth,
+          roadWidthDivision: value.roadWidthDivision,
           is: [],
         },
       }));

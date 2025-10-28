@@ -53,6 +53,7 @@ const SetFollowingValues = ({ setTab, onSubmit }) => {
           label={'Backsight'}
           variant={'filled'}
           sx={{ width: '100%' }}
+          type={'number'}
         />
 
         <BasicTextFields
@@ -60,6 +61,7 @@ const SetFollowingValues = ({ setTab, onSubmit }) => {
           label={'Reduced level'}
           variant={'filled'}
           sx={{ width: '100%' }}
+          type={'number'}
         />
       </Stack>
 

@@ -10,6 +10,7 @@ export default function BasicTextFields({
   value,
   onChange,
   name,
+  type,
 }) {
   return (
     <Box
@@ -30,6 +31,7 @@ export default function BasicTextFields({
         value={value}
         onChange={onChange}
         name={name}
+        type={type ? type : 'text'}
       />
     </Box>
   );
