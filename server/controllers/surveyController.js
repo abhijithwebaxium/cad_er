@@ -13,14 +13,14 @@ const checkSurveyExists = async (req, res, next) => {
 const createSurvey = async (req, res, next) => {
   try {
     const {
-      body: { backSight, reducedLevel },
+      body: { backSight, reducedLevel, name },
     } = req;
 
     const isExist = await Surveys.findOne({ isSurveyFinish: false });
     if (isExist) throw Error('Already a survey in progress');
 
     await Surveys.create({
-      name: 'Unknown Name',
+      name,
       backSight,
       reducedLevel,
     });

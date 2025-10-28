@@ -7,10 +7,12 @@ const SetFollowingValues = ({ setTab, onSubmit }) => {
   const handleSubmit = () => {
     const inpBackSight = document.getElementById('inp-back-sight');
     const inpReducedLevel = document.getElementById('inp-reduced-level');
+    const inpName = document.getElementById('inp-project-name');
 
     const values = {
       backSight: inpBackSight.value,
       reducedLevel: inpReducedLevel.value,
+      name: inpName.value,
     };
 
     onSubmit(values);
@@ -39,6 +41,13 @@ const SetFollowingValues = ({ setTab, onSubmit }) => {
       </Stack>
 
       <Stack width={'100%'} spacing={3} className="input-wrapper">
+        <BasicTextFields
+          id={'inp-project-name'}
+          label={'Project name'}
+          variant={'filled'}
+          sx={{ width: '100%' }}
+        />
+
         <BasicTextFields
           id={'inp-back-sight'}
           label={'Backsight'}
