@@ -205,36 +205,32 @@ const RoadSurveyRowsForm = () => {
 
   const calculateOffset = () => {
     const roadWidth = Number(formValues.current.roadWidth || 0);
-    const roadWidthDivision = Number(formValues.current.spacing || 0);
+    const spacing = Number(formValues.current.spacing || 0);
 
-    // Half width
-    const half = roadWidth / 2;
-    // Step size
-    const step = roadWidth / roadWidthDivision;
+    if (!roadWidth || !spacing) return;
 
+    const halfWidth = roadWidth / 2;
     const pattern = [];
 
-    // 1) Generate LHS values (negative)
-    for (let i = 0; i <= roadWidthDivision; i++) {
-      const offset = -(half - i * step);
+    // Generate offsets from -halfWidth to +halfWidth (inclusive)
+    for (
+      let offset = -halfWidth;
+      offset <= halfWidth + 0.0001;
+      offset += spacing
+    ) {
       pattern.push(offset.toFixed(3));
     }
 
-    // Now pattern looks like: [ -half, -(half-step), ..., half ]
-    // Sort to ensure correct ordering (negative to positive)
-    pattern.sort((a, b) => Number(a) - Number(b));
     const limit = formValues.current.intermediateOffsets.length;
     const updatedRows = [...formValues.current.intermediateOffsets];
 
     for (let i = 0; i < limit; i++) {
       const offset = pattern[i % pattern.length];
-
       updatedRows[i].offset = offset;
       updatedRows[i].intermediateSight = updatedRows[i].intermediateSight || '';
     }
 
     formValues.current.intermediateOffsets = updatedRows;
-
     setForceRender(!forceRender);
   };
 

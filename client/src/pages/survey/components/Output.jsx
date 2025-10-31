@@ -131,20 +131,78 @@ export default function Output() {
   const exportToExcel = () => {
     if (!survey) return;
 
-    const headers = ['CH', 'BS', 'IS', 'FS', 'HI', 'RL', 'Offset', 'Remarks'];
+    const headers = ['CH', 'BS', 'IS', 'FS', 'HI', 'RL'];
 
-    const worksheet = XLSX.utils.json_to_sheet(tableData, { header: headers });
-
-    // Add survey name on top
-    XLSX.utils.sheet_add_aoa(worksheet, [[`Name of Work: ${survey.purpose}`]], {
-      origin: 'A1',
-    });
-    worksheet['!merges'] = worksheet['!merges'] || [];
-    worksheet['!merges'].push({
-      s: { r: 0, c: 0 },
-      e: { r: 0, c: headers.length - 1 },
+    // Create worksheet from table data (start from row 5)
+    const worksheet = XLSX.utils.json_to_sheet(tableData, {
+      header: headers,
+      origin: 'A5',
     });
 
+    // Add custom header section (rows 1–3)
+    const headerSection = [
+      [
+        `Purpose: ${survey.purpose}`,
+        '',
+        '',
+        '',
+        `Name of Officer: N/A`,
+        '',
+        '',
+        '',
+      ],
+      [
+        `Date of Survey: ${new Date().toLocaleDateString()}`,
+        '',
+        '',
+        '',
+        'Designation: Assistant Engineer',
+        '',
+        '',
+        '',
+      ],
+      [
+        `Instrument No: ${survey.instrumentNo}`,
+        '',
+        '',
+        '',
+        'Department: N/A',
+        '',
+        '',
+        '',
+      ],
+    ];
+
+    XLSX.utils.sheet_add_aoa(worksheet, headerSection, { origin: 'A1' });
+
+    // ✅ Corrected merge ranges (A–D for left, E–H for right)
+    worksheet['!merges'] = [
+      // Row 1
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // A1:D1 - Purpose
+      { s: { r: 0, c: 4 }, e: { r: 0, c: 7 } }, // E1:H1 - Name of Officer
+
+      // Row 2
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // A2:D2 - Date
+      { s: { r: 1, c: 4 }, e: { r: 1, c: 7 } }, // E2:H2 - Designation
+
+      // Row 3
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } }, // A3:D3 - Instrument No
+      { s: { r: 2, c: 4 }, e: { r: 2, c: 7 } }, // E3:H3 - Department
+    ];
+
+    // Optional: Adjust column widths for readability
+    worksheet['!cols'] = [
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+    ];
+
+    // Create workbook and export
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Survey');
 
@@ -155,7 +213,6 @@ export default function Output() {
     const blob = new Blob([excelBuffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
-
     saveAs(blob, `Survey_${survey.purpose}.xlsx`);
   };
 

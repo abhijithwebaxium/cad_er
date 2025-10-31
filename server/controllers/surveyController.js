@@ -224,7 +224,9 @@ const addSurveyRow = async (req, res, next) => {
           ? intermediateSight
           : [],
       offsets: Array.isArray(offsets)
-        ? offsets.map((n) => Number(n).toFixed(3))
+        ? offsets
+            .map((n) => Number(n).toFixed(3))
+            .sort((a, b) => Number(a) - Number(b))
         : [],
     };
 
