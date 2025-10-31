@@ -12,7 +12,8 @@ export default function BasicTextFields({
   error,
   className,
   disabled,
-  fullWidth
+  fullWidth,
+  slotProps,
 }) {
   return (
     <TextField
@@ -23,10 +24,21 @@ export default function BasicTextFields({
       name={name}
       value={value}
       variant={variant}
-      sx={sx}
+      sx={{
+        ...sx,
+        '& input[type=number]': {
+          MozAppearance: 'textfield',
+        },
+        '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button':
+          {
+            WebkitAppearance: 'none',
+            margin: 0,
+          },
+      }}
       className={`${className} ${error && 'inp-err'}`}
       disabled={disabled}
       fullWidth={fullWidth || true}
+      slotProps={slotProps}
     />
   );
 }

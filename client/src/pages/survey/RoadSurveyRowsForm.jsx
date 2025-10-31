@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { handleFormError } from '../../utils/handleFormError';
 import { startLoading, stopLoading } from '../../redux/loadingSlice';
 import HeaderImg from '../../assets/chainage.png';
-import { Box, Stack, Typography, Grid } from '@mui/material';
+import { Box, Stack, Typography, Grid, InputAdornment } from '@mui/material';
 import BasicTextFields from '../../components/BasicTextFields';
 import BasicButtons from '../../components/BasicButton';
 import { IoAdd } from 'react-icons/io5';
@@ -467,26 +467,28 @@ const RoadSurveyRowsForm = () => {
         )}
 
         <Stack>
-          <Stack direction={'row'} justifyContent={'end'} gap={2}>
-            {rowType !== 'Chainage' && (
-              <ButtonLink
-                label={'Add Chainage'}
-                onClick={() => handleChangeRowType('Chainage')}
-              />
-            )}
-            {rowType !== 'CP' && (
-              <ButtonLink
-                label={'Add CP'}
-                onClick={() => handleChangeRowType('CP')}
-              />
-            )}
-            {rowType !== 'TBM' && (
-              <ButtonLink
-                label={'Add TBM'}
-                onClick={() => handleChangeRowType('TBM')}
-              />
-            )}
-          </Stack>
+          {page === 0 && (
+            <Stack direction={'row'} justifyContent={'end'} gap={2}>
+              {rowType !== 'Chainage' && (
+                <ButtonLink
+                  label={'Add Chainage'}
+                  onClick={() => handleChangeRowType('Chainage')}
+                />
+              )}
+              {rowType !== 'CP' && (
+                <ButtonLink
+                  label={'Add CP'}
+                  onClick={() => handleChangeRowType('CP')}
+                />
+              )}
+              {rowType !== 'TBM' && (
+                <ButtonLink
+                  label={'Add TBM'}
+                  onClick={() => handleChangeRowType('TBM')}
+                />
+              )}
+            </Stack>
+          )}
 
           <Box display={'flex'} flexDirection={'column'} alignItems={'center'}>
             <Typography fontSize={'26px'} fontWeight={700}>
@@ -556,37 +558,64 @@ const RoadSurveyRowsForm = () => {
                       alignItems={'center'}
                       spacing={1}
                     >
-                      <BasicTextFields
-                        label="Intermediate Sight"
-                        type="number"
-                        name="intermediateOffsets"
-                        value={row.intermediateSight}
-                        onChange={(e) =>
-                          handleInputChange(e, idx, 'intermediateSight')
-                        }
-                        error={
-                          formErrors &&
-                          formErrors[
-                            `intermediateOffsets[${idx}].intermediateSight`
-                          ]
-                        }
-                        variant="filled"
-                        sx={{ width: '100%' }}
-                      />
+                      <Box
+                        sx={{
+                          '& .MuiOutlinedInput-root, & .MuiFilledInput-root': {
+                            borderRadius: '15px',
+                          },
+                          width: '100%',
+                        }}
+                      >
+                        <BasicTextFields
+                          label="Intermediate Sight"
+                          type="number"
+                          name="intermediateOffsets"
+                          value={row.intermediateSight}
+                          onChange={(e) =>
+                            handleInputChange(e, idx, 'intermediateSight')
+                          }
+                          error={
+                            formErrors &&
+                            formErrors[
+                              `intermediateOffsets[${idx}].intermediateSight`
+                            ]
+                          }
+                          variant="filled"
+                          sx={{ width: '100%' }}
+                        />
+                      </Box>
 
-                      <BasicTextFields
-                        label="Offset"
-                        type="number"
-                        name="intermediateOffsets"
-                        value={row.offset}
-                        onChange={(e) => handleInputChange(e, idx, 'offset')}
-                        error={
-                          formErrors &&
-                          formErrors[`intermediateOffsets[${idx}].offset`]
-                        }
-                        variant="filled"
-                        sx={{ width: '100%' }}
-                      />
+                      <Box
+                        sx={{
+                          '& .MuiOutlinedInput-root, & .MuiFilledInput-root': {
+                            borderRadius: '15px',
+                          },
+                          width: '100%',
+                        }}
+                      >
+                        <BasicTextFields
+                          label="Offset"
+                          type="number"
+                          name="intermediateOffsets"
+                          value={row.offset}
+                          onChange={(e) => handleInputChange(e, idx, 'offset')}
+                          error={
+                            formErrors &&
+                            formErrors[`intermediateOffsets[${idx}].offset`]
+                          }
+                          variant="filled"
+                          sx={{ width: '100%' }}
+                          slotProps={{
+                            input: {
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  mtr
+                                </InputAdornment>
+                              ),
+                            },
+                          }}
+                        />
+                      </Box>
 
                       {idx ===
                       formValues.current.intermediateOffsets?.length - 1 ? (
