@@ -6,6 +6,8 @@ export default function BasicButtons({
   fullWidth,
   onClick,
   variant,
+  loading,
+  loadingIndicator,
 }) {
   return (
     <Button
@@ -13,6 +15,8 @@ export default function BasicButtons({
       sx={sx}
       fullWidth={fullWidth}
       onClick={onClick}
+      loading={loading}
+      loadingIndicator={loadingIndicator || 'Loading…'}
     >
       {value}
     </Button>

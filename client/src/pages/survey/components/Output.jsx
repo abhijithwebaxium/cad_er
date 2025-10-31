@@ -1,4 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getSurvey } from '../../../services/surveyServices';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import BasicButtons from '../../../components/BasicButton';
+import { useDispatch, useSelector } from 'react-redux';
+import { startLoading, stopLoading } from '../../../redux/loadingSlice';
+import { handleFormError } from '../../../utils/handleFormError';
+import { MdArrowBackIosNew } from 'react-icons/md';
 import {
   Box,
   Table,
@@ -9,92 +18,132 @@ import {
   TableRow,
   Paper,
   Typography,
+  Stack,
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
-import { getSurvey } from '../../../services/surveyServices';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import BasicButtons from '../../../components/BasicButton';
 
 export default function Output() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { global } = useSelector((state) => state.loading);
+
   const [survey, setSurvey] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await getSurvey(id);
-      setSurvey(data);
+      try {
+        if (!global) dispatch(startLoading());
+        const { data } = await getSurvey(id);
+        if (data.success) {
+          setSurvey(data.survey);
+        } else {
+          throw Error('Something went wrong');
+        }
+      } catch (error) {
+        handleFormError(error, null, dispatch, navigate);
+      } finally {
+        dispatch(stopLoading());
+      }
     };
     fetchData();
   }, [id]);
 
-  const calculateHI = () =>
-    Number(survey?.backSight || 0) + Number(survey?.reducedLevel || 0);
+  // 🔸 Compute table data from survey rows
+  const tableData = useMemo(() => {
+    if (!survey) return [];
 
-  const hiValue = calculateHI();
+    let hi = 0; // Height of Instrument
+    let rl = 0; // Reduced Level
+    const rows = [];
 
-  if (!survey) {
-    return <Typography p={2}>Loading survey details...</Typography>;
-  }
+    for (const row of survey.rows) {
+      switch (row.type) {
+        case 'Instrument setup':
+          rl = Number(survey.reducedLevel || 0);
+          hi = rl + Number(row.backSight || 0);
+          rows.push({
+            CH: '-',
+            BS: row.backSight || '-',
+            IS: '-',
+            FS: '-',
+            HI: hi.toFixed(3),
+            RL: rl.toFixed(3),
+            Offset: '-',
+            Remarks: '-',
+          });
+          break;
+
+        case 'Chainage':
+          row.intermediateSight?.forEach((isVal, i) => {
+            const rlValue = (hi - Number(isVal || 0)).toFixed(3);
+            rows.push({
+              CH: i === 0 ? row.chainage : '',
+              BS: '-',
+              IS: isVal || '-',
+              FS: '-',
+              HI: hi.toFixed(3),
+              RL: rlValue,
+              Offset: row.offsets?.[i] || '-',
+              Remarks: row.remarks?.[i] || '-',
+            });
+          });
+          break;
+
+        case 'TBM':
+          row.intermediateSight?.forEach((isVal, i) => {
+            const rlValue = (hi - Number(isVal || 0)).toFixed(3);
+            rows.push({
+              CH: '-',
+              BS: '-',
+              IS: isVal || '-',
+              FS: '-',
+              HI: hi.toFixed(3),
+              RL: rlValue,
+              Offset: row.offsets?.[i] || '-',
+              Remarks: row.remarks?.[i] || '-',
+            });
+          });
+          break;
+
+        case 'CP':
+          rl = Number(hi) - Number(row.foreSight);
+          hi = Number(rl) + Number(row.backSight || 0);
+          rows.push({
+            CH: '-',
+            BS: row.backSight || '-',
+            IS: '-',
+            FS: row.foreSight || '-',
+            HI: hi.toFixed(3),
+            RL: rl.toFixed(3),
+            Offset: '-',
+            Remarks: row.remarks?.[0] || '-',
+          });
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    return rows;
+  }, [survey]);
 
   const exportToExcel = () => {
     if (!survey) return;
 
-    const data = [];
-
-    // Second row (first data row under headers)
-    data.push({
-      CH: '-',
-      BS: survey.backSight || 0,
-      IS: '-',
-      FS: '-',
-      HI: hiValue,
-      RL: survey.reducedLevel || 0,
-      Offset: '-',
-      Remarks: '-',
-    });
-
-    // Chainage rows
-    survey.tbm.forEach((chainageData) => {
-      chainageData.is.forEach((entry, index) => {
-        data.push({
-          CH: index === 0 ? chainageData.chainage : '',
-          BS: '-',
-          IS: entry,
-          FS: '-',
-          HI: hiValue,
-          RL: (hiValue - Number(entry)).toFixed(3),
-          Offset: chainageData.offset[index] || '-',
-          Remarks: '-',
-        });
-      });
-    });
-
-    // Closing row
-    data.push({
-      CH: '-',
-      BS: '-',
-      IS: '-',
-      FS: hiValue - (survey.reducedLevel || 0),
-      HI: '-',
-      RL: survey.reducedLevel || 0,
-      Offset: '-',
-      Remarks: `Closed on Starting TBM at CH:${survey.tbm[0]?.chainage}`,
-    });
-
-    // Define headers / columns
     const headers = ['CH', 'BS', 'IS', 'FS', 'HI', 'RL', 'Offset', 'Remarks'];
 
-    // Create worksheet with first row = survey name, second row = headers
-    const aoa = [[`Name of Work: ${survey.name}`], headers];
-    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+    const worksheet = XLSX.utils.json_to_sheet(tableData, { header: headers });
 
-    // Merge the survey name across all columns (A1:H1)
+    // Add survey name on top
+    XLSX.utils.sheet_add_aoa(worksheet, [[`Name of Work: ${survey.purpose}`]], {
+      origin: 'A1',
+    });
     worksheet['!merges'] = worksheet['!merges'] || [];
-    worksheet['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } });
-
-    // Add the data starting at row 3 (A3), skipHeader true because headers already written in row 2
-    XLSX.utils.sheet_add_json(worksheet, data, { origin: 'A3', skipHeader: true, header: headers });
+    worksheet['!merges'].push({
+      s: { r: 0, c: 0 },
+      e: { r: 0, c: headers.length - 1 },
+    });
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Survey');
@@ -107,17 +156,40 @@ export default function Output() {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
 
-    saveAs(blob, `Survey_${id}.xlsx`);
+    saveAs(blob, `Survey_${survey.purpose}.xlsx`);
   };
+
+  if (!survey) {
+    return <Typography p={2}>Loading survey details...</Typography>;
+  }
 
   return (
     <Box p={2}>
-      <BasicButtons
-        variant="contained"
-        sx={{ mb: 2 }}
-        onClick={exportToExcel}
-        value="Download Excel 📥"
-      />
+      <Stack direction={'row'} spacing={2} mb={2}>
+        <Box
+          sx={{
+            border: '1px solid #EFEFEF',
+            borderRadius: '9px',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: 'pointer',
+            mb: '24px',
+          }}
+          onClick={() => navigate('/')}
+        >
+          <MdArrowBackIosNew />
+        </Box>
+
+        <BasicButtons
+          variant="contained"
+          sx={{ mb: 2 }}
+          onClick={exportToExcel}
+          value="Download Excel 📥"
+        />
+      </Stack>
 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} size="small">
@@ -149,55 +221,18 @@ export default function Output() {
           </TableHead>
 
           <TableBody>
-            <TableRow>
-              <TableCell>-</TableCell>
-              <TableCell align="right">{survey?.backSight || 0}</TableCell>
-              <TableCell align="right">-</TableCell>
-              <TableCell align="right">-</TableCell>
-              <TableCell align="right">{hiValue}</TableCell>
-              <TableCell align="right">{survey?.reducedLevel || 0}</TableCell>
-              <TableCell align="right">-</TableCell>
-              <TableCell align="right">-</TableCell>
-            </TableRow>
-
-            {survey?.tbm.map((chainageData, idx) =>
-              chainageData?.is.map((entry, index) => (
-                <TableRow key={`${idx}-${index}`}>
-                  {index === 0 && (
-                    <TableCell rowSpan={chainageData.is.length}>
-                      {chainageData.chainage}
-                    </TableCell>
-                  )}
-
-                  <TableCell align="right">-</TableCell>
-                  <TableCell align="right">{entry}</TableCell>
-                  <TableCell align="right">-</TableCell>
-                  <TableCell align="right">{hiValue}</TableCell>
-                  <TableCell align="right">
-                    {(hiValue - Number(entry)).toFixed(3)}
-                  </TableCell>
-                  <TableCell align="right">
-                    {chainageData?.offset[index] || '-'}
-                  </TableCell>
-                  <TableCell align="right">-</TableCell>
-                </TableRow>
-              ))
-            )}
-
-            <TableRow>
-              <TableCell>-</TableCell>
-              <TableCell align="right">-</TableCell>
-              <TableCell align="right">-</TableCell>
-              <TableCell align="right">
-                {hiValue - (survey?.reducedLevel || 0)}
-              </TableCell>
-              <TableCell align="right">-</TableCell>
-              <TableCell align="right">{survey?.reducedLevel || 0}</TableCell>
-              <TableCell align="right">-</TableCell>
-              <TableCell align="right">
-                Closed on Starting TBM at CH:{survey?.tbm[0]?.chainage}
-              </TableCell>
-            </TableRow>
+            {tableData.map((row, index) => (
+              <TableRow key={index}>
+                <TableCell>{row.CH}</TableCell>
+                <TableCell align="right">{row.BS}</TableCell>
+                <TableCell align="right">{row.IS}</TableCell>
+                <TableCell align="right">{row.FS}</TableCell>
+                <TableCell align="right">{row.HI}</TableCell>
+                <TableCell align="right">{row.RL}</TableCell>
+                <TableCell align="right">{row.Offset}</TableCell>
+                <TableCell align="right">{row.Remarks}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </TableContainer>

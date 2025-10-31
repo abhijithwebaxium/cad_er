@@ -3,22 +3,30 @@ import express from 'express';
 const router = express.Router();
 
 import {
-  addChainage,
   checkSurveyExists,
+  getAllSurvey,
   createSurvey,
   getSurvey,
+  updateSurvey,
+  deleteSurvey,
+  addSurveyRow,
+  updateSurveyRow,
+  deleteSurveyRow,
+  endSurvey,
 } from '../controllers/surveyController.js';
 
-// Check survey exists
+// Survey routes
 router.get('/exists', checkSurveyExists);
-
-// Create a survey
+router.get('/', getAllSurvey);
 router.post('/', createSurvey);
-
-// Get a survey
+router.patch('/:id/end', endSurvey);
 router.get('/:id', getSurvey);
+router.patch('/:id', updateSurvey);
+router.delete('/:id', deleteSurvey);
 
-// Add chainage
-router.post('/chainage', addChainage);
+// Row routes (nested under a survey)
+router.post('/:id/rows', addSurveyRow);
+router.patch('/:id/rows/:rowId', updateSurveyRow);
+router.delete('/:id/rows/:rowId', deleteSurveyRow);
 
 export default router;

@@ -3,11 +3,13 @@ import LandingImg from '../../assets/landing.jpg';
 import BasicButtons from '../../components/BasicButton';
 import { FaRoad } from 'react-icons/fa6';
 import { FaWater } from 'react-icons/fa';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SimpleAlert from '../../components/SimpleAlert';
 import { GoAlert } from 'react-icons/go';
 import { useNavigate } from 'react-router-dom';
 import OutlinedCard from './components/OutlinedCard';
+import { stopLoading } from '../../redux/loadingSlice';
+import { useDispatch } from 'react-redux';
 
 const cardData = [
   {
@@ -33,6 +35,8 @@ const alertData = {
 };
 
 const Index = () => {
+  const dispatch = useDispatch();
+
   const navigate = useNavigate();
 
   const [active, setActive] = useState(0);
@@ -50,6 +54,10 @@ const Index = () => {
     navigate('/survey/road-survey');
   };
 
+  useEffect(() => {
+    dispatch(stopLoading());
+  }, []);
+
   return (
     <Box>
       {showAlert && <SimpleAlert {...alertData} />}
@@ -66,7 +74,12 @@ const Index = () => {
         </Box>
 
         <Stack alignItems={'center'}>
-          <Typography fontSize={'26px'} fontWeight={700}>
+          <Typography
+            fontSize={'26px'}
+            fontWeight={700}
+            sx={{ cursor: 'pointer' }}
+            onClick={() => navigate('/survey')}
+          >
             Welcome To CADer
           </Typography>
           <Typography fontSize={'16px'} fontWeight={400} color="#434343">

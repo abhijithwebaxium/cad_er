@@ -1,142 +1,150 @@
-import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import * as Yup from 'yup';
+import { Box, Stack, Typography } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 import { MdArrowBackIosNew } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
-import SetChainage from './components/SetChainage';
-import SetFollowingValues from './components/SetFollowingValues';
-import IntermediateSight from './components/IntermediateSight';
-import {
-  addChainage,
-  checkSurveyExists,
-  createSurvey,
-} from '../../services/surveyServices';
+import HeaderImg from '../../assets/following_values.jpg';
+import { checkSurveyExists, createSurvey } from '../../services/surveyServices';
+import BasicTextFields from '../../components/BasicTextFields';
+import BasicButtons from '../../components/BasicButton';
+import { useDispatch, useSelector } from 'react-redux';
+import { handleFormError } from '../../utils/handleFormError';
+import { startLoading, stopLoading } from '../../redux/loadingSlice';
+import { showAlert } from '../../redux/alertSlice';
+import BasicSelect from '../../components/BasicSelect';
+
+const schema = Yup.object().shape({
+  purpose: Yup.string().required('Project name is required'),
+  instrumentNo: Yup.string().required('Instrument number is required'),
+  backSight: Yup.number()
+    .typeError('Backsight is required')
+    .required('Backsight is required'),
+  reducedLevel: Yup.number()
+    .typeError('Reduced level is required')
+    .required('Reduced level is required'),
+  chainageMultiple: Yup.number()
+    .typeError('Chainage multiple is required')
+    .required('Chainage multiple is required'),
+});
+
+const inputData = [
+  {
+    label: 'Project name*',
+    name: 'purpose',
+    type: 'text',
+  },
+  {
+    label: 'Instrument number*',
+    name: 'instrumentNo',
+    type: 'text',
+  },
+  {
+    label: 'Back sight*',
+    name: 'backSight',
+    type: 'number',
+  },
+  {
+    label: 'Reduced level*',
+    name: 'reducedLevel',
+    type: 'number',
+  },
+  {
+    label: 'Chainage multiple*',
+    name: 'chainageMultiple',
+    mode: 'select',
+    options: [5, 10, 20, 30, 50].map((n) => ({ label: n, value: n })),
+  },
+];
+
+const initialFormValues = {
+  purpose: '',
+  instrumentNo: '',
+  backSight: '',
+  reducedLevel: '',
+  chainageMultiple: '',
+};
 
 const RoadSurveyForm = () => {
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState(1);
+  const dispatch = useDispatch();
 
-  const [formValues, setFormValues] = useState(null);
+  const { global } = useSelector((state) => state.loading);
 
-  const [otherValues, setOtherValues] = useState(null);
+  const formValues = useRef(initialFormValues);
 
-  const handleGoBack = () => {
-    if (otherValues && tab === 2) return;
+  const [formErrors, setFormErrors] = useState(null);
 
-    setTab(tab - 1);
-    if (tab === 1) {
-      navigate('/');
+  const [btnLoading, setBtnLoading] = useState(false);
+
+  const handleGoBack = () => navigate('/');
+
+  const handleInputChange = async (event) => {
+    const { name, value } = event.target;
+
+    formValues.current = {
+      ...formValues.current,
+      [name]: value,
+    };
+
+    try {
+      await Yup.reach(schema, name).validate(value);
+
+      setFormErrors({ ...formErrors, [name]: null });
+    } catch (error) {
+      setFormErrors({ ...formErrors, [name]: error.message });
     }
   };
 
-  const handleCreateSurvey = async (values) => {
+  const handleSubmit = async () => {
+    setBtnLoading(true);
+
     try {
-      const { data } = await createSurvey(values);
+      await schema.validate(formValues.current, { abortEarly: false });
+
+      const { data } = await createSurvey(formValues.current);
 
       if (data.success) {
-        return setTab(2);
+        const id = data?.survey?._id;
+
+        dispatch(
+          showAlert({
+            type: 'success',
+            message: `Form Submitted Successfully`,
+          })
+        );
+
+        dispatch(startLoading());
+
+        navigate(`/survey/road-survey/${id}/rows`);
+      } else {
+        throw new Error('Something went wrong.');
       }
-
-      throw Error('Something went wrong.');
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const handleSetOtherValues = (values) => {
-    setOtherValues(values);
-
-    handleCreateSurvey(values);
-  };
-
-  const handleSubmit = async (value, type, action) => {
-    // if no form values yet, initialize safely depending on the type
-    if (!formValues) {
-      if (type === 'Chainage') {
-        setFormValues({
-          1: {
-            chainage: value.chainage,
-            roadWidth: value.roadWidth,
-            roadWidthDivision: value.roadWidthDivision,
-            is: [],
-          },
-        });
-      }
-
-      return;
-    }
-
-    const length = Object.keys(formValues).length;
-
-    if (type === 'Chainage') {
-      const nextKey = length + 1;
-      setFormValues((prev) => ({
-        ...prev,
-        [nextKey]: {
-          chainage: value.chainage,
-          roadWidth: value.roadWidth,
-          roadWidthDivision: value.roadWidthDivision,
-          is: [],
-        },
-      }));
-    } else {
-      // append value immutably to the latest entry's values array
-      const lastKey = length; // keys start at 1 and are consecutive
-      let lastChainage = null;
-
-      setFormValues((prev) => {
-        const updated = { ...prev };
-
-        updated[lastKey] = {
-          ...updated[lastKey],
-          is: [...value.iSValues],
-          offset: [...value.offsetValues],
-        };
-
-        lastChainage = updated[lastKey];
-        return updated;
-      });
-
-      try {
-        const { data } = await addChainage({ ...lastChainage, action });
-
-        if (!data.success) throw Error('Something went wrong.');
-
-        if (action === 'finish') {
-          navigate(`/survey/road-survey-tbm/${data?.survey?._id}`);
-        } else {
-          setTab(2);
-        }
-      } catch (err) {
-        console.log(err);
-      }
+    } catch (error) {
+      handleFormError(error, setFormErrors, dispatch, navigate);
+    } finally {
+      setBtnLoading(false);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data } = await checkSurveyExists();
-
-      if (data) {
-        setOtherValues({
-          backSight: data?.backSight || 0,
-          reducedLevel: data?.reducedLevel || 0,
-          roadWidth: data?.roadWidth || 0,
-        });
-
-        if (data?.tbm?.length) {
-          const updatedData = data?.tbm?.map((entry, index) => {
-            return {
-              [index + 1]: {
-                entry,
-              },
-            };
-          });
-
-          setFormValues(...updatedData);
+      try {
+        if (!global) {
+          dispatch(startLoading());
         }
 
-        setTab(2);
+        const { data } = await checkSurveyExists();
+
+        if (data.survey) {
+          const id = data?.survey?._id;
+
+          navigate(`/survey/road-survey/${id}/rows`);
+        }
+      } catch (error) {
+        handleFormError(error, null, dispatch, navigate);
+      } finally {
+        dispatch(stopLoading());
       }
     };
 
@@ -161,23 +169,72 @@ const RoadSurveyForm = () => {
       >
         <MdArrowBackIosNew />
       </Box>
-      {tab === 1 && (
-        <SetFollowingValues setTab={setTab} onSubmit={handleSetOtherValues} />
-      )}
-      {tab === 2 && (
-        <SetChainage
-          setTab={setTab}
-          formValues={formValues}
-          onSubmit={handleSubmit}
-        />
-      )}
-      {tab === 3 && (
-        <IntermediateSight
-          setTab={setTab}
-          formValues={formValues}
-          onSubmit={handleSubmit}
-        />
-      )}
+
+      <Stack alignItems={'center'} spacing={5}>
+        <Box className="set-chainage-img-wrapper">
+          <img
+            src={HeaderImg}
+            srcSet={`${HeaderImg}?w=800 800w, ${HeaderImg}?w=1600 1600w, ${HeaderImg}?w=2400 2400w`}
+            sizes="100vw"
+            alt="landing"
+            // loading="lazy"
+            className="chainage-img"
+          />
+        </Box>
+
+        <Stack alignItems={'center'}>
+          <Typography fontSize={'26px'} fontWeight={700}>
+            Please Enter The Following Values
+          </Typography>
+          <Typography fontSize={'16px'} fontWeight={400} color="#434343">
+            Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+          </Typography>
+        </Stack>
+
+        <Stack width={'100%'} spacing={3} className="input-wrapper">
+          {inputData.map((input, index) => (
+            <Box
+              key={index}
+              sx={{
+                '& .MuiOutlinedInput-root, & .MuiFilledInput-root': {
+                  borderRadius: '15px',
+                },
+                width: '100%',
+              }}
+            >
+              {input?.mode === 'select' ? (
+                <BasicSelect
+                  {...input}
+                  value={formValues.current[input.name]}
+                  error={formErrors && formErrors[input.name]}
+                  variant={'filled'}
+                  sx={{ width: '100%' }}
+                  onChange={(e) => handleInputChange(e)}
+                />
+              ) : (
+                <BasicTextFields
+                  {...input}
+                  value={formValues.current[input.name]}
+                  error={formErrors && formErrors[input.name]}
+                  variant={'filled'}
+                  sx={{ width: '100%' }}
+                  onChange={(e) => handleInputChange(e)}
+                />
+              )}
+            </Box>
+          ))}
+        </Stack>
+
+        <Box px={'24px'} className="landing-btn">
+          <BasicButtons
+            value={'Continue'}
+            sx={{ backgroundColor: '#0059E7', height: '45px' }}
+            fullWidth={true}
+            onClick={handleSubmit}
+            loading={btnLoading}
+          />
+        </Box>
+      </Stack>
     </Box>
   );
 };

@@ -1,38 +1,32 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 
 export default function BasicTextFields({
-  id,
   label,
-  variant,
-  sx,
-  value,
+  placeholder,
+  type,
   onChange,
   name,
-  type,
+  value,
+  variant,
+  sx,
+  error,
+  className,
+  disabled,
+  fullWidth
 }) {
   return (
-    <Box
-      noValidate
-      autoComplete="off"
-      sx={{
-        '& .MuiOutlinedInput-root, & .MuiFilledInput-root': {
-          borderRadius: '15px',
-        },
-        width: '100%',
-      }}
-    >
-      <TextField
-        id={id}
-        label={label}
-        variant={variant}
-        sx={sx}
-        value={value}
-        onChange={onChange}
-        name={name}
-        type={type ? type : 'text'}
-      />
-    </Box>
+    <TextField
+      label={error ? error : label}
+      placeholder={placeholder}
+      type={type ? type : 'text'}
+      onChange={onChange}
+      name={name}
+      value={value}
+      variant={variant}
+      sx={sx}
+      className={`${className} ${error && 'inp-err'}`}
+      disabled={disabled}
+      fullWidth={fullWidth || true}
+    />
   );
 }

@@ -1,10 +1,10 @@
 import { showAlert } from '../redux/alertSlice';
-import { logOut } from '../redux/userSlice';
-import { disconnectSocket } from './socket';
+// import { logOut } from '../redux/userSlice';
+// import { disconnectSocket } from './socket';
 
 export const handleFormError = (error, setFormErrors, dispatch, navigate) => {
   const validationErrors = {};
-
+console.log(error.inner)
   // Check if the error is a Yup validation error
   if (error?.inner && Array.isArray(error.inner)) {
     error.inner.forEach((innerError) => {
