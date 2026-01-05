@@ -297,6 +297,12 @@ const RoadSurveyRowsForm = () => {
         purpose?.status !== "Paused" &&
         page === 0,
     },
+    {
+      icon: <MdDone />,
+      name: "Finish Survey",
+      onClick: () => handleClickOpen("Finish Survey"),
+      show: purpose && purpose?.phase === "Actual" && page === 0,
+    },
   ];
 
   const handleClickOpen = (action) => {
@@ -1497,23 +1503,6 @@ const RoadSurveyRowsForm = () => {
               loading={btnLoading}
             />
           </Stack>
-
-          {rowType === "CP" && purpose.phase === "Actual" && (
-            <BasicButtons
-              value={
-                <Box display={"flex"} gap={1} alignItems={"center"}>
-                  <Typography fontSize={"16px"} fontWeight={600}>
-                    Finish Survey
-                  </Typography>
-                  <MdDone fontSize={"20px"} />
-                </Box>
-              }
-              sx={{ backgroundColor: "#4caf50", height: "45px", flex: 1 }}
-              fullWidth={true}
-              onClick={() => handleClickOpen("Finish Survey")}
-              loading={btnLoading}
-            />
-          )}
         </Stack>
 
         <Activity mode={page === 0 && purpose ? "visible" : "hidden"}>

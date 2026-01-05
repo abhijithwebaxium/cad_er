@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const { Schema, model, Types } = mongoose;
 
+const qualifications = [
+  "ITI CIVIL / SURVEY",
+  "POLYTECHNIC CIVIL",
+  "B.E / B.Tech CIVIL",
+];
+
 const UserSchema = new Schema(
   {
     name: {
@@ -79,7 +85,7 @@ const UserSchema = new Schema(
       index: true,
       required: true,
     },
-    qualification: String,
+    qualification: { type: String, enum: qualifications },
     isQuizCompleted: {
       type: Boolean,
       default: false,
