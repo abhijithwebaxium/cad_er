@@ -46,6 +46,7 @@ const StyledInput = styled(Input)(({ theme }) => ({
 
 const BasicInput = ({
   label,
+  labelColor = "",
   error = "",
   warning = "",
   helperText = "",
@@ -60,7 +61,13 @@ const BasicInput = ({
           sx={{
             mb: 0.5,
             fontWeight: 600,
-            color: error ? "error.main" : warning ? "warning.main" : "black",
+            color: error
+              ? "error.main"
+              : warning
+              ? "warning.main"
+              : labelColor
+              ? labelColor
+              : "black",
           }}
         >
           {label}

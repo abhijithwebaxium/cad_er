@@ -112,7 +112,7 @@ const Landing = () => {
       maxWidth={false}
       disableGutters
       sx={{
-        maxWidth: "1300px",
+        maxWidth: "1400px",
         overflow: "hidden",
       }}
     >
@@ -242,7 +242,7 @@ const Landing = () => {
               src={CONTOUR_LINES_2}
               alt="contour_lines"
               style={{
-                height: "325px",
+                height: "50%",
                 position: "absolute",
                 left: 0,
                 bottom: 0,
@@ -632,6 +632,7 @@ const Landing = () => {
             bgcolor="#ff8100"
             color="white"
             top="50%"
+            width={"70%"}
             sx={{
               transform: {
                 xs: "translate(-50%, -50%)",
@@ -674,7 +675,12 @@ const Landing = () => {
 
             <Stack spacing={1}>
               {inputData.map((input, idx) => (
-                <BasicInput {...input} sx={{ width: "100%" }} key={idx} />
+                <BasicInput
+                  {...input}
+                  labelColor="white"
+                  sx={{ width: "100%" }}
+                  key={idx}
+                />
               ))}
             </Stack>
 

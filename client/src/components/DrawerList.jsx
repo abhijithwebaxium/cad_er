@@ -84,7 +84,8 @@ const DrawerList = ({ toggleDrawer }) => {
       console.error("Logout error:", err);
     } finally {
       dispatch(logOut());
-      persistor.purge();
+      await persistor.flush();
+      await persistor.purge();
 
       navigate("/login", { replace: true });
     }

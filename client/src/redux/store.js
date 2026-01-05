@@ -30,6 +30,7 @@ export const store = configureStore({
           "persist/PERSIST",
           "persist/REHYDRATE",
           "persist/PURGE",
+          "persist/FLUSH",
         ], // ✅ Ignore redux-persist actions
       },
     }),
