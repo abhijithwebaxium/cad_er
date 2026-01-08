@@ -201,7 +201,7 @@ const ProfessionalDashboard = () => {
         onCancel={() => setOpenValidateCert(false)}
       />
 
-      {!open && !openUnitConverter && (
+      {!open && !openUnitConverter && !openValidateCert && (
         <Tooltip title="Help" placement="left">
           <Fab
             onClick={() => handleOpen("help & support")}

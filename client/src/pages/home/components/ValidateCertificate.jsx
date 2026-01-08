@@ -9,7 +9,7 @@ const schema = Yup.object().shape({
   id: Yup.string().required("Required"),
 });
 
-const validCertificate = "CADER-CERT-2026-0012";
+const validCertificate = "CADER-CERT-2025-0012";
 
 const ValidateCertificate = ({ onCancel }) => {
   const [formValues, setFormValues] = useState({ id: "CADER-CERT-" });
@@ -48,8 +48,9 @@ const ValidateCertificate = ({ onCancel }) => {
         if (formValues.id === validCertificate) {
           setResult({
             name: "John Doe",
-            course: "B.Tech",
-            year: "2024",
+            education: "B.Tech",
+            courseStarted: "12/11/2025",
+            courseCompleted: "12/12/2025",
             certificateId: formValues.id,
           });
         } else {
@@ -132,8 +133,9 @@ const ValidateCertificate = ({ onCancel }) => {
           <Box mt={{ xs: 2, sm: 3 }}>
             {[
               ["Name", result.name],
-              ["Course", result.course],
-              ["Year", result.year],
+              ["Education", result.education],
+              ["Course Started", result.courseStarted],
+              ["Course Completed", result.courseCompleted],
               ["Certificate ID", result.certificateId],
             ].map(([label, value]) => (
               <Box
