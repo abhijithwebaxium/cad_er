@@ -24,7 +24,7 @@ import { googleLogin, registerUser } from "../../services/indexServices";
 import BasicButtons from "../../components/BasicButton";
 import BasicInput from "../../components/BasicInput";
 import Logo from "../../assets/logo/CADer logo-loader.png";
-import BackgroundImage from "../../assets/back-ground-img.png";
+import BackgroundImage from "../../assets/background-img.png";
 import { setUser } from "../../redux/userSlice";
 import BasicSelect from "../../components/BasicSelect";
 import { qualificationOptions } from "../../constants";
@@ -48,7 +48,7 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   position: "relative",
   minHeight: "100vh",
   padding: theme.spacing(2),
-  background: "#131344",
+  background: "#0d1e3e",
 }));
 
 /* =========================

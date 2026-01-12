@@ -23,7 +23,7 @@ import { setUser } from "../../redux/userSlice";
 import BasicButtons from "../../components/BasicButton";
 import BasicInput from "../../components/BasicInput";
 import Logo from "../../assets/logo/CADer logo-loader.png";
-import BackgroundImage from "../../assets/back-ground-img.png";
+import BackgroundImage from "../../assets/background-img.png";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -53,7 +53,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: {
     padding: theme.spacing(4),
   },
-  background: "#131344",
+  background: "#0d1e3e",
 }));
 
 const schema = Yup.object().shape({

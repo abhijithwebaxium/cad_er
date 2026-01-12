@@ -10,17 +10,26 @@ import {
   useMediaQuery,
   Link,
   Container,
+  IconButton,
+  Divider,
 } from "@mui/material";
 import {
   AiOutlineWarning,
   AiOutlineCloud,
   AiOutlineLineChart,
 } from "react-icons/ai";
-import { FaInstagram, FaFacebookF, FaTwitter } from "react-icons/fa";
 import { FiTool, FiUsers } from "react-icons/fi";
 import { MdDevices } from "react-icons/md";
+import { motion } from "framer-motion";
+import Lenis from "@studio-freight/lenis";
+import {
+  FaXTwitter,
+  FaInstagram,
+  FaLinkedin,
+  FaFacebook,
+} from "react-icons/fa6";
+
 import LOGO from "../../assets/logo/CADer logo-loader.png";
-import LOGO2 from "../../assets/logo/CADer logo-main.png";
 import CADER_EQUIPMENT from "../../assets/cader_equipment.png";
 import CONTOUR_LINES from "../../assets/contour_lines.png";
 import CONTOUR_LINES_2 from "../../assets/contour_lines_2.png";
@@ -28,6 +37,48 @@ import ENGINEERS from "../../assets/engineers.jpg";
 import ROAD from "../../assets/road.png";
 import SURVEYOR from "../../assets/surveyor.png";
 import BasicInput from "../../components/BasicInput";
+
+const MotionBox = motion.create(Box);
+const MotionStack = motion.create(Stack);
+const MotionImg = motion.img;
+const MotionTypography = motion.create(Typography);
+
+const slowFadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 1.2, ease: "easeOut" },
+  },
+};
+
+const slowFade = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 1.5, ease: "easeOut" },
+  },
+};
+
+const floatAnim = {
+  animate: {
+    y: [0, -10, 0],
+    transition: {
+      duration: 6,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+const containerStagger = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.25,
+    },
+  },
+};
 
 const features = [
   {
@@ -104,6 +155,25 @@ const Landing = () => {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      smooth: true,
+      smoothTouch: false,
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+
   const isLgDown = useMediaQuery(theme.breakpoints.down("lg"));
 
   const handleNavigate = (link) => navigate(link);
@@ -118,15 +188,23 @@ const Landing = () => {
     >
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, lg: 6 }}>
-          <Stack
+          <MotionStack
+            variants={containerStagger}
+            initial="hidden"
+            animate="visible"
             spacing={{ xs: 4, md: 6, lg: 10 }}
             py={{ xs: 2, sm: 4, md: 8, lg: 10 }}
             pl={{ xs: 2, sm: 4, md: 8, lg: 10 }}
             pr={{ xs: 2, sm: 4, md: 8, lg: 2 }}
           >
-            <img src={LOGO} alt="CADer" style={{ width: 150 }} />
+            <MotionImg
+              variants={slowFade}
+              src={LOGO}
+              alt="CADer"
+              style={{ width: 150 }}
+            />
 
-            <Stack spacing={1}>
+            <MotionStack variants={slowFadeUp} spacing={1}>
               <Typography
                 variant="h2"
                 sx={{
@@ -151,9 +229,9 @@ const Landing = () => {
               >
                 (Road & Waterways) with CADer
               </Typography>
-            </Stack>
+            </MotionStack>
 
-            <Box position={"relative"}>
+            <MotionBox variants={slowFadeUp} position={"relative"}>
               <Button
                 variant="contained"
                 sx={{
@@ -171,7 +249,8 @@ const Landing = () => {
               </Button>
 
               <Activity mode={isLgDown ? "hidden" : "visible"}>
-                <img
+                <MotionImg
+                  {...floatAnim}
                   src={CONTOUR_LINES}
                   alt="contour_lines"
                   style={{
@@ -182,15 +261,17 @@ const Landing = () => {
                   }}
                 />
               </Activity>
-            </Box>
-          </Stack>
+            </MotionBox>
+          </MotionStack>
         </Grid>
+
         <Grid
           size={{ xs: 12, lg: 6 }}
           position={"relative"}
           overflow={"hidden"}
         >
-          <img
+          <MotionImg
+            {...floatAnim}
             src={CONTOUR_LINES}
             alt="contour_lines"
             style={{
@@ -200,13 +281,18 @@ const Landing = () => {
               right: -70,
             }}
           />
-          <Box
+
+          <MotionBox
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={slowFadeUp}
             display={"flex"}
             justifyContent={isLgDown ? "center" : "end"}
             alignItems={"center"}
             p={10}
           >
-            <img
+            <MotionImg
               src={CADER_EQUIPMENT}
               alt="equipment"
               style={{
@@ -215,7 +301,7 @@ const Landing = () => {
                 paddingRight: isLgDown ? 0 : 95,
               }}
             />
-          </Box>
+          </MotionBox>
         </Grid>
       </Grid>
 
@@ -229,7 +315,11 @@ const Landing = () => {
         }}
       >
         <Grid size={{ xs: 12, lg: 6 }} overflow={"hidden"}>
-          <img
+          <MotionImg
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={slowFade}
             src={ROAD}
             alt="road"
             style={{
@@ -237,8 +327,10 @@ const Landing = () => {
               transform: "translateY(-12.9%) scale(1.1)",
             }}
           />
+
           <Activity mode={isLgDown ? "hidden" : "visible"}>
-            <img
+            <MotionImg
+              {...floatAnim}
               src={CONTOUR_LINES_2}
               alt="contour_lines"
               style={{
@@ -251,6 +343,7 @@ const Landing = () => {
             />
           </Activity>
         </Grid>
+
         <Grid
           size={{ xs: 12, lg: 6 }}
           p={{ xs: 2, sm: 4, md: 8, lg: 0 }}
@@ -262,9 +355,14 @@ const Landing = () => {
             height="100%"
             px={{ xs: 2, md: 4, lg: 0 }}
           >
-            <Stack spacing={{ xs: 4, md: 6, lg: 10 }}>
-              {/* Headline */}
-              <Stack spacing={{ xs: 0.5, md: 1 }}>
+            <MotionStack
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={containerStagger}
+              spacing={{ xs: 4, md: 6, lg: 10 }}
+            >
+              <MotionStack variants={slowFadeUp} spacing={{ xs: 0.5, md: 1 }}>
                 <Typography
                   sx={{
                     fontSize: {
@@ -295,10 +393,12 @@ const Landing = () => {
                 >
                   without errors!
                 </Typography>
-              </Stack>
+              </MotionStack>
 
-              {/* Description */}
-              <Stack spacing={{ xs: 2, md: 3, lg: 4 }}>
+              <MotionStack
+                variants={slowFadeUp}
+                spacing={{ xs: 2, md: 3, lg: 4 }}
+              >
                 <Typography
                   sx={{
                     fontSize: {
@@ -328,8 +428,8 @@ const Landing = () => {
                   professionals achieve a 40% reduction in time spent on-site
                   while ensuring zero errors in their calculations
                 </Typography>
-              </Stack>
-            </Stack>
+              </MotionStack>
+            </MotionStack>
           </Box>
         </Grid>
       </Grid>
@@ -349,10 +449,23 @@ const Landing = () => {
         </Stack>
       </Box>
 
-      <Box py={{ xs: 8, md: 10 }}>
+      <Box
+        py={{ xs: 8, md: 10 }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-120px" }}
+        component={motion.div}
+        variants={containerStagger}
+      >
         {/* Heading */}
-        <Stack spacing={2} textAlign="center" mb={{ xs: 6, md: 8 }}>
-          <Typography
+        <MotionStack
+          spacing={2}
+          textAlign="center"
+          mb={{ xs: 6, md: 8 }}
+          variants={containerStagger}
+        >
+          <MotionTypography
+            variants={slowFadeUp}
             sx={{
               fontSize: {
                 xs: "1.6rem",
@@ -370,22 +483,19 @@ const Landing = () => {
             on
             <br />
             the market!
-          </Typography>
+          </MotionTypography>
 
-          <Typography
+          <MotionTypography
+            variants={slowFadeUp}
             sx={{
-              fontSize: {
-                xs: "0.90rem",
-                md: "0.95rem",
-                lg: "1rem",
-              },
+              fontSize: { xs: "0.90rem", md: "0.95rem", lg: "1rem" },
               lineHeight: 1.6,
             }}
           >
             Choosing CADer for your projects has many advantages.
             <br /> Let’s expand!
-          </Typography>
-        </Stack>
+          </MotionTypography>
+        </MotionStack>
 
         {/* Features grid */}
         <Grid container spacing={{ xs: 4, md: 6 }}>
@@ -396,28 +506,26 @@ const Landing = () => {
               display="flex"
               justifyContent="center"
             >
-              <Stack
+              <MotionStack
                 spacing={2}
                 alignItems="center"
                 maxWidth={240}
-                sx={{
-                  transition: "transform 0.2s ease",
-                  "&:hover": { transform: "translateY(-4px)" },
-                  cursor: "pointer",
-                }}
+                variants={slowFadeUp}
+                whileHover={{ y: -4, scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                sx={{ cursor: "pointer" }}
               >
-                <Box sx={{ color: "text.primary" }}>{item.icon}</Box>
+                <Box sx={{ color: "text.primary", fontSize: 42 }}>
+                  {item.icon}
+                </Box>
 
                 <Typography
                   textAlign="center"
-                  sx={{
-                    fontSize: "0.95rem",
-                    fontWeight: 500,
-                  }}
+                  sx={{ fontSize: "0.95rem", fontWeight: 500 }}
                 >
                   {item.text}
                 </Typography>
-              </Stack>
+              </MotionStack>
             </Grid>
           ))}
         </Grid>
@@ -703,75 +811,118 @@ const Landing = () => {
       </Grid>
 
       {/* Footer */}
-      <Box
-        sx={{
-          color: "white",
-        }}
-      >
-        <Box
-          sx={{
-            backgroundColor: "#020b7c",
-            color: "white",
-            px: { xs: 3, md: 10 },
-            py: { xs: 5, md: 6 },
-          }}
-        >
-          <Grid container spacing={4}>
-            {/* LEFT */}
+      <Box sx={{ bgcolor: "#f9fafb", py: 6, px: 2 }}>
+        <Container maxWidth="lg">
+          {/* Top Section */}
+          <Grid container spacing={{ xs: 4, md: 8 }}>
+            {/* Logo + Description */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <Stack spacing={2}>
-                <img src={LOGO2} alt="CADer" style={{ width: 150 }} />
-
-                <Stack direction="row" spacing={2}>
-                  <FaInstagram size={20} />
-                  <FaFacebookF size={20} />
-                  <FaTwitter size={20} />
-                </Stack>
+              <img src={LOGO} alt="CADer" style={{ width: 150 }} />
+              <Typography variant="body2" color="text.secondary" mt={1}>
+                CADer simplifies autolevel surveying, reducing on-site time by
+                40% while ensuring accurate, error-free calculations for
+                professionals.
+              </Typography>
+              <Stack direction="row" spacing={1} mt={2}>
+                <IconButton>
+                  <FaXTwitter size={18} />
+                </IconButton>
+                <IconButton>
+                  <FaInstagram size={18} />
+                </IconButton>
+                <IconButton>
+                  <FaLinkedin size={18} />
+                </IconButton>
+                <IconButton>
+                  <FaFacebook size={18} />
+                </IconButton>
               </Stack>
             </Grid>
+
+            {/* Links Section */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <Grid container spacing={2}>
-                {/* CENTER */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Stack spacing={1.5}>
-                    {["Home", "Partners", "Contact us", "Academy"].map(
-                      (item) => (
-                        <Link
-                          key={item}
-                          href="#"
-                          underline="none"
-                          color="white"
-                          sx={{
-                            fontSize: "0.95rem",
-                            "&:hover": { opacity: 0.8 },
-                          }}
-                        >
-                          {item}
-                        </Link>
-                      )
-                    )}
+              <Grid container spacing={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                    Product
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Link href="#">Features</Link>
+                    <Link href="#">Pricing</Link>
                   </Stack>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Stack spacing={1.5}>
-                    <Typography fontSize="0.95rem">
-                      Contact: <strong>235467890</strong>
-                    </Typography>
-                    <Typography fontSize="0.95rem">
-                      Mail: <strong>asa@getcader.com</strong>
-                    </Typography>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                    Resources
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Link href="#">Documentation</Link>
+                    <Link href="#">Tutorials</Link>
+                  </Stack>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                    Company
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Link href="#">About</Link>
+                    <Link href="#">Careers</Link>
+                    <Link href="#">Partners</Link>
                   </Stack>
                 </Grid>
               </Grid>
             </Grid>
           </Grid>
-        </Box>
-        <Box sx={{ backgroundColor: "#0a0b61ff", py: 2 }}>
-          <Typography textAlign="center" variant="body2">
-            © {new Date().getFullYear()} CADer. All rights reserved.
-          </Typography>
-        </Box>
+
+          {/* Divider */}
+          <Divider sx={{ my: 4 }} />
+
+          {/* Contact Row */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              📞 <Link href="tel:+917994419955">+91 79944 19955</Link>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              📞 <Link href="tel:+917994439955">+91 79944 39955</Link>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              📞 <Link href="tel:+917994469955">+91 79944 69955</Link>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              ✉ <Link href="mailto:admin@getcader.com">admin@getcader.com</Link>
+            </Typography>
+          </Stack>
+
+          {/* Divider */}
+          <Divider sx={{ my: 4 }} />
+
+          {/* Bottom Section */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={2}
+          >
+            <Typography variant="caption" color="text.secondary">
+              © 2025 CADer. All rights reserved.
+            </Typography>
+            <Stack direction="row" spacing={2}>
+              <Link href="#" variant="caption">
+                Privacy Policy
+              </Link>
+              <Link href="#" variant="caption">
+                Terms of Service
+              </Link>
+            </Stack>
+          </Stack>
+        </Container>
       </Box>
     </Container>
   );
