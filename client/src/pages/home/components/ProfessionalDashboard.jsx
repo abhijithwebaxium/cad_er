@@ -35,11 +35,8 @@ import BasicDivider from "../../../components/BasicDevider";
 import AlertDialogSlide from "../../../components/AlertDialogSlide";
 import UniversalConverter from "../../../components/UniversalConverter";
 import StatusChip from "../../../components/StatusChip";
-import BasicSelect from "../../../components/BasicSelect";
 import Sidebar from "../../../components/Sidebar";
 import CreateTicket from "../../tickets/components/CreateTicket";
-import ButtonLink from "../../../components/ButtonLink";
-import ValidateCertificate from "./ValidateCertificate";
 
 const unitConverterAlertData = {
   title: "Unit Converter",
@@ -117,8 +114,6 @@ const ProfessionalDashboard = () => {
 
   const [openUnitConverter, setOpenUnitConverter] = useState();
 
-  const [openValidateCert, setOpenValidateCert] = useState(false);
-
   const above385 = useMediaQuery("(min-width:386px)");
   const above400 = useMediaQuery("(min-width:400px)");
 
@@ -172,14 +167,6 @@ const ProfessionalDashboard = () => {
     content: <CreateTicket onClose={handleClose} />,
   };
 
-  const checkCertAlertData = {
-    title: "Validate Certificate",
-    description: "Please enter the certificate ID to validate",
-    content: (
-      <ValidateCertificate onCancel={() => setOpenValidateCert(false)} />
-    ),
-  };
-
   useEffect(() => {
     dispatch(stopLoading());
   }, []);
@@ -195,13 +182,7 @@ const ProfessionalDashboard = () => {
         onSubmit={handleClose}
       />
 
-      <AlertDialogSlide
-        {...checkCertAlertData}
-        open={openValidateCert}
-        onCancel={() => setOpenValidateCert(false)}
-      />
-
-      {!open && !openUnitConverter && !openValidateCert && (
+      {!open && !openUnitConverter && (
         <Tooltip title="Help" placement="left">
           <Fab
             onClick={() => handleOpen("help & support")}
@@ -354,16 +335,9 @@ const ProfessionalDashboard = () => {
         <Box px={2} className="overlapping-header">
           {/* ⚡ Quick Actions */}
           <Stack spacing={2}>
-            <Stack direction={"row"} justifyContent={"space-between"}>
-              <Typography fontWeight={700} fontSize="16px">
-                Quick Actions
-              </Typography>
-
-              <ButtonLink
-                label="Check Certificate"
-                onClick={() => setOpenValidateCert(true)}
-              />
-            </Stack>
+            <Typography fontWeight={700} fontSize="16px">
+              Quick Actions
+            </Typography>
             <Box display={"flex"} justifyContent={"space-between"}>
               {actions.map((item, idx) => (
                 <Box key={idx}>

@@ -37,6 +37,8 @@ import ENGINEERS from "../../assets/engineers.jpg";
 import ROAD from "../../assets/road.png";
 import SURVEYOR from "../../assets/surveyor.png";
 import BasicInput from "../../components/BasicInput";
+import AlertDialogSlide from "../../components/AlertDialogSlide";
+import ValidateCertificate from "../../components/ValidateCertificate";
 
 const MotionBox = motion.create(Box);
 const MotionStack = motion.create(Stack);
@@ -130,16 +132,25 @@ const inputData = [
   },
 ];
 
+const TICK_WIDTH = 2; // px
+const GAP = 8; // px
+const UNIT = TICK_WIDTH + GAP;
+
 const Landing = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
   const containerRef = useRef(null);
   const [tickCount, setTickCount] = useState(0);
+  const [openValidateCert, setOpenValidateCert] = useState(false);
 
-  const TICK_WIDTH = 2; // px
-  const GAP = 8; // px
-  const UNIT = TICK_WIDTH + GAP;
+  const checkCertAlertData = {
+    title: "Validate Certificate",
+    description: "Please enter the certificate ID to validate",
+    content: (
+      <ValidateCertificate onCancel={() => setOpenValidateCert(false)} />
+    ),
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -186,6 +197,12 @@ const Landing = () => {
         overflow: "hidden",
       }}
     >
+      <AlertDialogSlide
+        {...checkCertAlertData}
+        open={openValidateCert}
+        onCancel={() => setOpenValidateCert(false)}
+      />
+
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, lg: 6 }}>
           <MotionStack
@@ -646,21 +663,38 @@ const Landing = () => {
               </Typography>
             </Stack>
 
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "red",
-                borderRadius: 0,
-                py: 2,
-                px: 5,
-                width: "fit-content",
-                textTransform: "none",
-                zIndex: 1,
-              }}
-              onClick={() => handleNavigate("/register")}
-            >
-              Enroll Now!
-            </Button>
+            <Stack direction={"row"} spacing={2}>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "red",
+                  borderRadius: 0,
+                  py: 2,
+                  px: 5,
+                  width: "fit-content",
+                  textTransform: "none",
+                  zIndex: 1,
+                }}
+                onClick={() => handleNavigate("/register")}
+              >
+                Enroll Now!
+              </Button>
+              <Button
+                variant="outlined"
+                sx={{
+                  backgroundColor: "white",
+                  borderRadius: 0,
+                  py: 2,
+                  px: 5,
+                  width: "fit-content",
+                  textTransform: "none",
+                  zIndex: 1,
+                }}
+                onClick={() => setOpenValidateCert(true)}
+              >
+                Validate Certificate
+              </Button>
+            </Stack>
           </Stack>
         </Grid>
 
@@ -720,7 +754,7 @@ const Landing = () => {
         <Grid
           position={"relative"}
           size={{ xs: 12, lg: 6 }}
-          sx={{ display: "flex", backgroundColor: "blue" }}
+          sx={{ display: "flex", backgroundColor: "#00007a" }}
         >
           <img
             src={CONTOUR_LINES_2}
@@ -847,8 +881,12 @@ const Landing = () => {
                     Product
                   </Typography>
                   <Stack spacing={1}>
-                    <Link href="#">Features</Link>
-                    <Link href="#">Pricing</Link>
+                    <Link href="#" fontSize={14}>
+                      Features
+                    </Link>
+                    <Link href="#" fontSize={14}>
+                      Pricing
+                    </Link>
                   </Stack>
                 </Grid>
 
@@ -857,8 +895,12 @@ const Landing = () => {
                     Resources
                   </Typography>
                   <Stack spacing={1}>
-                    <Link href="#">Documentation</Link>
-                    <Link href="#">Tutorials</Link>
+                    <Link href="#" fontSize={14}>
+                      Documentation
+                    </Link>
+                    <Link href="#" fontSize={14}>
+                      Tutorials
+                    </Link>
                   </Stack>
                 </Grid>
 
@@ -867,9 +909,18 @@ const Landing = () => {
                     Company
                   </Typography>
                   <Stack spacing={1}>
-                    <Link href="#">About</Link>
-                    <Link href="#">Careers</Link>
-                    <Link href="#">Partners</Link>
+                    <Link href="#" fontSize={14}>
+                      About
+                    </Link>
+                    <Link href="#" fontSize={14}>
+                      Careers
+                    </Link>
+                    <Link href="#" fontSize={14}>
+                      Placements
+                    </Link>
+                    <Link href="#" fontSize={14}>
+                      Our Team
+                    </Link>
                   </Stack>
                 </Grid>
               </Grid>

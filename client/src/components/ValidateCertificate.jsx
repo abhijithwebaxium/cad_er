@@ -1,9 +1,9 @@
 import { Box, Stack } from "@mui/material";
 import { useState } from "react";
 import * as Yup from "yup";
-import BasicInput from "../../../components/BasicInput";
-import BasicButton from "../../../components/BasicButton";
-import { handleFormError } from "../../../utils/handleFormError";
+import BasicInput from "./BasicInput";
+import BasicButton from "./BasicButton";
+import { handleFormError } from "../utils/handleFormError";
 
 const schema = Yup.object().shape({
   id: Yup.string().required("Required"),
