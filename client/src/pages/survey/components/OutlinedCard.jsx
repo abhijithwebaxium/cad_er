@@ -1,8 +1,8 @@
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import { Stack } from '@mui/material';
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import { Stack } from "@mui/material";
 
 export default function OutlinedCard({ card, selected, onClick }) {
   return (
@@ -11,11 +11,11 @@ export default function OutlinedCard({ card, selected, onClick }) {
       className="landing-card"
       onClick={() => onClick(card.id)}
     >
-      <Card className={`card-wrapper ${selected ? 'active' : ''}`}>
+      <Card className={`card-wrapper ${selected ? "active" : ""}`}>
         <CardContent className="card-content">
-          <Stack alignItems={'center'} spacing={1}>
+          <Stack alignItems={"center"} spacing={1}>
             <Box className="icon-bg-area">{card.icon}</Box>
-            <Typography fontSize={'12px'} fontWeight={700} textAlign={'center'}>
+            <Typography fontSize={"12px"} fontWeight={600} textAlign={"center"}>
               {card.title}
             </Typography>
           </Stack>

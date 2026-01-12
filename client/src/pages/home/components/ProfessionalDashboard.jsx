@@ -373,7 +373,7 @@ const ProfessionalDashboard = () => {
                         {item.icon}
                         <Typography
                           fontSize={above400 ? "12px" : "10px"}
-                          fontWeight={700}
+                          fontWeight={600}
                           color="black"
                           align="center"
                         >
