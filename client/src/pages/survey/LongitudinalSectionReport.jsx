@@ -87,7 +87,7 @@ const LongitudinalSectionReport = () => {
 
     const imgData = canvas.toDataURL("image/png");
 
-    const pdf = new jsPDF("l", "mm", "a5");
+    const pdf = new jsPDF("p", "mm", "a4");
 
     const margin = 10;
     const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;

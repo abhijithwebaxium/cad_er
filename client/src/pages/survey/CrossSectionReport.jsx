@@ -20,6 +20,7 @@ import {
   Typography,
 } from "@mui/material";
 import CrossSectionChart from "./components/CrossSectionChart";
+import CrossSectionChartV2 from "./components/CrossSectionChartV2";
 import { v1ChartOptions, v2ChartOptions } from "../../constants";
 import { BsThreeDots } from "react-icons/bs";
 import BasicMenu from "../../components/BasicMenu";
@@ -60,6 +61,15 @@ const menuItems = [
     ),
     value: "download",
   },
+  {
+    label: (
+      <Stack direction={"row"} alignItems={"center"} gap={0.5}>
+        All Chainage Report
+        <MdDownload />
+      </Stack>
+    ),
+    value: "downloadAllChainage",
+  },
 ];
 
 const colors = {
@@ -87,6 +97,8 @@ const CrossSectionReport = () => {
 
   const pdfRef = useRef();
 
+  const allCsRef = useRef({});
+
   const [chartOptions, setChartOptions] = useState(null);
 
   const [survey, setSurvey] = useState([]);
@@ -101,8 +113,52 @@ const CrossSectionReport = () => {
 
   const [selectedMenu, setSelectedMenu] = useState("v1");
 
+  const [allCs, setAllCs] = useState(null);
+
+  const [loading, setLoading] = useState(false);
+
   const handleToggle = (rowId) => {
     setOpenRowId((prev) => (prev === rowId ? null : rowId));
+  };
+
+  const downloadAllAsPDF = async () => {
+    if (!allCsRef.current) return;
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const margin = 10;
+    const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+    const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
+
+    const items = allCsRef.current.querySelectorAll(".pdf-chart-item");
+
+    for (let i = 0; i < items.length; i++) {
+      const el = items[i];
+
+      await new Promise((res) => setTimeout(res, 500));
+
+      const canvas = await html2canvas(el, {
+        scale: 3, // 🔥 Increase this for more sharpness (2–4)
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png"); // 🔥 PNG = no quality loss
+
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let y = margin;
+
+      if (i !== 0) pdf.addPage();
+
+      if (imgHeight < pageHeight) {
+        y = (pdf.internal.pageSize.getHeight() - imgHeight) / 2;
+      }
+
+      pdf.addImage(imgData, "PNG", margin, y, imgWidth, imgHeight);
+    }
+
+    pdf.save("cross-section.pdf");
   };
 
   const downloadPDF = async () => {
@@ -118,7 +174,7 @@ const CrossSectionReport = () => {
 
     const imgData = canvas.toDataURL("image/png");
 
-    const pdf = new jsPDF("l", "mm", "a5");
+    const pdf = new jsPDF("p", "mm", "a4");
 
     const margin = 10;
     const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
@@ -144,8 +200,116 @@ const CrossSectionReport = () => {
     pdf.save("cross-section.pdf");
   };
 
+  const buildCsData = (row) => {
+    if (!row) return null;
+
+    const initialEntry = tableData[0];
+    if (!initialEntry?.rows?.length) return null;
+
+    const rawOffsets = row.offsets || [];
+    const safeInitial = row.reducedLevels || [];
+
+    const uniqueOffsets = [...new Set(rawOffsets.map((n) => Number(n)))]
+      .sort((a, b) => a - b)
+      .map((n) => Number(n).toFixed(3));
+
+    const data = {
+      id: row._id,
+      type: "cs",
+      offsets: [...uniqueOffsets],
+      chainage: row.chainage,
+      series: [],
+      allRl: [],
+    };
+
+    const makeSeries = (offsets, levels) =>
+      offsets.map((o, i) => {
+        const y = Number(levels?.[i] ?? 0).toFixed(3);
+        data.allRl.push(Number(y));
+
+        return {
+          x: Number(o).toFixed(3),
+          y,
+        };
+      });
+
+    // Initial table
+    data.series.push({
+      _id: row._id,
+      purpose: initialEntry._id,
+      name: initialEntry.type,
+      color: getColor(initialEntry.type),
+      data: makeSeries(rawOffsets, safeInitial),
+    });
+
+    // Additional tables
+    if (tableData.length > 1) {
+      for (let i = 1; i < tableData.length; i++) {
+        const table = tableData[i];
+
+        const newRow = table?.rows?.find((r) => r.chainage === row.chainage);
+        if (!newRow) continue;
+
+        const rawProposalOffsets = newRow.offsets || [];
+        const safeProposalLevels = newRow.reducedLevels || [];
+
+        rawProposalOffsets.forEach((o) => {
+          const num = Number(o).toFixed(3);
+          if (!data.offsets.includes(num)) data.offsets.push(num);
+        });
+
+        data.series.push({
+          _id: newRow._id,
+          purpose: table._id,
+          name: table.type,
+          color: getColor(table.type),
+          data: makeSeries(rawProposalOffsets, safeProposalLevels),
+        });
+      }
+    }
+
+    data.offsets.sort((a, b) => a - b);
+
+    const minY = Math.min(...data.allRl);
+    const maxY = Math.max(...data.allRl);
+    const pad = (maxY - minY) * 0.1;
+
+    data.xaxis = {
+      min: Math.min(...data.offsets),
+      max: Math.max(...data.offsets),
+    };
+
+    data.datum = Math.round(minY - 2);
+    data.yRange = [minY - 2, maxY + pad];
+
+    return data;
+  };
+
+  const handleDownloadAllChainage = async () => {
+    setLoading(true);
+
+    try {
+      const initialEntry = tableData[0];
+      if (!initialEntry?.rows?.length) return;
+
+      const allFormattedData = initialEntry.rows
+        ?.filter((row) => row.type === "Chainage")
+        .map((row) => buildCsData(row))
+        .filter(Boolean);
+
+      setAllCs(allFormattedData);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleMenuSelect = (item) => {
     if (item.value === "download") return downloadPDF();
+
+    if (item.value === "downloadAllChainage")
+      return handleDownloadAllChainage();
 
     if (!selectedCs) return;
 
@@ -531,6 +695,16 @@ const CrossSectionReport = () => {
   };
 
   useEffect(() => {
+    if (allCs?.length > 0) {
+      const timer = setTimeout(() => {
+        downloadAllAsPDF();
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [allCs]);
+
+  useEffect(() => {
     fetchSurvey();
   }, []);
 
@@ -624,6 +798,31 @@ const CrossSectionReport = () => {
           />
         )}
 
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
+        >
+          <Box sx={{ bgcolor: "transparent" }}>
+            {allCs?.length > 0 && (
+              <Box ref={allCsRef} sx={{ padding: 2 }}>
+                {allCs.map((cs, key) => (
+                  <Box key={key} className="pdf-chart-item" sx={{ mb: 4 }}>
+                    <CrossSectionChartV2
+                      selectedCs={cs}
+                      chartOptions={chartOptions}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Box>
         <Box
           sx={{
             height: 56, // MUI table header height
