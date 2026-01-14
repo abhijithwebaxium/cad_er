@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.js";
+import Company from "../models/company.js";
 import jwt from "../utils/jwt.js";
 
 export const loginUser = async (req, res, next) => {
@@ -261,6 +262,13 @@ export const registerAccountType = async (req, res, next) => {
           statusCode: 400,
         });
       }
+
+      const company = await Company.create({
+        name: companyName.trim(),
+        size: size.trim(),
+      });
+
+      user.company = company._id;
 
       details.companyName = companyName.trim();
       details.size = size.trim();

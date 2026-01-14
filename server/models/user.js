@@ -14,6 +14,10 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
+    company: {
+      type: Types.ObjectId,
+      ref: "Company",
+    },
     organization: {
       type: Types.ObjectId,
       ref: "Organization",
