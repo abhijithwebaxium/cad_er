@@ -7,6 +7,7 @@ import StudentDashboard from "./components/StudentDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import { getDashboard } from "../../services/indexServices";
 import { handleFormError } from "../../utils/handleFormError";
+import CompanyDashboard from "./components/CompanyDashboard";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -40,6 +41,8 @@ const Home = () => {
         ) : (
           <ProfessionalDashboard user={user} data={data} />
         )
+      ) : user?.type === "Company" ? (
+        <CompanyDashboard user={user} data={data} />
       ) : (
         <StudentDashboard user={user} data={data} />
       )}

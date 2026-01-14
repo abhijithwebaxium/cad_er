@@ -20,11 +20,9 @@ const UserSchema = new Schema(
     },
     designation: {
       type: String,
-      // required: true,
     },
     department: {
       type: String,
-      // required: true,
     },
     createdBy: {
       type: Types.ObjectId,
@@ -61,8 +59,7 @@ const UserSchema = new Schema(
     dob: Date,
     type: {
       type: String,
-      required: true,
-      enum: ["Student", "Professional"],
+      enum: ["Student", "Professional", "Company"],
     },
     role: {
       type: String,
@@ -85,7 +82,19 @@ const UserSchema = new Schema(
       index: true,
       required: true,
     },
-    qualification: { type: String, enum: qualifications },
+    details: {
+      type: {
+        instituteName: String,
+        qualification: String,
+        specialization: String,
+        discoverySource: String,
+        jobTitle: String,
+        industry: String,
+        companyName: String,
+        size: String,
+      },
+      default: {},
+    },
     isQuizCompleted: {
       type: Boolean,
       default: false,

@@ -27,6 +27,8 @@ import Landing from "./pages/landing";
 import Quiz from "./pages/quiz";
 import TicketsDashboard from "./pages/tickets";
 import Followup from "./pages/tickets/Followup";
+import OnboardingAccountType from "./pages/auth/OnboardingAccountType";
+import OnboardingRoute from "./routes/OnboardingRoute";
 
 function App() {
   return (
@@ -37,6 +39,13 @@ function App() {
             <Route path="/landing" element={<Landing />} />
             <Route path="/login" element={<SignIn />} />
             <Route path="/register" element={<SignUp />} />
+          </Route>
+
+          <Route element={<OnboardingRoute />}>
+            <Route
+              path="/onboarding/account-type"
+              element={<OnboardingAccountType />}
+            />
           </Route>
 
           <Route element={<ProtectedRoute />}>

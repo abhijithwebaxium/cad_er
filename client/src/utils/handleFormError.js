@@ -1,5 +1,5 @@
-import { showAlert } from '../redux/alertSlice';
-import { logOut } from '../redux/userSlice';
+import { showAlert } from "../redux/alertSlice";
+import { logOut } from "../redux/userSlice";
 // import { logOut } from '../redux/userSlice';
 // import { disconnectSocket } from './socket';
 
@@ -14,9 +14,9 @@ export const handleFormError = (error, setFormErrors, dispatch, navigate) => {
   }
 
   const errorMessage =
-    error?.response?.data?.message || error?.message || 'Something went wrong.';
+    error?.response?.data?.message || error?.message || "Something went wrong.";
 
-  if (import.meta.env.VITE_NODE_ENV === 'development') {
+  if (import.meta.env.VITE_NODE_ENV === "development") {
     console.error(error); // Log full error in development
     console.error(validationErrors); // Log full error in development
   }
@@ -27,22 +27,26 @@ export const handleFormError = (error, setFormErrors, dispatch, navigate) => {
   }
 
   if (error?.response?.status === 401 || error?.response?.status === 403) {
-    // disconnectSocket();
-    dispatch(logOut()); // Clear user state in Redux
+    if (error?.response?.data?.message === "ONBOARDING_REQUIRED") {
+      navigate("/onboarding/account-type");
+    } else {
+      // disconnectSocket();
+      dispatch(logOut()); // Clear user state in Redux
+    }
   }
 
   if (error?.response?.status === 500) {
-    navigate('/server-error'); // Redirect to server error page
+    navigate("/server-error"); // Redirect to server error page
   }
 
   if (error?.response?.status === 404) {
-    navigate('/not-found'); // Redirect to 404 error page
+    navigate("/not-found"); // Redirect to 404 error page
   }
 
   // Dispatch alert for API or other errors
   dispatch(
     showAlert({
-      type: error.response ? 'error' : 'warning',
+      type: error.response ? "error" : "warning",
       message: errorMessage,
     })
   );

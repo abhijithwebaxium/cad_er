@@ -7,8 +7,8 @@ import {
   Typography,
   Stack,
   Card as MuiCard,
-  Button,
-  CssBaseline,
+  Container,
+  useMediaQuery,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -22,8 +22,11 @@ import { useNavigate } from "react-router-dom";
 import { setUser } from "../../redux/userSlice";
 import BasicButtons from "../../components/BasicButton";
 import BasicInput from "../../components/BasicInput";
-import Logo from "../../assets/logo/CADer logo-loader.png";
+import Logo from "../../assets/logo/CADer logo-main.png";
+import Logo2 from "../../assets/logo/CADer logo-loader.png";
 import BackgroundImage from "../../assets/background-img.png";
+import BackgroundImage2 from "../../assets/back-ground-img.png";
+import { useTheme } from "@mui/material/styles";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -42,18 +45,6 @@ const Card = styled(MuiCard)(({ theme }) => ({
     boxShadow:
       "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
   }),
-}));
-
-const SignInContainer = styled(Stack)(({ theme }) => ({
-  position: "relative",
-  height: "calc((1 - var(--template-frame-height, 0)) * 100vh)",
-  minHeight: "100%",
-  padding: theme.spacing(2),
-  overflow: "hidden",
-  [theme.breakpoints.up("sm")]: {
-    padding: theme.spacing(4),
-  },
-  background: "#0d1e3e",
 }));
 
 const schema = Yup.object().shape({
@@ -89,7 +80,9 @@ const initialFormValues = {
   password: "",
 };
 
-export default function SignIn() {
+const SignIn = () => {
+  const theme = useTheme();
+
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
@@ -184,30 +177,48 @@ export default function SignIn() {
     dispatch(stopLoading());
   }, []);
 
-  return (
-    <>
-      <CssBaseline enableColorScheme />
-      <SignInContainer
-        direction="column"
-        justifyContent="center"
-        alignItems="center"
-        minHeight={"660px !important"}
-      >
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: `url(${BackgroundImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.25,
-            zIndex: 0,
-            pointerEvents: "none",
-          }}
-        />
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
+  return (
+    <Container
+      maxWidth={false}
+      disableGutters
+      sx={{
+        display: "flex",
+        width: "100vw",
+        height: "100vh",
+      }}
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url(${BackgroundImage2})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: 0.25,
+          zIndex: 0,
+          pointerEvents: "none",
+          display: { xs: "block", md: "none" },
+        }}
+      />
+
+      {/* LEFT SIDE */}
+      <Box
+        sx={{
+          width: {
+            xs: "100%",
+            md: "40%",
+            xl: "50%",
+          },
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          p: { xs: 2, md: 3 },
+        }}
+      >
         <Card variant="outlined" sx={{ zIndex: 1 }}>
-          <img src={Logo} alt="logo" width={100} />
+          <img src={Logo2} alt="logo" width={100} />
           <Typography
             component="h1"
             variant="h4"
@@ -307,14 +318,6 @@ export default function SignIn() {
               }}
             />
 
-            {/* <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign in with Facebook")}
-              startIcon={<FacebookIcon />}
-            >
-              Sign in with Facebook
-            </Button> */}
             <Typography sx={{ textAlign: "center" }}>
               Don&apos;t have an account?{" "}
               <Link
@@ -327,7 +330,76 @@ export default function SignIn() {
             </Typography>
           </Box>
         </Card>
-      </SignInContainer>
-    </>
+      </Box>
+
+      {/* RIGHT SIDE */}
+      {!isMobile && (
+        <Box
+          sx={{
+            width: {
+              xs: "0%",
+              md: "60%",
+              xl: "50%",
+            },
+            display: { xs: "none", md: "block" },
+            position: "relative",
+            overflow: "hidden",
+            background:
+              "linear-gradient(217.64deg, #0A3BAF -5.84%, #0025A0 106.73%)",
+            borderTopLeftRadius: "60px",
+            borderBottomLeftRadius: "60px",
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url(${BackgroundImage})`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+              backgroundSize: "2500px",
+              opacity: 0.3,
+            }}
+          />
+
+          <Box
+            sx={{
+              backdropFilter: "blur(1.6px)",
+              height: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Box
+              sx={{
+                width: "70%",
+                height: "70%",
+                borderRadius: "46px",
+                border: "1px solid #FFFFFF85",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgb(0 12 51 / 20%)",
+              }}
+            >
+              <Stack justifyContent="center" alignItems="center" p={2}>
+                <img
+                  src={Logo}
+                  alt="logo"
+                  style={{ width: "200px", marginBottom: "25px" }}
+                />
+
+                <Typography color="white" textAlign="center">
+                  CADer makes your surveying work easier and more efficient.
+                </Typography>
+              </Stack>
+            </Box>
+          </Box>
+        </Box>
+      )}
+    </Container>
   );
-}
+};
+
+export default SignIn;

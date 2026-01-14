@@ -7,11 +7,12 @@ import {
   Typography,
   Stack,
   Card as MuiCard,
-  CssBaseline,
   IconButton,
+  Container,
+  useMediaQuery,
 } from "@mui/material";
 import { useGoogleLogin } from "@react-oauth/google";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash, FaUserGraduate, FaUserTie } from "react-icons/fa";
@@ -23,11 +24,11 @@ import { handleFormError } from "../../utils/handleFormError";
 import { googleLogin, registerUser } from "../../services/indexServices";
 import BasicButtons from "../../components/BasicButton";
 import BasicInput from "../../components/BasicInput";
-import Logo from "../../assets/logo/CADer logo-loader.png";
+import Logo from "../../assets/logo/CADer logo-main.png";
+import Logo2 from "../../assets/logo/CADer logo-loader.png";
 import BackgroundImage from "../../assets/background-img.png";
+import BackgroundImage2 from "../../assets/back-ground-img.png";
 import { setUser } from "../../redux/userSlice";
-import BasicSelect from "../../components/BasicSelect";
-import { qualificationOptions } from "../../constants";
 
 /* =========================
    Styled Components
@@ -44,18 +45,10 @@ const Card = styled(MuiCard)(({ theme }) => ({
     "hsla(220, 30%, 5%, 0.05) 0px 5px 15px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
 }));
 
-const SignUpContainer = styled(Stack)(({ theme }) => ({
-  position: "relative",
-  minHeight: "100vh",
-  padding: theme.spacing(2),
-  background: "#0d1e3e",
-}));
-
 /* =========================
    Validation Schema
 ========================= */
 const schema = Yup.object().shape({
-  type: Yup.string().oneOf(["Student", "Professional"]).required(),
   name: Yup.string().required("Full name is required"),
   email: Yup.string()
     .trim()
@@ -65,11 +58,6 @@ const schema = Yup.object().shape({
     )
     .email("Please enter a valid email address")
     .required("Email is required"),
-  qualification: Yup.string().when("type", {
-    is: "Student",
-    then: (schema) => schema.required("Qualification is required"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
   password: Yup.string().min(6).required("Password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords do not match")
@@ -77,19 +65,17 @@ const schema = Yup.object().shape({
 });
 
 const initialFormValues = {
-  type: "",
   name: "",
   email: "",
-  qualification: "",
   password: "",
   confirmPassword: "",
 };
 
 export default function SignUp() {
+  const theme = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [step, setStep] = React.useState(1);
   const [formValues, setFormValues] = React.useState(initialFormValues);
   const [formErrors, setFormErrors] = React.useState({});
   const [loading, setLoading] = React.useState(false);
@@ -137,11 +123,7 @@ export default function SignUp() {
   };
 
   const handleSuccessLogin = (user) => {
-    const isQuizPending = user?.type === "Student" && !user?.isQuizCompleted;
-
-    const message = isQuizPending
-      ? `Hi ${user?.name}, before getting started, please complete the quiz.`
-      : `Hi ${user?.name}, everything's ready for you. Let's get started!`;
+    const message = "Signup successful!";
 
     dispatch(setUser(user));
 
@@ -152,7 +134,7 @@ export default function SignUp() {
       })
     );
 
-    navigate("/");
+    navigate("/onboarding/account-type");
   };
 
   const handleSubmit = async () => {
@@ -174,7 +156,6 @@ export default function SignUp() {
     onSuccess: async (tokenResponse) => {
       const { data } = await googleLogin({
         accessToken: tokenResponse.access_token,
-        type: formValues.type,
         action: "register",
       });
 
@@ -188,246 +169,243 @@ export default function SignUp() {
     },
   });
 
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   return (
     <>
-      <CssBaseline />
-      <SignUpContainer alignItems="center" justifyContent="center">
-        {/* Background */}
+      <Container
+        maxWidth={false}
+        disableGutters
+        sx={{
+          display: "flex",
+          width: "100vw",
+          height: "100vh",
+        }}
+      >
         <Box
           sx={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(${BackgroundImage})`,
+            backgroundImage: `url(${BackgroundImage2})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.25,
             zIndex: 0,
+            pointerEvents: "none",
+            display: { xs: "block", md: "none" },
           }}
         />
+        {/* LEFT SIDE */}
+        <Box
+          sx={{
+            width: {
+              xs: "100%",
+              md: "40%",
+              xl: "50%",
+            },
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            p: { xs: 2, md: 3 },
+          }}
+        >
+          <Card sx={{ zIndex: 1 }}>
+            <img src={Logo2} alt="logo" width={100} />
 
-        <Card sx={{ zIndex: 1 }}>
-          <img src={Logo} alt="logo" width={100} />
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{ width: "100%", fontSize: "clamp(1.5rem, 10vw, 1.6rem)" }}
+            >
+              Sign up
+            </Typography>
 
-          <Typography
-            component="h1"
-            variant="h4"
-            sx={{ width: "100%", fontSize: "clamp(1.5rem, 10vw, 1.6rem)" }}
-          >
-            Sign up
-          </Typography>
+            <Stack spacing={2}>
+              <BasicInput
+                label="Full Name"
+                name="name"
+                value={formValues.name}
+                error={formErrors.name}
+                onChange={handleInputChange}
+                variant="filled"
+              />
 
-          {/* ================= STEP 1 ================= */}
-          {step === 1 && (
-            <>
-              <Typography fontWeight={600}>What best describes you?</Typography>
-              <Typography variant="body2" color="text.secondary">
-                This helps us personalize your experience
-              </Typography>
+              <BasicInput
+                label="Email"
+                name="email"
+                value={formValues.email}
+                error={formErrors.email}
+                onChange={handleInputChange}
+                variant="filled"
+              />
 
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                {[
-                  {
-                    key: "Student",
-                    icon: <FaUserGraduate size={26} />,
-                    title: "Student",
-                    desc: "Learning or academic use",
-                  },
-                  {
-                    key: "Professional",
-                    icon: <FaUserTie size={26} />,
-                    title: "Professional",
-                    desc: "Work or organization use",
-                  },
-                ].map((item) => (
-                  <Box
-                    key={item.key}
-                    onClick={() =>
-                      setFormValues((p) => ({
-                        ...p,
-                        type: item.key,
-                      }))
-                    }
-                    sx={{
-                      flex: 1,
-                      p: 2,
-                      borderRadius: 2,
-                      cursor: "pointer",
-                      border:
-                        formValues.type === item.key
-                          ? "2px solid #1976d2"
-                          : "2px solid #ccc",
-                      backgroundColor:
-                        formValues.type === item.key
-                          ? "rgba(25,118,210,0.08)"
-                          : "transparent",
-                    }}
-                  >
-                    {item.icon}
-                    <Typography fontWeight="bold" mt={1}>
-                      {item.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.desc}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
+              {/* Password */}
+              <Box position="relative">
+                <BasicInput
+                  label="Password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formValues.password}
+                  error={formErrors.password}
+                  onChange={handleInputChange}
+                  variant="filled"
+                />
+                <IconButton
+                  onClick={() => setShowPassword((p) => !p)}
+                  sx={{ position: "absolute", top: 25, right: 8 }}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </IconButton>
+              </Box>
+
+              {/* Confirm Password */}
+              <Box position="relative">
+                <BasicInput
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formValues.confirmPassword}
+                  error={formErrors.confirmPassword}
+                  onChange={handleInputChange}
+                  variant="filled"
+                />
+                <IconButton
+                  onClick={() => setShowConfirmPassword((p) => !p)}
+                  sx={{ position: "absolute", top: 25, right: 8 }}
+                >
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </IconButton>
+              </Box>
 
               <BasicButtons
-                value="Continue"
+                value="Create Account"
                 fullWidth
-                disabled={!formValues.type}
-                onClick={() => setStep(2)}
-              />
-            </>
-          )}
-
-          {/* ================= STEP 2 ================= */}
-          {step === 2 && (
-            <>
-              <Stack spacing={2}>
-                <BasicInput
-                  label="Full Name"
-                  name="name"
-                  value={formValues.name}
-                  error={formErrors.name}
-                  onChange={handleInputChange}
-                  variant="filled"
-                />
-
-                <BasicInput
-                  label="Email"
-                  name="email"
-                  value={formValues.email}
-                  error={formErrors.email}
-                  onChange={handleInputChange}
-                  variant="filled"
-                />
-
-                {formValues.type === "Student" && (
-                  <BasicSelect
-                    label="Qualification"
-                    name="qualification"
-                    options={qualificationOptions.map((q) => ({
-                      label: q.label,
-                      value: q.label,
-                    }))}
-                    value={formValues.qualification}
-                    error={formErrors.qualification}
-                    onChange={handleInputChange}
-                  />
-                )}
-
-                {/* Password */}
-                <Box position="relative">
-                  <BasicInput
-                    label="Password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formValues.password}
-                    error={formErrors.password}
-                    onChange={handleInputChange}
-                    variant="filled"
-                  />
-                  <IconButton
-                    onClick={() => setShowPassword((p) => !p)}
-                    sx={{ position: "absolute", top: 25, right: 8 }}
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </IconButton>
-                </Box>
-
-                {/* Confirm Password */}
-                <Box position="relative">
-                  <BasicInput
-                    label="Confirm Password"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formValues.confirmPassword}
-                    error={formErrors.confirmPassword}
-                    onChange={handleInputChange}
-                    variant="filled"
-                  />
-                  <IconButton
-                    onClick={() => setShowConfirmPassword((p) => !p)}
-                    sx={{ position: "absolute", top: 25, right: 8 }}
-                  >
-                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                  </IconButton>
-                </Box>
-
-                <BasicButtons
-                  value="Create Account"
-                  fullWidth
-                  loading={loading}
-                  onClick={handleSubmit}
-                  sx={{
-                    textTransform: "none",
-                    height: "2.5rem",
-                    color: "white",
-                    backgroundColor: "hsl(220, 35%, 3%)",
-                    backgroundImage:
-                      "linear-gradient(to bottom, hsl(220, 20%, 25%), hsl(220, 30%, 6%))",
-                    boxShadow:
-                      "inset 0 1px 0 hsl(220, 20%, 35%), inset 0 -1px 0 1px hsl(220, 0%, 0%)",
-                    border: "1px solid hsl(220, 20%, 25%)",
-                    "&:hover": {
-                      backgroundImage: "none",
-                      backgroundColor: "rgb(51, 60, 77)",
-                      boxShadow: "none",
-                    },
-                  }}
-                />
-
-                {/* ✅ Google Register Button */}
-                <BasicButtons
-                  fullWidth={true}
-                  variant="outlined"
-                  onClick={() => googleAuth()}
-                  startIcon={<GoogleIcon />}
-                  value={"Sign in with Google"}
-                  sx={{
-                    textTransform: "none",
-                    height: "2.5rem",
-                    color: "black",
-                    backgroundColor: "#f5f6fa4d",
+                loading={loading}
+                onClick={handleSubmit}
+                sx={{
+                  textTransform: "none",
+                  height: "2.5rem",
+                  color: "white",
+                  backgroundColor: "hsl(220, 35%, 3%)",
+                  backgroundImage:
+                    "linear-gradient(to bottom, hsl(220, 20%, 25%), hsl(220, 30%, 6%))",
+                  boxShadow:
+                    "inset 0 1px 0 hsl(220, 20%, 35%), inset 0 -1px 0 1px hsl(220, 0%, 0%)",
+                  border: "1px solid hsl(220, 20%, 25%)",
+                  "&:hover": {
+                    backgroundImage: "none",
+                    backgroundColor: "rgb(51, 60, 77)",
                     boxShadow: "none",
-                    transition:
-                      "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-                    border: "1px solid hsl(220, 20%, 88%)",
-                    "&:hover": {
-                      backgroundImage: "none",
-                      backgroundColor: "hsl(220, 30%, 94%)",
-                      borderColor: "hsl(220, 20%, 80%)",
-                    },
-                  }}
-                />
+                  },
+                }}
+              />
 
-                {/* <Button
-                  variant="text"
-                  onClick={() => setStep(1)}
-                  sx={{ textTransform: "none" }}
-                >
-                  ← Back
-                </Button> */}
-              </Stack>
-            </>
-          )}
+              <Divider>or</Divider>
 
-          <Divider sx={{ my: 2 }} />
+              {/* ✅ Google Register Button */}
+              <BasicButtons
+                fullWidth={true}
+                variant="outlined"
+                onClick={() => googleAuth()}
+                startIcon={<GoogleIcon />}
+                value={"Sign in with Google"}
+                sx={{
+                  textTransform: "none",
+                  height: "2.5rem",
+                  color: "black",
+                  backgroundColor: "#f5f6fa4d",
+                  boxShadow: "none",
+                  transition:
+                    "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+                  border: "1px solid hsl(220, 20%, 88%)",
+                  "&:hover": {
+                    backgroundImage: "none",
+                    backgroundColor: "hsl(220, 30%, 94%)",
+                    borderColor: "hsl(220, 20%, 80%)",
+                  },
+                }}
+              />
+            </Stack>
 
-          <Typography textAlign="center">
-            Already have an account?{" "}
-            <Link
-              component="button"
-              variant="body2"
-              onClick={() => navigate("/login")}
+            <Typography textAlign="center">
+              Already have an account?{" "}
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => navigate("/login")}
+              >
+                Sign in
+              </Link>
+            </Typography>
+          </Card>
+        </Box>
+        {/* RIGHT SIDE */}
+        {!isMobile && (
+          <Box
+            sx={{
+              width: {
+                xs: "0%",
+                md: "60%",
+                xl: "50%",
+              },
+              display: { xs: "none", md: "block" },
+              position: "relative",
+              overflow: "hidden",
+              background:
+                "linear-gradient(217.64deg, #0A3BAF -5.84%, #0025A0 106.73%)",
+              borderTopLeftRadius: "60px",
+              borderBottomLeftRadius: "60px",
+            }}
+          >
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: `url(${BackgroundImage})`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                backgroundSize: "2500px",
+                opacity: 0.3,
+              }}
+            />
+
+            <Box
+              sx={{
+                backdropFilter: "blur(1.6px)",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
             >
-              Sign in
-            </Link>
-          </Typography>
-        </Card>
-      </SignUpContainer>
+              <Box
+                sx={{
+                  width: "70%",
+                  height: "70%",
+                  borderRadius: "46px",
+                  border: "1px solid #FFFFFF85",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgb(0 12 51 / 20%)",
+                }}
+              >
+                <Stack justifyContent="center" alignItems="center" p={2}>
+                  <img
+                    src={Logo}
+                    alt="logo"
+                    style={{ width: "200px", marginBottom: "25px" }}
+                  />
+
+                  <Typography color="white" textAlign="center">
+                    CADer makes your surveying work easier and more efficient.
+                  </Typography>
+                </Stack>
+              </Box>
+            </Box>
+          </Box>
+        )}
+      </Container>
     </>
   );
 }

@@ -64,17 +64,11 @@ export const loginUser = async (req, res, next) => {
 export const googleLogin = async (req, res, next) => {
   try {
     const {
-      body: { accessToken, type, action, qualification },
+      body: { accessToken, action },
     } = req;
 
     if (action !== "login" && action !== "register") {
       throw Object.assign(new Error("Invalid action"), {
-        statusCode: 400,
-      });
-    }
-
-    if (action === "register" && !["Student", "Professional"].includes(type)) {
-      throw Object.assign(new Error("Invalid user type for registration"), {
         statusCode: 400,
       });
     }
@@ -107,21 +101,10 @@ export const googleLogin = async (req, res, next) => {
     }
 
     if (!user) {
-      if (type === "Student" && !qualification) {
-        throw Object.assign(
-          new Error("Qualification is required for Students"),
-          {
-            statusCode: 400,
-          }
-        );
-      }
-
       user = await User.create({
         name,
         email,
         password: await bcrypt.hash(sub, 10),
-        type,
-        qualification: type === "Student" ? qualification : undefined,
         authProvider: "google",
         status: "Active",
       });
@@ -155,23 +138,12 @@ export const googleLogin = async (req, res, next) => {
 export const registerUser = async (req, res, next) => {
   try {
     const {
-      body: { name, email, password, type, qualification },
+      body: { name, email, password },
     } = req;
 
     // Validate required fields
-    if (!name || !email || !password || !type) {
+    if (!name || !email || !password) {
       throw Object.assign(new Error("All fields are required"), {
-        statusCode: 400,
-      });
-    }
-
-    // Validate type
-    if (!["Student", "Professional"].includes(type)) {
-      throw Object.assign(new Error("Invalid user type"), { statusCode: 400 });
-    }
-
-    if (type === "Student" && !qualification) {
-      throw Object.assign(new Error("Qualification is required for Students"), {
         statusCode: 400,
       });
     }
@@ -192,8 +164,6 @@ export const registerUser = async (req, res, next) => {
       name,
       email,
       password: hashedPassword,
-      type,
-      qualification: type === "Student" ? qualification : undefined,
       status: "Active",
     });
 
@@ -219,6 +189,94 @@ export const registerUser = async (req, res, next) => {
         status: "success",
         user: userWithoutPassword,
       });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const registerAccountType = async (req, res, next) => {
+  try {
+    const {
+      body: { type, details },
+      user: { userId, isAuthenticated, type: userType },
+    } = req;
+
+    if (!isAuthenticated) {
+      throw Object.assign(new Error("User not found"), {
+        statusCode: 404,
+      });
+    }
+
+    if (userType) {
+      throw Object.assign(new Error("User already has an account type"), {
+        statusCode: 400,
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    const isFilled = (val) => typeof val === "string" && val.trim().length > 0;
+
+    // 🔒 Validation based on type
+    if (type === "Student") {
+      const { instituteName, qualification, specialization, discoverySource } =
+        details || {};
+
+      if (
+        !isFilled(instituteName) ||
+        !isFilled(qualification) ||
+        !isFilled(specialization) ||
+        !isFilled(discoverySource)
+      ) {
+        throw Object.assign(new Error("All student fields are required"), {
+          statusCode: 400,
+        });
+      }
+
+      // Trim before saving
+      details.instituteName = instituteName.trim();
+      details.qualification = qualification.trim();
+      details.specialization = specialization.trim();
+      details.discoverySource = discoverySource.trim();
+    }
+
+    if (type === "Professional") {
+      const { jobTitle, industry } = details || {};
+
+      if (!isFilled(jobTitle) || !isFilled(industry)) {
+        throw Object.assign(new Error("All professional fields are required"), {
+          statusCode: 400,
+        });
+      }
+
+      details.jobTitle = jobTitle.trim();
+      details.industry = industry.trim();
+    }
+
+    if (type === "Company") {
+      const { companyName, size } = details || {};
+
+      if (!isFilled(companyName) || !isFilled(size)) {
+        throw Object.assign(new Error("All company fields are required"), {
+          statusCode: 400,
+        });
+      }
+
+      details.companyName = companyName.trim();
+      details.size = size.trim();
+    }
+
+    user.type = type;
+    user.details = details;
+
+    await user.save();
+
+    const { password: _, ...userWithoutPassword } = user.toObject();
+
+    res.status(200).json({
+      success: true,
+      user: userWithoutPassword,
+    });
   } catch (err) {
     next(err);
   }

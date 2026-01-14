@@ -16,16 +16,22 @@ const ProtectedRoute = ({ requiredRoles = [], requiredTypes = [] }) => {
   }
 
   // 2️⃣ User-type restriction (route-level, if defined)
+  if (!user.type) {
+    return <Navigate to="/onboarding/account-type" replace />;
+  }
+
+  // 3️⃣ Global quiz access restriction (non-students)
   if (requiredTypes.length > 0 && !requiredTypes.includes(user.type)) {
     return <Navigate to="/" replace />;
   }
 
-  // 3️⃣ Global quiz access restriction (non-students)
+  // 4️⃣ Mandatory quiz enforcement (students must complete quiz first)
+
   if (location.pathname === "/quiz" && user.type !== "Student") {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // 4️⃣ Mandatory quiz enforcement (students must complete quiz first)
+  // 5️⃣ Prevent quiz re-access after completion (students) // -- DELETED --
   if (
     user.type === "Student" &&
     !user.isQuizCompleted &&
@@ -34,7 +40,6 @@ const ProtectedRoute = ({ requiredRoles = [], requiredTypes = [] }) => {
     return <Navigate to="/quiz" replace />;
   }
 
-  // 5️⃣ Prevent quiz re-access after completion (students) // -- DELETED --
   // if (
   //   user.type === "Student" &&
   //   user.isQuizCompleted &&

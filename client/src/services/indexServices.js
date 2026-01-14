@@ -12,6 +12,10 @@ export const googleLogin = (formData) => {
   return axiosInstance.post("google", formData);
 };
 
+export const registerAccountType = (formData) => {
+  return axiosInstance.post("register-account-type", formData);
+};
+
 export const logoutUser = () => {
   return axiosInstance.get("logout");
 };

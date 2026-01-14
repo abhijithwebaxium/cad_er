@@ -10,6 +10,7 @@ import {
   registerUser,
   logoutUser,
   getDashboard,
+  registerAccountType,
 } from "../controllers/indexController.js";
 
 router.post("/login", loginUser);
@@ -17,6 +18,8 @@ router.post("/login", loginUser);
 router.post("/google", googleLogin);
 
 router.post("/register", registerUser);
+
+router.post("/register-account-type", requireAuth, registerAccountType);
 
 router.get("/logout", logoutUser);
 

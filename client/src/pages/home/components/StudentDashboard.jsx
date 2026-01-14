@@ -34,7 +34,7 @@ const StudentDashboard = ({ user }) => {
 
   const getPrice = () => {
     const priceDetails = qualificationOptions.find(
-      (q) => q.label === user.qualification
+      (q) => q.label === user.details.qualification
     );
     if (priceDetails) {
       return priceDetails.fee - priceDetails.discount;
