@@ -909,16 +909,16 @@ const Landing = () => {
                     Company
                   </Typography>
                   <Stack spacing={1}>
-                    <Link href="#" fontSize={14}>
+                    <Link href="/about" fontSize={14}>
                       About
                     </Link>
-                    <Link href="#" fontSize={14}>
+                    <Link href="/careers" fontSize={14}>
                       Careers
                     </Link>
-                    <Link href="#" fontSize={14}>
+                    <Link href="/placements" fontSize={14}>
                       Placements
                     </Link>
-                    <Link href="#" fontSize={14}>
+                    <Link href="/our-team" fontSize={14}>
                       Our Team
                     </Link>
                   </Stack>

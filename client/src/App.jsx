@@ -24,17 +24,27 @@ import ProjectsList from "./pages/survey/ProjectsList";
 import CameraPage from "./pages/home/components/CameraPage";
 import SelectEquipment from "./pages/survey/SelectEquipment";
 import Landing from "./pages/landing";
+import Landing2 from "./pages/landing/Landing";
 import Quiz from "./pages/quiz";
 import TicketsDashboard from "./pages/tickets";
 import Followup from "./pages/tickets/Followup";
 import OnboardingAccountType from "./pages/auth/OnboardingAccountType";
 import OnboardingRoute from "./routes/OnboardingRoute";
+import OurTeam from "./pages/public/OurTeam";
+import About from "./pages/public/About";
+import Careers from "./pages/public/Careers";
+import Placements from "./pages/public/Placements";
 
 function App() {
   return (
     <>
       <BrowserRouter>
         <Routes>
+          <Route path="/our-team" element={<OurTeam />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/placements" element={<Placements />} />
+
           <Route element={<PublicRoute />}>
             <Route path="/landing" element={<Landing />} />
             <Route path="/login" element={<SignIn />} />
