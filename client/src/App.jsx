@@ -47,6 +47,7 @@ function App() {
 
           <Route element={<PublicRoute />}>
             <Route path="/landing" element={<Landing />} />
+            <Route path="/landing2" element={<Landing2 />} />
             <Route path="/login" element={<SignIn />} />
             <Route path="/register" element={<SignUp />} />
           </Route>

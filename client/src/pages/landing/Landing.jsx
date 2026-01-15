@@ -1,472 +1,757 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 import {
-  Typography,
   Box,
-  Stack,
-  Button,
-  useTheme,
-  useMediaQuery,
-  Link,
   Container,
-  IconButton,
-  Divider,
+  Typography,
+  Button,
+  Stack,
   AppBar,
   Toolbar,
-  Paper,
+  useTheme,
+  useMediaQuery,
+  CssBaseline,
+  ThemeProvider,
+  createTheme,
   Grid,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Divider,
 } from "@mui/material";
+
+import { FaArrowRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import Lenis from "@studio-freight/lenis";
-import {
-  FaXTwitter,
-  FaInstagram,
-  FaLinkedin,
-  FaFacebook,
-  FaPhone,
-  FaEnvelope,
-  FaBars,
-} from "react-icons/fa6";
-import {
-  AiOutlineWarning,
-  AiOutlineCloud,
-  AiOutlineLineChart,
-  AiOutlineArrowRight,
-} from "react-icons/ai";
-import { FiTool, FiUsers } from "react-icons/fi";
-import { MdDevices } from "react-icons/md";
+import CADER_EQUIPMENT from "../../assets/cader_equipment.png";
+import { Link } from "react-router-dom";
 
-// Note: Replace these with your actual local imports
-import LOGO from "../../assets/logo/CADer logo-loader.png";
+const MotionButton = motion.create(Button);
 
-const MotionBox = motion.create(Box);
-const MotionTypography = motion.create(Typography);
+const PulseDot = () => (
+  <Box
+    component={motion.span}
+    sx={{
+      width: 8,
+      height: 8,
+      borderRadius: "50%",
+      bgcolor: "primary.main",
+      display: "inline-block",
+      mr: 1,
+    }}
+    animate={{
+      scale: [1, 1.5, 1],
+      opacity: [1, 0.5, 1],
+    }}
+    transition={{
+      duration: 1.2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  />
+);
 
-// --- Animation Variants ---
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-};
+// --- Custom SVG Icons to avoid external resolution issues ---
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
-};
-
-// --- Components ---
-
-const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <AppBar
-      position="fixed"
-      elevation={scrolled ? 2 : 0}
-      sx={{
-        bgcolor: scrolled ? "rgba(255, 255, 255, 0.8)" : "transparent",
-        backdropFilter: scrolled ? "blur(10px)" : "none",
-        transition: "all 0.3s ease",
-        borderBottom: scrolled ? "1px solid #e0e0e0" : "none",
-      }}
+const SocialIcons = {
+  LinkedIn: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <Container maxWidth="lg">
-        <Toolbar sx={{ justifyContent: "space-between", py: 1 }}>
-          <img src={LOGO} alt="CADer" style={{ height: 40 }} />
-          <Stack
-            direction="row"
-            spacing={4}
-            sx={{ display: { xs: "none", md: "flex" } }}
-          >
-            {["Features", "Training", "About", "Contact"].map((item) => (
-              <Link
-                key={item}
-                href="#"
-                underline="none"
-                sx={{
-                  color: "#1e293b",
-                  fontWeight: 500,
-                  "&:hover": { color: "#ef4444" },
-                }}
-              >
-                {item}
-              </Link>
-            ))}
-          </Stack>
-          <Button
-            variant="contained"
-            sx={{ bgcolor: "#ef4444", borderRadius: "8px", px: 3 }}
-          >
-            Login
-          </Button>
-        </Toolbar>
-      </Container>
-    </AppBar>
-  );
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect x="2" y="9" width="4" height="12" />
+      <circle cx="4" cy="4" r="2" />
+    </svg>
+  ),
+  Twitter: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+    </svg>
+  ),
+  Github: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+    </svg>
+  ),
 };
 
-const Landing = () => {
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+const MenuIcon = ({ size = 24 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="3" y1="12" x2="21" y2="12"></line>
+    <line x1="3" y1="6" x2="21" y2="6"></line>
+    <line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+);
 
-  useEffect(() => {
-    const lenis = new Lenis();
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
+const CloseIcon = ({ size = 24 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
+
+// Social Icons
+const XTwitterIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
+const InstagramIcon = ({ size = 18 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+);
+
+const LinkedinIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+  </svg>
+);
+
+const FacebookIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+  </svg>
+);
+
+// --- Theme Configuration ---
+const theme = createTheme({
+  palette: {
+    primary: { main: "#6366f1" }, // Indigo
+    secondary: { main: "#000000" }, // Black
+    background: { default: "#ffffff" },
+    text: {
+      primary: "#000000",
+      secondary: "#4b5563",
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "system-ui", sans-serif',
+    h1: { fontWeight: 900, letterSpacing: "-0.02em" },
+    h2: { fontWeight: 800, letterSpacing: "-0.01em" },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: "none",
+          fontWeight: 600,
+          padding: "10px 24px",
+        },
+        containedPrimary: {
+          boxShadow: "0 10px 15px -3px rgba(99, 102, 241, 0.3)",
+          "&:hover": {
+            boxShadow: "0 20px 25px -5px rgba(99, 102, 241, 0.4)",
+          },
+        },
+      },
+    },
+  },
+});
+
+const NAV_ITEMS = ["Product", "Calculators", "Roads", "Pricing"];
+const GRID_PATTERN =
+  "data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E";
+
+const fUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+const float = {
+  animate: {
+    y: [0, -10, 0],
+    transition: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+  },
+};
+
+const App = () => {
+  const muiTheme = useTheme();
+  const isMdDown = useMediaQuery(muiTheme.breakpoints.down("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   return (
-    <Box sx={{ bgcolor: "#ffffff" }}>
-      <Navbar />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+
+      {/* Navigation */}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          bgcolor: "rgba(255, 255, 255, 0.8)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid #f3f4f6",
+          zIndex: 1100,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography
+                variant="h6"
+                color="secondary"
+                sx={{ fontWeight: 900, fontSize: "1.4rem", cursor: "pointer" }}
+              >
+                CAD<span style={{ color: "#6366f1" }}>er.</span>
+              </Typography>
+            </Stack>
+
+            {/* Desktop Menu */}
+            {!isMdDown && (
+              <Stack direction="row" spacing={1}>
+                {NAV_ITEMS.map((item) => (
+                  <Button
+                    key={item}
+                    color="inherit"
+                    sx={{
+                      color: "text.secondary",
+                      "&:hover": {
+                        color: "primary.main",
+                        bgcolor: "rgba(99, 102, 241, 0.05)",
+                      },
+                    }}
+                  >
+                    {item}
+                  </Button>
+                ))}
+              </Stack>
+            )}
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              {!isMdDown && <Button color="secondary">Sign In</Button>}
+
+              {/* Mobile Menu Toggle */}
+              {isMdDown && (
+                <IconButton
+                  color="secondary"
+                  onClick={handleDrawerToggle}
+                  edge="end"
+                  sx={{ ml: 1 }}
+                >
+                  <MenuIcon size={24} />
+                </IconButton>
+              )}
+            </Stack>
+          </Toolbar>
+        </Container>
+      </AppBar>
+
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        slotProps={{
+          sx: { width: "280px", p: 2 },
+        }}
+      >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <IconButton onClick={handleDrawerToggle}>
+            <CloseIcon size={24} />
+          </IconButton>
+        </Box>
+        <List>
+          {NAV_ITEMS.map((item) => (
+            <ListItem key={item} disablePadding>
+              <ListItemButton
+                onClick={handleDrawerToggle}
+                sx={{ borderRadius: 2 }}
+              >
+                <ListItemText
+                  primary={item}
+                  primaryTypographyProps={{ fontWeight: 600 }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+          <Divider sx={{ my: 2 }} />
+          <ListItem disablePadding>
+            <ListItemButton
+              sx={{ borderRadius: 2, bgcolor: "rgba(0,0,0,0.05)" }}
+            >
+              <ListItemText primary="Sign In" />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Drawer>
 
       {/* Hero Section */}
       <Box
         sx={{
-          pt: { xs: 15, md: 20 },
-          pb: 10,
-          background:
-            "radial-gradient(circle at 90% 10%, #fff1f2 0%, #ffffff 50%)",
+          position: "relative",
+          pt: { xs: 6, md: 12 },
+          pb: { xs: 8, md: 12 },
+          overflow: "hidden",
+          backgroundImage: `url("${GRID_PATTERN}")`,
         }}
       >
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
             <Grid size={{ xs: 12, md: 7 }}>
-              <MotionBox
+              <motion.div
                 initial="hidden"
                 animate="visible"
-                variants={staggerContainer}
+                variants={{
+                  visible: { transition: { staggerChildren: 0.15 } },
+                }}
               >
-                <MotionTypography
-                  variants={fadeInUp}
-                  variant="overline"
-                  sx={{ color: "#ef4444", fontWeight: 700, letterSpacing: 2 }}
-                >
-                  REVOLUTIONIZING SURVEYING
-                </MotionTypography>
-                <MotionTypography
-                  variants={fadeInUp}
-                  variant="h1"
-                  sx={{
-                    fontSize: { xs: "2.5rem", md: "4rem" },
-                    fontWeight: 800,
-                    color: "#0f172a",
-                    lineHeight: 1.1,
-                    mb: 3,
-                  }}
-                >
-                  Construction Survey <br />
-                  <span style={{ color: "#ef4444" }}>Made Easy</span>
-                </MotionTypography>
-                <MotionTypography
-                  variants={fadeInUp}
-                  sx={{
-                    fontSize: "1.2rem",
-                    color: "#64748b",
-                    mb: 4,
-                    maxWidth: "500px",
-                  }}
-                >
-                  The ultimate tool for Roads & Waterways. Reduce on-site time
-                  by 40% with zero-error field book generation.
-                </MotionTypography>
-                <MotionBox variants={fadeInUp}>
-                  <Stack direction="row" spacing={2}>
-                    <Button
+                <motion.div variants={fUp}>
+                  <Box
+                    sx={{
+                      display: "inline-flex",
+                      px: 2,
+                      py: 0.5,
+                      mb: 3,
+                      borderRadius: 10,
+                      bgcolor: "rgba(99, 102, 241, 0.1)",
+                      border: "1px solid rgba(99, 102, 241, 0.2)",
+                    }}
+                  >
+                    <Box display="flex" alignItems="center">
+                      <PulseDot />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "primary.main",
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                        }}
+                      >
+                        v2.4 is live
+                      </Typography>
+                    </Box>
+                  </Box>
+                </motion.div>
+
+                <motion.div variants={fUp}>
+                  <Typography
+                    variant="h1"
+                    gutterBottom
+                    sx={{
+                      fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
+                    }}
+                  >
+                    Construction Survey <br />
+                    <Box component="span" sx={{ color: "primary.main" }}>
+                      Made Easy .
+                    </Box>
+                  </Typography>
+                </motion.div>
+
+                <motion.div variants={fUp}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "text.secondary",
+                      fontSize: "1.1rem",
+                      mb: 4,
+                      maxWidth: 540,
+                    }}
+                  >
+                    Automate road cross-sections, waterway contours, and volume
+                    calculations with CAD-integrated tools that eliminate human
+                    error.
+                  </Typography>
+                </motion.div>
+
+                <motion.div variants={fUp}>
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <MotionButton
                       variant="contained"
                       size="large"
+                      initial="rest"
+                      whileHover="hover"
+                      animate="rest"
+                      variants={{
+                        rest: { paddingRight: 32 },
+                        hover: { paddingRight: 56 },
+                      }}
+                      transition={{ type: "spring", stiffness: 300 }}
                       sx={{
-                        bgcolor: "#ef4444",
-                        py: 2,
+                        py: 1.5,
                         px: 4,
-                        fontSize: "1rem",
+                        overflow: "hidden",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
                       }}
                     >
-                      Get Started Free
-                    </Button>
+                      <span>Get Started</span>
+
+                      <motion.span
+                        variants={{
+                          rest: { x: -10, opacity: 0 },
+                          hover: { x: 0, opacity: 1 },
+                        }}
+                        transition={{ duration: 0.25 }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          color: "white",
+                          position: "relative",
+                        }}
+                      >
+                        <FaArrowRight
+                          size={16}
+                          style={{ position: "absolute" }}
+                        />
+                      </motion.span>
+                    </MotionButton>
+
                     <Button
                       variant="outlined"
+                      color="secondary"
                       size="large"
-                      sx={{
-                        color: "#1e293b",
-                        borderColor: "#e2e8f0",
-                        py: 2,
-                        px: 4,
-                      }}
+                      sx={{ py: 1.5, px: 4 }}
                     >
                       Watch Demo
                     </Button>
                   </Stack>
-                </MotionBox>
-              </MotionBox>
+                </motion.div>
+              </motion.div>
             </Grid>
+
             <Grid size={{ xs: 12, md: 5 }}>
-              <MotionBox
-                animate={{ y: [0, -20, 0] }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8 }}
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "center",
                 }}
-                sx={{ width: "100%", position: "relative" }}
               >
-                <Paper
-                  elevation={20}
-                  sx={{ p: 2, borderRadius: 4, bgcolor: "#f8fafc" }}
-                >
-                  {/* Replace with CADER_EQUIPMENT image */}
-                  <Box
-                    component="img"
-                    src="https://via.placeholder.com/400x500"
-                    sx={{ width: "100%", borderRadius: 2 }}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    background:
+                      "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+                    zIndex: -1,
+                    filter: "blur(40px)",
+                  }}
+                />
+
+                <motion.div {...float}>
+                  <img
+                    src={CADER_EQUIPMENT}
+                    alt="equipment"
+                    style={{
+                      width: "300px",
+                      zIndex: 1,
+                    }}
                   />
-                </Paper>
-              </MotionBox>
+                </motion.div>
+              </motion.div>
             </Grid>
           </Grid>
         </Container>
       </Box>
 
-      {/* Features Grid */}
-      <Box sx={{ py: 12, bgcolor: "#f8fafc" }}>
+      {/* Feature Highlights */}
+      <Box sx={{ py: 8, bgcolor: "#000" }}>
         <Container maxWidth="lg">
-          <Box sx={{ textAlign: "center", mb: 8 }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-              Why Choose CADer?
-            </Typography>
-            <Typography color="text.secondary">
-              Industry-leading features built for modern engineers.
-            </Typography>
-          </Box>
           <Grid container spacing={4}>
             {[
               {
-                icon: <AiOutlineWarning />,
-                title: "Zero Error",
-                desc: "Instant field book generation without manual calculation mistakes.",
+                title: "Road Networks",
+                desc: "Automated L-section and X-section generation.",
               },
               {
-                icon: <FiTool />,
-                title: "Instant Calibration",
-                desc: "Check autolevel calibration on the fly, right from your device.",
+                title: "Waterways",
+                desc: "Complex contour mapping for hydraulic studies.",
               },
               {
-                icon: <AiOutlineCloud />,
                 title: "Cloud Sync",
-                desc: "Your data is always safe and accessible across all your devices.",
-              },
-              {
-                icon: <MdDevices />,
-                title: "Multi-Platform",
-                desc: "Works seamlessly on Mobile, Tablet, and Desktop browsers.",
-              },
-              {
-                icon: <FiUsers />,
-                title: "Collaboration",
-                desc: "Share projects with your team and review surveys in real-time.",
-              },
-              {
-                icon: <AiOutlineLineChart />,
-                title: "1-Click Quantities",
-                desc: "Automated graph plotting and volume calculations.",
+                desc: "Sync field data to the office in real-time.",
               },
             ].map((f, i) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
-                <MotionBox
-                  whileHover={{ y: -10 }}
+              <Grid size={{ xs: 12, md: 4 }} key={i}>
+                <Box
                   sx={{
+                    color: "white",
                     p: 4,
-                    bgcolor: "white",
-                    borderRadius: 4,
                     height: "100%",
-                    border: "1px solid #e2e8f0",
+                    borderLeft: "2px solid #6366f1",
+                    transition: "all 0.3s",
+                    "&:hover": {
+                      bgcolor: "rgba(255,255,255,0.03)",
+                    },
                   }}
                 >
-                  <Box sx={{ color: "#ef4444", fontSize: "2.5rem", mb: 2 }}>
-                    {f.icon}
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ fontWeight: 800 }}
+                  >
                     {f.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}
+                  >
                     {f.desc}
                   </Typography>
-                </MotionBox>
+                </Box>
               </Grid>
             ))}
           </Grid>
         </Container>
       </Box>
 
-      {/* Training Section */}
-      <Container maxWidth="lg" sx={{ py: 15 }}>
-        <Grid container spacing={8} alignItems="center">
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Box
-              component="img"
-              src="https://via.placeholder.com/600x400"
-              sx={{
-                width: "100%",
-                borderRadius: 8,
-                boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Typography variant="h3" sx={{ fontWeight: 800, mb: 3 }}>
-              CADer <span style={{ color: "#ef4444" }}>Training Program</span>
-            </Typography>
-            <Typography sx={{ mb: 4, color: "#475569", fontSize: "1.1rem" }}>
-              Equip your students with the skills needed for the modern job
-              market. Our 10-day intensive program is designed for institutions.
-            </Typography>
-            <Stack spacing={2} sx={{ mb: 4 }}>
-              {[
-                "6 Months Free Software Access",
-                "Up to 20% Increase in Pay Scale",
-                "Official Certification",
-                "On-site & Remote Training Options",
-              ].map((text) => (
-                <Stack
-                  key={text}
-                  direction="row"
-                  spacing={2}
-                  alignItems="center"
-                >
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      bgcolor: "#ef4444",
-                      borderRadius: "50%",
-                    }}
-                  />
-                  <Typography sx={{ fontWeight: 500 }}>{text}</Typography>
-                </Stack>
-              ))}
-            </Stack>
-            <Button
-              variant="contained"
-              size="large"
-              sx={{ bgcolor: "#0f172a", px: 6 }}
-            >
-              Enroll Institution
-            </Button>
-          </Grid>
-        </Grid>
-      </Container>
-
       {/* Footer */}
-      <Box sx={{ bgcolor: "#0f172a", color: "white", pt: 10, pb: 4 }}>
+      {/* Footer Section */}
+      <Box sx={{ bgcolor: "#f9fafb", py: 8, borderTop: "1px solid #f3f4f6" }}>
         <Container maxWidth="lg">
-          <Grid container spacing={8}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <img
-                src={LOGO}
-                alt="CADer"
-                style={{
-                  height: 40,
-                  filter: "brightness(0) invert(1)",
-                  marginBottom: "24px",
-                }}
-              />
-              <Typography sx={{ color: "#94a3b8", mb: 4 }}>
-                CADer simplifies autolevel surveying, reducing on-site time by
-                40% while ensuring accurate, error-free calculations.
+          <Grid container spacing={{ xs: 4, md: 8 }}>
+            {/* Logo + Description */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography
+                variant="h6"
+                color="secondary"
+                sx={{ fontWeight: 900, mb: 1 }}
+              >
+                CAD
+                <Box component="span" sx={{ color: "primary.main" }}>
+                  er.
+                </Box>
               </Typography>
-              <Stack direction="row" spacing={2}>
-                {[FaXTwitter, FaInstagram, FaLinkedin, FaFacebook].map(
-                  (Icon, i) => (
-                    <IconButton
-                      key={i}
-                      sx={{
-                        color: "white",
-                        bgcolor: "rgba(255,255,255,0.05)",
-                        "&:hover": { bgcolor: "#ef4444" },
-                      }}
-                    >
-                      <Icon size={20} />
-                    </IconButton>
-                  )
-                )}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ maxWidth: 400, lineHeight: 1.7 }}
+              >
+                CADer simplifies autolevel surveying, reducing on-site time by
+                40% while ensuring accurate, error-free calculations for
+                professionals.
+              </Typography>
+              <Stack
+                direction="row"
+                spacing={1.5}
+                mt={2}
+                justifyContent="start"
+                className="social-stack"
+                sx={{
+                  transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                }}
+              >
+                {[
+                  <SocialIcons.Twitter />,
+                  <SocialIcons.LinkedIn />,
+                  <SocialIcons.Github />,
+                ].map((icon, i) => (
+                  <IconButton
+                    key={i}
+                    size="medium"
+                    component={motion.button}
+                    whileHover={{ scale: 1.2, rotate: 8, color: "#6366f1" }}
+                    whileTap={{ scale: 0.9 }}
+                    sx={{
+                      color: "#94a3b8",
+                      bgcolor: "#f8fafc",
+                      transition: "color 0.2s",
+                      "&:hover": { bgcolor: "#eef2ff" },
+                    }}
+                  >
+                    {icon}
+                  </IconButton>
+                ))}
               </Stack>
             </Grid>
-            <Grid size={{ xs: 12, md: 8 }}>
+
+            {/* Links Section */}
+            <Grid size={{ xs: 12, md: 6 }}>
               <Grid container spacing={4}>
-                {["Product", "Resources", "Company"].map((cat) => (
-                  <Grid size={{ xs: 6, sm: 4 }} key={cat}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
-                      {cat}
-                    </Typography>
-                    <Stack spacing={2}>
-                      {["Link One", "Link Two", "Link Three"].map((link) => (
-                        <Link
-                          key={link}
-                          href="#"
-                          sx={{
-                            color: "#94a3b8",
-                            textDecoration: "none",
-                            "&:hover": { color: "white" },
-                          }}
-                        >
-                          {link}
-                        </Link>
-                      ))}
-                    </Stack>
-                  </Grid>
-                ))}
+                <Grid size={{ xs: 6, sm: 4 }}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    color="text.primary"
+                    gutterBottom
+                  >
+                    Product
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      Features
+                    </Link>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      Pricing
+                    </Link>
+                  </Stack>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    color="text.primary"
+                    gutterBottom
+                  >
+                    Resources
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      Documentation
+                    </Link>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      Tutorials
+                    </Link>
+                  </Stack>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    color="text.primary"
+                    gutterBottom
+                  >
+                    Company
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      About
+                    </Link>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      Careers
+                    </Link>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      Placements
+                    </Link>
+                    <Link href="#" fontSize={14} color="text.secondary">
+                      Our Team
+                    </Link>
+                  </Stack>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>
 
-          <Divider sx={{ my: 6, borderColor: "rgba(255,255,255,0.1)" }} />
+          <Divider sx={{ my: 6, borderColor: "#e5e7eb" }} />
 
+          {/* Contact Row */}
           <Stack
             direction={{ xs: "column", md: "row" }}
+            spacing={3}
             justifyContent="space-between"
-            alignItems="center"
-            spacing={4}
+            alignItems={{ xs: "flex-start", md: "center" }}
           >
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={4}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#94a3b8",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <FaPhone size={14} /> +91 79944 19955
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#94a3b8",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <FaEnvelope size={14} /> admin@getcader.com
-              </Typography>
-            </Stack>
-            <Typography variant="caption" sx={{ color: "#64748b" }}>
-              © 2026 CADer. Professional Surveying Solutions.
+            {[
+              { label: "+91 79944 19955", type: "tel" },
+              { label: "+91 79944 39955", type: "tel" },
+              { label: "+91 79944 69955", type: "tel" },
+              { label: "admin@getcader.com", type: "mailto" },
+            ].map((contact, idx) => (
+              <Stack direction="row" spacing={1} alignItems="center" key={idx}>
+                <Typography variant="body2" color="text.secondary">
+                  {contact.type === "tel" ? "📞" : "✉"}
+                </Typography>
+                <Link
+                  href={`${contact.type}:${contact.label.replace(/\s/g, "")}`}
+                  fontSize={14}
+                  fontWeight={500}
+                  color="text.primary"
+                >
+                  {contact.label}
+                </Link>
+              </Stack>
+            ))}
+          </Stack>
+
+          <Divider sx={{ my: 6, borderColor: "#e5e7eb" }} />
+
+          {/* Bottom Section */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "center", sm: "center" }}
+            spacing={2}
+          >
+            <Typography variant="caption" color="text.disabled">
+              © 2025 CADer Engineering Solutions. All rights reserved.
             </Typography>
+            <Stack direction="row" spacing={3}>
+              <Link href="#" variant="caption" color="text.disabled">
+                Privacy Policy
+              </Link>
+              <Link href="#" variant="caption" color="text.disabled">
+                Terms of Service
+              </Link>
+            </Stack>
           </Stack>
         </Container>
       </Box>
-    </Box>
+    </ThemeProvider>
   );
 };
 
-export default Landing;
+export default App;
