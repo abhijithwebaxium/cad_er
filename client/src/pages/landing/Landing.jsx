@@ -25,8 +25,10 @@ import {
 import { FaArrowRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import CADER_EQUIPMENT from "../../assets/cader_equipment.png";
-import CADER_INTRO from "../../assets/cader_intro.mp4";
 import { Link } from "react-router-dom";
+
+const CADER_INTRO =
+  "https://res.cloudinary.com/dukl0w92v/video/upload/v1768545884/cader_intro_nhzzon.mp4";
 
 const MotionButton = motion.create(Button);
 
