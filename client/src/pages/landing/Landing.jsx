@@ -27,9 +27,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import CADER_EQUIPMENT from "../../assets/cader_equipment.png";
 import { Link } from "react-router-dom";
 
-const CADER_INTRO =
-  "https://res.cloudinary.com/dukl0w92v/video/upload/v1768545884/cader_intro_nhzzon.mp4";
-
 const MotionButton = motion.create(Button);
 
 const PulseDot = () => (
@@ -526,6 +523,7 @@ const App = () => {
                     loop
                     muted
                     playsInline
+                    preload="none"
                     style={{
                       width: "100%",
                       height: "auto",
@@ -533,7 +531,10 @@ const App = () => {
                       display: "block",
                     }}
                   >
-                    <source src={CADER_INTRO} type="video/mp4" />
+                    <source
+                      src="https://res.cloudinary.com/dukl0w92v/video/upload/f_auto,q_auto,vc_auto,c_limit,w_1280/cader_intro_nhzzon.mp4"
+                      type="video/mp4"
+                    />
                   </video>
                 </Box>
               </motion.div>
