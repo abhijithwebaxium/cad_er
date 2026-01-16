@@ -9,17 +9,18 @@ const CompanySchema = new Schema(
       required: true,
       unique: true,
     },
-    email: {
-      type: String,
-      //   required: true,
-    },
-    status: {
-      type: String,
-      //   required: true,
-    },
+    email: String,
+    website: String,
+    location: String,
+    logo: String,
+    status: String,
     size: {
       type: String,
       required: true,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   { timestamps: true }

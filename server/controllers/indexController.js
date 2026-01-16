@@ -7,7 +7,7 @@ export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate("company");
 
     if (!user) {
       throw Object.assign(new Error("Invalid credentials"), {
@@ -92,7 +92,7 @@ export const googleLogin = async (req, res, next) => {
       });
     }
 
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email }).populate("company");
 
     if (action === "login" && !user) {
       throw Object.assign(
@@ -266,6 +266,7 @@ export const registerAccountType = async (req, res, next) => {
       const company = await Company.create({
         name: companyName.trim(),
         size: size.trim(),
+        createdBy: userId,
       });
 
       user.company = company._id;
@@ -279,7 +280,13 @@ export const registerAccountType = async (req, res, next) => {
 
     await user.save();
 
-    const { password: _, ...userWithoutPassword } = user.toObject();
+    let finalUser = user;
+
+    if (type === "Company") {
+      finalUser = await User.findById(user._id).populate("company");
+    }
+
+    const { password: _, ...userWithoutPassword } = finalUser.toObject();
 
     res.status(200).json({
       success: true,

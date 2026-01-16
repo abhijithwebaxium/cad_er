@@ -25,6 +25,7 @@ import {
 import { FaArrowRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import CADER_EQUIPMENT from "../../assets/cader_equipment.png";
+import CADER_INTRO from "../../assets/cader_intro.mp4";
 import { Link } from "react-router-dom";
 
 const MotionButton = motion.create(Button);
@@ -500,16 +501,39 @@ const App = () => {
                   }}
                 />
 
-                <motion.div {...float}>
-                  <img
-                    src={CADER_EQUIPMENT}
-                    alt="equipment"
+                <Box
+                  sx={{
+                    position: "relative",
+                    p: 1,
+                    borderRadius: 4,
+                    background: "rgba(255, 255, 255, 0.05)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    boxShadow: "0 15px 40px rgba(0,0,0,0.3)",
+                    width: "100%",
+                    maxWidth: {
+                      xs: "100%",
+                      sm: "250px",
+                      md: "300px",
+                    },
+                    margin: "0 auto",
+                  }}
+                >
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
                     style={{
-                      width: "300px",
-                      zIndex: 1,
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "12px",
+                      display: "block",
                     }}
-                  />
-                </motion.div>
+                  >
+                    <source src={CADER_INTRO} type="video/mp4" />
+                  </video>
+                </Box>
               </motion.div>
             </Grid>
           </Grid>

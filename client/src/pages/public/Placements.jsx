@@ -463,7 +463,7 @@ const Placements = () => {
       {/* Header Section */}
       <Box
         sx={{
-          bgcolor: "#f0f4ff",
+          bgcolor: "#f8fafc",
           pt: { xs: 8, md: 12 },
           pb: { xs: 6, md: 10 },
           borderBottom: "1px solid #dbeafe",
@@ -473,7 +473,7 @@ const Placements = () => {
           <Stack spacing={2} alignItems="center" textAlign="center">
             <Typography
               variant="overline"
-              sx={{ color: "#3b82f6", fontWeight: 800, letterSpacing: 3 }}
+              sx={{ color: "#6366f1", fontWeight: 800, letterSpacing: 3 }}
             >
               PLACEMENT PORTAL
             </Typography>
@@ -481,12 +481,11 @@ const Placements = () => {
               variant="h2"
               sx={{
                 fontWeight: 900,
-                color: "#1e3a8a",
                 fontSize: { xs: "2.5rem", md: "3.5rem" },
               }}
             >
               Explore New <br />
-              <span style={{ color: "#3b82f6" }}>Placement Openings</span>
+              <span style={{ color: "#6366f1" }}>Placement Openings</span>
             </Typography>
             <Typography
               variant="h6"
@@ -562,7 +561,7 @@ const Placements = () => {
                         border: "1px solid #e2e8f0",
                         transition: "all 0.2s",
                         "&:hover": {
-                          borderColor: "#3b82f6",
+                          borderColor: "#6366f1",
                           boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)",
                           transform: "translateY(-2px)",
                         },
@@ -617,7 +616,7 @@ const Placements = () => {
                             </Stack>
                             <Typography
                               variant="body2"
-                              sx={{ color: "#3b82f6", fontWeight: 600 }}
+                              sx={{ color: "#3B82F6", fontWeight: 600 }}
                             >
                               {opening.stipend}
                             </Typography>
@@ -660,12 +659,12 @@ const Placements = () => {
                             onClick={() => handleApply(opening)}
                             endIcon={<IconChevronRight />}
                             sx={{
-                              bgcolor: "#2563eb",
+                              bgcolor: "#6366f1",
                               borderRadius: 2,
                               px: 3,
                               textTransform: "none",
                               fontWeight: 700,
-                              "&:hover": { bgcolor: "#1d4ed8" },
+                              "&:hover": { bgcolor: "#4f46e5" },
                             }}
                           >
                             Express Interest
@@ -802,8 +801,8 @@ const Placements = () => {
                               cursor: "pointer",
                               transition: "0.2s",
                               "&:hover": {
-                                borderColor: "#3b82f6",
-                                bgcolor: "#eff6ff",
+                                borderColor: "#6366f1",
+                                bgcolor: "#f3f4ff",
                               },
                             }}
                           >
@@ -831,13 +830,13 @@ const Placements = () => {
                             size="large"
                             sx={{
                               py: 2,
-                              bgcolor: "#2563eb",
+                              bgcolor: "#6366f1",
                               borderRadius: 3,
                               fontWeight: 800,
                               fontSize: "1.1rem",
                               textTransform: "none",
                               mt: 2,
-                              "&:hover": { bgcolor: "#1d4ed8" },
+                              "&:hover": { bgcolor: "#4f46e5" },
                             }}
                           >
                             Submit to Placement Cell
