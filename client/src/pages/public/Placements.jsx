@@ -14,6 +14,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
+import ScrollToTop from "../../components/ScrollToTop";
 
 // Custom SVG Icons
 const IconMapPin = () => (
@@ -459,441 +460,449 @@ const Placements = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: "#ffffff", minHeight: "100vh", pb: 10 }}>
-      {/* Header Section */}
-      <Box
-        sx={{
-          bgcolor: "#f8fafc",
-          pt: { xs: 8, md: 12 },
-          pb: { xs: 6, md: 10 },
-          borderBottom: "1px solid #dbeafe",
-        }}
-      >
-        <Container maxWidth="lg">
-          <Stack spacing={2} alignItems="center" textAlign="center">
-            <Typography
-              variant="overline"
-              sx={{ color: "#6366f1", fontWeight: 800, letterSpacing: 3 }}
-            >
-              PLACEMENT PORTAL
-            </Typography>
-            <Typography
-              variant="h2"
-              sx={{
-                fontWeight: 900,
-                fontSize: { xs: "2.5rem", md: "3.5rem" },
-              }}
-            >
-              Explore New <br />
-              <span style={{ color: "#6366f1" }}>Placement Openings</span>
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{ color: "#475569", maxWidth: 600, fontWeight: 400 }}
-            >
-              Connecting CADer certified professionals with leading construction
-              and engineering firms globally.
-            </Typography>
-          </Stack>
-        </Container>
-      </Box>
+    <>
+      <ScrollToTop />
+      <Box sx={{ bgcolor: "#ffffff", minHeight: "100vh", pb: 10 }}>
+        {/* Header Section */}
+        <Box
+          sx={{
+            bgcolor: "#f8fafc",
+            pt: { xs: 8, md: 12 },
+            pb: { xs: 6, md: 10 },
+            borderBottom: "1px solid #dbeafe",
+          }}
+        >
+          <Container maxWidth="lg">
+            <Stack spacing={2} alignItems="center" textAlign="center">
+              <Typography
+                variant="overline"
+                sx={{ color: "#6366f1", fontWeight: 800, letterSpacing: 3 }}
+              >
+                PLACEMENT PORTAL
+              </Typography>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 900,
+                  fontSize: { xs: "2.5rem", md: "3.5rem" },
+                }}
+              >
+                Explore New <br />
+                <span style={{ color: "#6366f1" }}>Placement Openings</span>
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{ color: "#475569", maxWidth: 600, fontWeight: 400 }}
+              >
+                Connecting CADer certified professionals with leading
+                construction and engineering firms globally.
+              </Typography>
+            </Stack>
+          </Container>
+        </Box>
 
-      <Container maxWidth="lg" sx={{ mt: -4 }}>
-        <AnimatePresence mode="wait">
-          {!selectedOpening ? (
-            <motion.div
-              key="placement-list"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Stack spacing={3}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 3,
-                    borderRadius: 4,
-                    border: "1px solid #e2e8f0",
-                    bgcolor: "#f8fafc",
-                    display: "flex",
-                    flexDirection: { xs: "column", md: "row" },
-                    alignItems: "center",
-                    gap: 3,
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 800, color: "#1e293b", minWidth: 150 }}
-                  >
-                    Search Openings:
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="Search by company or role..."
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <IconSearch />
-                        </InputAdornment>
-                      ),
+        <Container maxWidth="lg" sx={{ mt: -4 }}>
+          <AnimatePresence mode="wait">
+            {!selectedOpening ? (
+              <motion.div
+                key="placement-list"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Stack spacing={3}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      borderRadius: 4,
+                      border: "1px solid #e2e8f0",
+                      bgcolor: "#f8fafc",
+                      display: "flex",
+                      flexDirection: { xs: "column", md: "row" },
+                      alignItems: "center",
+                      gap: 3,
                     }}
-                    sx={{ bgcolor: "white" }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#64748b", whiteSpace: "nowrap" }}
                   >
-                    Showing {filteredPlacements.length} results
-                  </Typography>
-                </Paper>
-
-                {paginatedPlacements.length > 0 ? (
-                  paginatedPlacements.map((opening) => (
-                    <Paper
-                      key={opening.id}
-                      elevation={0}
-                      sx={{
-                        p: 4,
-                        borderRadius: 4,
-                        border: "1px solid #e2e8f0",
-                        transition: "all 0.2s",
-                        "&:hover": {
-                          borderColor: "#6366f1",
-                          boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)",
-                          transform: "translateY(-2px)",
-                        },
-                      }}
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 800, color: "#1e293b", minWidth: 150 }}
                     >
-                      <Grid container spacing={2} alignItems="center">
-                        <Grid size={{ xs: 12, md: 5 }}>
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                            sx={{ mb: 1 }}
-                          >
-                            <Box
-                              sx={{
-                                p: 1,
-                                bgcolor: "#eff6ff",
-                                borderRadius: 2,
-                                color: "#3b82f6",
-                              }}
-                            >
-                              <IconBuilding />
-                            </Box>
-                            <Typography
-                              variant="subtitle2"
-                              sx={{
-                                fontWeight: 700,
-                                color: "#64748b",
-                                textTransform: "uppercase",
-                              }}
-                            >
-                              {opening.company}
-                            </Typography>
-                          </Stack>
-                          <Typography
-                            variant="h6"
-                            sx={{ fontWeight: 800, color: "#111827" }}
-                          >
-                            {opening.title}
-                          </Typography>
-                          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                      Search Openings:
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Search by company or role..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <IconSearch />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{ bgcolor: "white" }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#64748b", whiteSpace: "nowrap" }}
+                    >
+                      Showing {filteredPlacements.length} results
+                    </Typography>
+                  </Paper>
+
+                  {paginatedPlacements.length > 0 ? (
+                    paginatedPlacements.map((opening) => (
+                      <Paper
+                        key={opening.id}
+                        elevation={0}
+                        sx={{
+                          p: 4,
+                          borderRadius: 4,
+                          border: "1px solid #e2e8f0",
+                          transition: "all 0.2s",
+                          "&:hover": {
+                            borderColor: "#6366f1",
+                            boxShadow:
+                              "0 10px 25px -5px rgba(59, 130, 246, 0.1)",
+                            transform: "translateY(-2px)",
+                          },
+                        }}
+                      >
+                        <Grid container spacing={2} alignItems="center">
+                          <Grid size={{ xs: 12, md: 5 }}>
                             <Stack
                               direction="row"
-                              spacing={1}
+                              spacing={2}
                               alignItems="center"
-                              sx={{ color: "#64748b" }}
+                              sx={{ mb: 1 }}
                             >
-                              <IconMapPin />
-                              <Typography variant="body2">
-                                {opening.location}
+                              <Box
+                                sx={{
+                                  p: 1,
+                                  bgcolor: "#eff6ff",
+                                  borderRadius: 2,
+                                  color: "#3b82f6",
+                                }}
+                              >
+                                <IconBuilding />
+                              </Box>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{
+                                  fontWeight: 700,
+                                  color: "#64748b",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {opening.company}
                               </Typography>
                             </Stack>
                             <Typography
-                              variant="body2"
-                              sx={{ color: "#3B82F6", fontWeight: 600 }}
-                            >
-                              {opening.stipend}
-                            </Typography>
-                          </Stack>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            flexWrap="wrap"
-                            useFlexGap
-                          >
-                            {opening.tags.map((tag) => (
-                              <Chip
-                                key={tag}
-                                label={tag}
-                                size="small"
-                                sx={{
-                                  bgcolor: "#f1f5f9",
-                                  fontWeight: 600,
-                                  color: "#475569",
-                                  mb: 1,
-                                }}
-                              />
-                            ))}
-                          </Stack>
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "#94a3b8", display: "block", mt: 1 }}
-                          >
-                            Deadline: {opening.deadline}
-                          </Typography>
-                        </Grid>
-                        <Grid
-                          size={{ xs: 12, md: 3 }}
-                          sx={{ textAlign: { md: "right" } }}
-                        >
-                          <Button
-                            variant="contained"
-                            onClick={() => handleApply(opening)}
-                            endIcon={<IconChevronRight />}
-                            sx={{
-                              bgcolor: "#6366f1",
-                              borderRadius: 2,
-                              px: 3,
-                              textTransform: "none",
-                              fontWeight: 700,
-                              "&:hover": { bgcolor: "#4f46e5" },
-                            }}
-                          >
-                            Express Interest
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </Paper>
-                  ))
-                ) : (
-                  <Box sx={{ textAlign: "center", py: 10 }}>
-                    <Typography color="textSecondary">
-                      No openings matching your search.
-                    </Typography>
-                  </Box>
-                )}
-
-                {totalPages > 1 && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "center", mt: 4 }}
-                  >
-                    <Pagination
-                      count={totalPages}
-                      page={page}
-                      onChange={(e, v) => setPage(v)}
-                      color="primary"
-                      size="large"
-                    />
-                  </Box>
-                )}
-              </Stack>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="apply-form"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  p: { xs: 4, md: 6 },
-                  borderRadius: 6,
-                  border: "1px solid #e2e8f0",
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.05)",
-                }}
-              >
-                {!formSubmitted ? (
-                  <>
-                    <Button
-                      startIcon={<IconArrowLeft />}
-                      onClick={() => setSelectedOpening(null)}
-                      sx={{ color: "#64748b", mb: 4, textTransform: "none" }}
-                    >
-                      Back to All Openings
-                    </Button>
-
-                    <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>
-                      Interest in {selectedOpening.title}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: "#64748b", mb: 5 }}
-                    >
-                      Position at <strong>{selectedOpening.company}</strong>.
-                      Provide your details for the placement coordinator.
-                    </Typography>
-
-                    <form onSubmit={handleSubmit}>
-                      <Grid container spacing={3}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            label="Full Name"
-                            required
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            label="CADer Student ID / Email"
-                            required
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            label="Current CGPA / Grade"
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            select
-                            label="Preferred Start Date"
-                            defaultValue="immediate"
-                            variant="outlined"
-                          >
-                            <MenuItem value="immediate">Immediate</MenuItem>
-                            <MenuItem value="next-month">Next Month</MenuItem>
-                            <MenuItem value="quarter">Next Quarter</MenuItem>
-                          </TextField>
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                          <TextField
-                            fullWidth
-                            label="Portfolio Link (Surveying/Design)"
-                            placeholder="Behance, GitHub, or Drive link"
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={3}
-                            label="Brief Technical Summary"
-                            placeholder="Mention your expertise in total station, AutoCAD, etc."
-                            variant="outlined"
-                          />
-                        </Grid>
-
-                        <Grid size={{ xs: 12 }}>
-                          <Box
-                            sx={{
-                              p: 4,
-                              border: "2px dashed #cbd5e1",
-                              borderRadius: 4,
-                              textAlign: "center",
-                              bgcolor: "#f8fafc",
-                              cursor: "pointer",
-                              transition: "0.2s",
-                              "&:hover": {
-                                borderColor: "#6366f1",
-                                bgcolor: "#f3f4ff",
-                              },
-                            }}
-                          >
-                            <IconUpload />
-                            <Typography
                               variant="h6"
-                              sx={{ fontSize: "1rem", fontWeight: 700, mt: 1 }}
+                              sx={{ fontWeight: 800, color: "#111827" }}
                             >
-                              Attach Professional Resume
+                              {opening.title}
                             </Typography>
+                            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                sx={{ color: "#64748b" }}
+                              >
+                                <IconMapPin />
+                                <Typography variant="body2">
+                                  {opening.location}
+                                </Typography>
+                              </Stack>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#3B82F6", fontWeight: 600 }}
+                              >
+                                {opening.stipend}
+                              </Typography>
+                            </Stack>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              flexWrap="wrap"
+                              useFlexGap
+                            >
+                              {opening.tags.map((tag) => (
+                                <Chip
+                                  key={tag}
+                                  label={tag}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: "#f1f5f9",
+                                    fontWeight: 600,
+                                    color: "#475569",
+                                    mb: 1,
+                                  }}
+                                />
+                              ))}
+                            </Stack>
                             <Typography
-                              variant="body2"
-                              sx={{ color: "#94a3b8" }}
+                              variant="caption"
+                              sx={{ color: "#94a3b8", display: "block", mt: 1 }}
                             >
-                              PDF preferred (max 5MB)
+                              Deadline: {opening.deadline}
                             </Typography>
-                          </Box>
-                        </Grid>
-
-                        <Grid size={{ xs: 12 }}>
-                          <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            size="large"
-                            sx={{
-                              py: 2,
-                              bgcolor: "#6366f1",
-                              borderRadius: 3,
-                              fontWeight: 800,
-                              fontSize: "1.1rem",
-                              textTransform: "none",
-                              mt: 2,
-                              "&:hover": { bgcolor: "#4f46e5" },
-                            }}
+                          </Grid>
+                          <Grid
+                            size={{ xs: 12, md: 3 }}
+                            sx={{ textAlign: { md: "right" } }}
                           >
-                            Submit to Placement Cell
-                          </Button>
+                            <Button
+                              variant="contained"
+                              onClick={() => handleApply(opening)}
+                              endIcon={<IconChevronRight />}
+                              sx={{
+                                bgcolor: "#6366f1",
+                                borderRadius: 2,
+                                px: 3,
+                                textTransform: "none",
+                                fontWeight: 700,
+                                "&:hover": { bgcolor: "#4f46e5" },
+                              }}
+                            >
+                              Express Interest
+                            </Button>
+                          </Grid>
                         </Grid>
-                      </Grid>
-                    </form>
-                  </>
-                ) : (
-                  <Stack alignItems="center" spacing={3} sx={{ py: 8 }}>
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200 }}
+                      </Paper>
+                    ))
+                  ) : (
+                    <Box sx={{ textAlign: "center", py: 10 }}>
+                      <Typography color="textSecondary">
+                        No openings matching your search.
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {totalPages > 1 && (
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", mt: 4 }}
                     >
-                      <Box sx={{ color: "#10b981", fontSize: 80 }}>
-                        <IconCheckCircle />
-                      </Box>
-                    </motion.div>
-                    <Typography variant="h4" sx={{ fontWeight: 900 }}>
-                      Interest Recorded!
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: "#64748b",
-                        textAlign: "center",
-                        maxWidth: 450,
-                      }}
-                    >
-                      Your profile has been shared with the placement team at{" "}
-                      {selectedOpening.company}. Check your email for further
-                      instructions on the interview schedule.
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      onClick={() => {
-                        setFormSubmitted(false);
-                        setSelectedOpening(null);
-                      }}
-                      sx={{
-                        borderRadius: 2,
-                        px: 4,
-                        mt: 2,
-                        textTransform: "none",
-                      }}
-                    >
-                      Browse Other Placements
-                    </Button>
-                  </Stack>
-                )}
-              </Paper>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Container>
-    </Box>
+                      <Pagination
+                        count={totalPages}
+                        page={page}
+                        onChange={(e, v) => setPage(v)}
+                        color="primary"
+                        size="large"
+                      />
+                    </Box>
+                  )}
+                </Stack>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="apply-form"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 4, md: 6 },
+                    borderRadius: 6,
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.05)",
+                  }}
+                >
+                  {!formSubmitted ? (
+                    <>
+                      <Button
+                        startIcon={<IconArrowLeft />}
+                        onClick={() => setSelectedOpening(null)}
+                        sx={{ color: "#64748b", mb: 4, textTransform: "none" }}
+                      >
+                        Back to All Openings
+                      </Button>
+
+                      <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>
+                        Interest in {selectedOpening.title}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: "#64748b", mb: 5 }}
+                      >
+                        Position at <strong>{selectedOpening.company}</strong>.
+                        Provide your details for the placement coordinator.
+                      </Typography>
+
+                      <form onSubmit={handleSubmit}>
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              label="Full Name"
+                              required
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              label="CADer Student ID / Email"
+                              required
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              label="Current CGPA / Grade"
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              select
+                              label="Preferred Start Date"
+                              defaultValue="immediate"
+                              variant="outlined"
+                            >
+                              <MenuItem value="immediate">Immediate</MenuItem>
+                              <MenuItem value="next-month">Next Month</MenuItem>
+                              <MenuItem value="quarter">Next Quarter</MenuItem>
+                            </TextField>
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField
+                              fullWidth
+                              label="Portfolio Link (Surveying/Design)"
+                              placeholder="Behance, GitHub, or Drive link"
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField
+                              fullWidth
+                              multiline
+                              rows={3}
+                              label="Brief Technical Summary"
+                              placeholder="Mention your expertise in total station, AutoCAD, etc."
+                              variant="outlined"
+                            />
+                          </Grid>
+
+                          <Grid size={{ xs: 12 }}>
+                            <Box
+                              sx={{
+                                p: 4,
+                                border: "2px dashed #cbd5e1",
+                                borderRadius: 4,
+                                textAlign: "center",
+                                bgcolor: "#f8fafc",
+                                cursor: "pointer",
+                                transition: "0.2s",
+                                "&:hover": {
+                                  borderColor: "#6366f1",
+                                  bgcolor: "#f3f4ff",
+                                },
+                              }}
+                            >
+                              <IconUpload />
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontSize: "1rem",
+                                  fontWeight: 700,
+                                  mt: 1,
+                                }}
+                              >
+                                Attach Professional Resume
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#94a3b8" }}
+                              >
+                                PDF preferred (max 5MB)
+                              </Typography>
+                            </Box>
+                          </Grid>
+
+                          <Grid size={{ xs: 12 }}>
+                            <Button
+                              type="submit"
+                              fullWidth
+                              variant="contained"
+                              size="large"
+                              sx={{
+                                py: 2,
+                                bgcolor: "#6366f1",
+                                borderRadius: 3,
+                                fontWeight: 800,
+                                fontSize: "1.1rem",
+                                textTransform: "none",
+                                mt: 2,
+                                "&:hover": { bgcolor: "#4f46e5" },
+                              }}
+                            >
+                              Submit to Placement Cell
+                            </Button>
+                          </Grid>
+                        </Grid>
+                      </form>
+                    </>
+                  ) : (
+                    <Stack alignItems="center" spacing={3} sx={{ py: 8 }}>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200 }}
+                      >
+                        <Box sx={{ color: "#10b981", fontSize: 80 }}>
+                          <IconCheckCircle />
+                        </Box>
+                      </motion.div>
+                      <Typography variant="h4" sx={{ fontWeight: 900 }}>
+                        Interest Recorded!
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "#64748b",
+                          textAlign: "center",
+                          maxWidth: 450,
+                        }}
+                      >
+                        Your profile has been shared with the placement team at{" "}
+                        {selectedOpening.company}. Check your email for further
+                        instructions on the interview schedule.
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          setFormSubmitted(false);
+                          setSelectedOpening(null);
+                        }}
+                        sx={{
+                          borderRadius: 2,
+                          px: 4,
+                          mt: 2,
+                          textTransform: "none",
+                        }}
+                      >
+                        Browse Other Placements
+                      </Button>
+                    </Stack>
+                  )}
+                </Paper>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Container>
+      </Box>
+    </>
   );
 };
 

@@ -12,6 +12,7 @@ import {
   Chip,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
+import ScrollToTop from "../../components/ScrollToTop";
 
 // Custom SVG Icons to replace react-icons and ensure successful compilation
 const IconBriefcase = () => (
@@ -181,368 +182,379 @@ const Careers = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: "#ffffff", minHeight: "100vh", pb: 10 }}>
-      {/* Header Section */}
-      <Box
-        sx={{
-          bgcolor: "#f8fafc",
-          pt: { xs: 8, md: 12 },
-          pb: { xs: 6, md: 10 },
-          borderBottom: "1px solid #e2e8f0",
-        }}
-      >
-        <Container maxWidth="lg">
-          <Stack spacing={2} alignItems="center" textAlign="center">
-            <Typography
-              variant="overline"
-              sx={{ color: "#6366f1", fontWeight: 800, letterSpacing: 3 }}
-            >
-              JOIN OUR MISSION
-            </Typography>
-            <Typography
-              variant="h2"
-              sx={{
-                fontWeight: 900,
-                color: "#111827",
-                fontSize: { xs: "2.5rem", md: "3.5rem" },
-              }}
-            >
-              Build the Future of <br />
-              <span style={{ color: "#6366f1" }}>Construction Tech</span>
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{ color: "#64748b", maxWidth: 600, fontWeight: 400 }}
-            >
-              Join CADer and help us revolutionize how site engineers and
-              surveyors work across the globe.
-            </Typography>
-          </Stack>
-        </Container>
-      </Box>
-
-      <Container maxWidth="lg" sx={{ mt: -4 }}>
-        <AnimatePresence mode="wait">
-          {!selectedJob ? (
-            <motion.div
-              key="job-list"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Stack spacing={3}>
-                <Typography
-                  variant="h5"
-                  sx={{ fontWeight: 800, color: "#1e293b", mb: 1 }}
-                >
-                  Open Positions ({JOBS.length})
-                </Typography>
-                {JOBS.map((job) => (
-                  <Paper
-                    key={job.id}
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      borderRadius: 4,
-                      border: "1px solid #e2e8f0",
-                      transition: "all 0.2s",
-                      "&:hover": {
-                        borderColor: "#6366f1",
-                        boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.1)",
-                        transform: "translateY(-2px)",
-                      },
-                    }}
-                  >
-                    <Grid container spacing={2} alignItems="center">
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 800, color: "#111827" }}
-                        >
-                          {job.title}
-                        </Typography>
-                        <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            sx={{ color: "#64748b" }}
-                          >
-                            <IconBriefcase />
-                            <Typography variant="body2">
-                              {job.department}
-                            </Typography>
-                          </Stack>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            sx={{ color: "#64748b" }}
-                          >
-                            <IconMapPin />
-                            <Typography variant="body2">
-                              {job.location}
-                            </Typography>
-                          </Stack>
-                        </Stack>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 3 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Chip
-                            label={job.type}
-                            size="small"
-                            sx={{
-                              bgcolor: "#f1f5f9",
-                              fontWeight: 600,
-                              color: "#475569",
-                            }}
-                          />
-                          <Stack
-                            direction="row"
-                            spacing={0.5}
-                            alignItems="center"
-                            sx={{ color: "#94a3b8" }}
-                          >
-                            <IconClock />
-                            <Typography
-                              variant="caption"
-                              sx={{ fontWeight: 500 }}
-                            >
-                              {job.salary}
-                            </Typography>
-                          </Stack>
-                        </Stack>
-                      </Grid>
-                      <Grid
-                        size={{ xs: 12, md: 3 }}
-                        sx={{ textAlign: { md: "right" } }}
-                      >
-                        <Button
-                          variant="contained"
-                          onClick={() => handleApply(job)}
-                          endIcon={<IconChevronRight />}
-                          sx={{
-                            bgcolor: "#6366f1",
-                            borderRadius: 2,
-                            px: 3,
-                            textTransform: "none",
-                            fontWeight: 700,
-                            "&:hover": { bgcolor: "#4f46e5" },
-                          }}
-                        >
-                          Apply Now
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                ))}
-              </Stack>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="apply-form"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <Paper
-                elevation={0}
+    <>
+      <ScrollToTop />
+      <Box sx={{ bgcolor: "#ffffff", minHeight: "100vh", pb: 10 }}>
+        {/* Header Section */}
+        <Box
+          sx={{
+            bgcolor: "#f8fafc",
+            pt: { xs: 8, md: 12 },
+            pb: { xs: 6, md: 10 },
+            borderBottom: "1px solid #e2e8f0",
+          }}
+        >
+          <Container maxWidth="lg">
+            <Stack spacing={2} alignItems="center" textAlign="center">
+              <Typography
+                variant="overline"
+                sx={{ color: "#6366f1", fontWeight: 800, letterSpacing: 3 }}
+              >
+                JOIN OUR MISSION
+              </Typography>
+              <Typography
+                variant="h2"
                 sx={{
-                  p: { xs: 4, md: 6 },
-                  borderRadius: 6,
-                  border: "1px solid #e2e8f0",
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.05)",
+                  fontWeight: 900,
+                  color: "#111827",
+                  fontSize: { xs: "2.5rem", md: "3.5rem" },
                 }}
               >
-                {!formSubmitted ? (
-                  <>
-                    <Button
-                      startIcon={<IconArrowLeft />}
-                      onClick={() => setSelectedJob(null)}
-                      sx={{ color: "#64748b", mb: 4, textTransform: "none" }}
+                Build the Future of <br />
+                <span style={{ color: "#6366f1" }}>Construction Tech</span>
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{ color: "#64748b", maxWidth: 600, fontWeight: 400 }}
+              >
+                Join CADer and help us revolutionize how site engineers and
+                surveyors work across the globe.
+              </Typography>
+            </Stack>
+          </Container>
+        </Box>
+
+        <Container maxWidth="lg" sx={{ mt: -4 }}>
+          <AnimatePresence mode="wait">
+            {!selectedJob ? (
+              <motion.div
+                key="job-list"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Stack spacing={3}>
+                  <Typography
+                    variant="h5"
+                    sx={{ fontWeight: 800, color: "#1e293b", mb: 1 }}
+                  >
+                    Open Positions ({JOBS.length})
+                  </Typography>
+                  {JOBS.map((job) => (
+                    <Paper
+                      key={job.id}
+                      elevation={0}
+                      sx={{
+                        p: 4,
+                        borderRadius: 4,
+                        border: "1px solid #e2e8f0",
+                        transition: "all 0.2s",
+                        "&:hover": {
+                          borderColor: "#6366f1",
+                          boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.1)",
+                          transform: "translateY(-2px)",
+                        },
+                      }}
                     >
-                      View All Jobs
-                    </Button>
-
-                    <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>
-                      Applying for {selectedJob.title}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: "#64748b", mb: 5 }}
-                    >
-                      Tell us more about yourself and your journey in
-                      construction/engineering.
-                    </Typography>
-
-                    <form onSubmit={handleSubmit}>
-                      <Grid container spacing={3}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            label="Full Name"
-                            required
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            label="Email Address"
-                            type="email"
-                            required
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            label="Phone Number"
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <TextField
-                            fullWidth
-                            select
-                            label="Experience Level"
-                            defaultValue="mid"
-                            variant="outlined"
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 800, color: "#111827" }}
                           >
-                            <MenuItem value="junior">
-                              Junior (0-2 years)
-                            </MenuItem>
-                            <MenuItem value="mid">
-                              Mid-Level (3-5 years)
-                            </MenuItem>
-                            <MenuItem value="senior">
-                              Senior (5+ years)
-                            </MenuItem>
-                          </TextField>
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                          <TextField
-                            fullWidth
-                            label="LinkedIn or Portfolio URL"
-                            placeholder="https://linkedin.com/in/username"
-                            variant="outlined"
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                          <TextField
-                            fullWidth
-                            multiline
-                            rows={4}
-                            label="Cover Letter / Brief Intro"
-                            placeholder="Tell us about your technical background..."
-                            variant="outlined"
-                          />
-                        </Grid>
-
-                        <Grid size={{ xs: 12 }}>
-                          <Box
-                            sx={{
-                              p: 4,
-                              border: "2px dashed #e2e8f0",
-                              borderRadius: 4,
-                              textAlign: "center",
-                              bgcolor: "#f8fafc",
-                              cursor: "pointer",
-                              transition: "0.2s",
-                              "&:hover": {
-                                borderColor: "#6366f1",
-                                bgcolor: "#f3f4ff",
-                              },
-                            }}
-                          >
-                            <IconUpload />
-                            <Typography
-                              variant="h6"
-                              sx={{ fontSize: "1rem", fontWeight: 700, mt: 1 }}
+                            {job.title}
+                          </Typography>
+                          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              sx={{ color: "#64748b" }}
                             >
-                              Drop your CV here
-                            </Typography>
-                            <Typography
-                              variant="body2"
+                              <IconBriefcase />
+                              <Typography variant="body2">
+                                {job.department}
+                              </Typography>
+                            </Stack>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              sx={{ color: "#64748b" }}
+                            >
+                              <IconMapPin />
+                              <Typography variant="body2">
+                                {job.location}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 3 }}>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                          >
+                            <Chip
+                              label={job.type}
+                              size="small"
+                              sx={{
+                                bgcolor: "#f1f5f9",
+                                fontWeight: 600,
+                                color: "#475569",
+                              }}
+                            />
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
                               sx={{ color: "#94a3b8" }}
                             >
-                              PDF, DOCX up to 10MB
-                            </Typography>
-                          </Box>
+                              <IconClock />
+                              <Typography
+                                variant="caption"
+                                sx={{ fontWeight: 500 }}
+                              >
+                                {job.salary}
+                              </Typography>
+                            </Stack>
+                          </Stack>
                         </Grid>
-
-                        <Grid size={{ xs: 12 }}>
+                        <Grid
+                          size={{ xs: 12, md: 3 }}
+                          sx={{ textAlign: { md: "right" } }}
+                        >
                           <Button
-                            type="submit"
-                            fullWidth
                             variant="contained"
-                            size="large"
+                            onClick={() => handleApply(job)}
+                            endIcon={<IconChevronRight />}
                             sx={{
-                              py: 2,
                               bgcolor: "#6366f1",
-                              borderRadius: 3,
-                              fontWeight: 800,
-                              fontSize: "1.1rem",
+                              borderRadius: 2,
+                              px: 3,
                               textTransform: "none",
-                              mt: 2,
+                              fontWeight: 700,
                               "&:hover": { bgcolor: "#4f46e5" },
                             }}
                           >
-                            Submit My Application
+                            Apply Now
                           </Button>
                         </Grid>
                       </Grid>
-                    </form>
-                  </>
-                ) : (
-                  <Stack alignItems="center" spacing={3} sx={{ py: 8 }}>
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                    >
-                      <Box sx={{ color: "#10b981", fontSize: 80 }}>
-                        <IconCheckCircle />
-                      </Box>
-                    </motion.div>
-                    <Typography variant="h4" sx={{ fontWeight: 900 }}>
-                      Application Received!
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: "#64748b",
-                        textAlign: "center",
-                        maxWidth: 450,
-                      }}
-                    >
-                      Thanks for reaching out! Our recruitment team will review
-                      your application for the {selectedJob.title} position and
-                      get back to you shortly.
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      onClick={() => {
-                        setFormSubmitted(false);
-                        setSelectedJob(null);
-                      }}
-                      sx={{
-                        borderRadius: 2,
-                        px: 4,
-                        mt: 2,
-                        textTransform: "none",
-                      }}
-                    >
-                      Explore More Roles
-                    </Button>
-                  </Stack>
-                )}
-              </Paper>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Container>
-    </Box>
+                    </Paper>
+                  ))}
+                </Stack>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="apply-form"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 4, md: 6 },
+                    borderRadius: 6,
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.05)",
+                  }}
+                >
+                  {!formSubmitted ? (
+                    <>
+                      <Button
+                        startIcon={<IconArrowLeft />}
+                        onClick={() => setSelectedJob(null)}
+                        sx={{ color: "#64748b", mb: 4, textTransform: "none" }}
+                      >
+                        View All Jobs
+                      </Button>
+
+                      <Typography variant="h4" sx={{ fontWeight: 900, mb: 1 }}>
+                        Applying for {selectedJob.title}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: "#64748b", mb: 5 }}
+                      >
+                        Tell us more about yourself and your journey in
+                        construction/engineering.
+                      </Typography>
+
+                      <form onSubmit={handleSubmit}>
+                        <Grid container spacing={3}>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              label="Full Name"
+                              required
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              label="Email Address"
+                              type="email"
+                              required
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              label="Phone Number"
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                              fullWidth
+                              select
+                              label="Experience Level"
+                              defaultValue="mid"
+                              variant="outlined"
+                            >
+                              <MenuItem value="junior">
+                                Junior (0-2 years)
+                              </MenuItem>
+                              <MenuItem value="mid">
+                                Mid-Level (3-5 years)
+                              </MenuItem>
+                              <MenuItem value="senior">
+                                Senior (5+ years)
+                              </MenuItem>
+                            </TextField>
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField
+                              fullWidth
+                              label="LinkedIn or Portfolio URL"
+                              placeholder="https://linkedin.com/in/username"
+                              variant="outlined"
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12 }}>
+                            <TextField
+                              fullWidth
+                              multiline
+                              rows={4}
+                              label="Cover Letter / Brief Intro"
+                              placeholder="Tell us about your technical background..."
+                              variant="outlined"
+                            />
+                          </Grid>
+
+                          <Grid size={{ xs: 12 }}>
+                            <Box
+                              sx={{
+                                p: 4,
+                                border: "2px dashed #e2e8f0",
+                                borderRadius: 4,
+                                textAlign: "center",
+                                bgcolor: "#f8fafc",
+                                cursor: "pointer",
+                                transition: "0.2s",
+                                "&:hover": {
+                                  borderColor: "#6366f1",
+                                  bgcolor: "#f3f4ff",
+                                },
+                              }}
+                            >
+                              <IconUpload />
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontSize: "1rem",
+                                  fontWeight: 700,
+                                  mt: 1,
+                                }}
+                              >
+                                Drop your CV here
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#94a3b8" }}
+                              >
+                                PDF, DOCX up to 10MB
+                              </Typography>
+                            </Box>
+                          </Grid>
+
+                          <Grid size={{ xs: 12 }}>
+                            <Button
+                              type="submit"
+                              fullWidth
+                              variant="contained"
+                              size="large"
+                              sx={{
+                                py: 2,
+                                bgcolor: "#6366f1",
+                                borderRadius: 3,
+                                fontWeight: 800,
+                                fontSize: "1.1rem",
+                                textTransform: "none",
+                                mt: 2,
+                                "&:hover": { bgcolor: "#4f46e5" },
+                              }}
+                            >
+                              Submit My Application
+                            </Button>
+                          </Grid>
+                        </Grid>
+                      </form>
+                    </>
+                  ) : (
+                    <Stack alignItems="center" spacing={3} sx={{ py: 8 }}>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200 }}
+                      >
+                        <Box sx={{ color: "#10b981", fontSize: 80 }}>
+                          <IconCheckCircle />
+                        </Box>
+                      </motion.div>
+                      <Typography variant="h4" sx={{ fontWeight: 900 }}>
+                        Application Received!
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "#64748b",
+                          textAlign: "center",
+                          maxWidth: 450,
+                        }}
+                      >
+                        Thanks for reaching out! Our recruitment team will
+                        review your application for the {selectedJob.title}{" "}
+                        position and get back to you shortly.
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          setFormSubmitted(false);
+                          setSelectedJob(null);
+                        }}
+                        sx={{
+                          borderRadius: 2,
+                          px: 4,
+                          mt: 2,
+                          textTransform: "none",
+                        }}
+                      >
+                        Explore More Roles
+                      </Button>
+                    </Stack>
+                  )}
+                </Paper>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Container>
+      </Box>
+    </>
   );
 };
 

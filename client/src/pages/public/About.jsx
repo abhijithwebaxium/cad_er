@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import BackgroundImage from "../../assets/back-ground-img.png";
+import ScrollToTop from "../../components/ScrollToTop";
 
 const CustomIcons = {
   Thunderbolt: () => (
@@ -111,335 +112,338 @@ const About = () => {
   const yBg = useTransform(smoothYProgress, [0, 1], ["0%", "10%"]);
 
   return (
-    <Box
-      ref={containerRef}
-      sx={{
-        backgroundColor: "#ffffff",
-        minHeight: "100vh",
-        position: "relative",
-        overflowX: "hidden",
-      }}
-    >
-      <CssBaseline />
-
-      {/* Background Elements */}
+    <>
+      <ScrollToTop />
       <Box
-        component={motion.div}
-        style={{ y: yBg }}
+        ref={containerRef}
         sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 0,
-          opacity: 0.03,
-          pointerEvents: "none",
-          backgroundImage: `url(${BackgroundImage})`,
-          backgroundRepeat: "repeat",
-          willChange: "transform",
+          backgroundColor: "#ffffff",
+          minHeight: "100vh",
+          position: "relative",
+          overflowX: "hidden",
         }}
-      />
+      >
+        <CssBaseline />
 
-      <Box sx={{ position: "relative", zIndex: 1 }}>
-        {/* Hero Section */}
-        <Container maxWidth="lg" sx={{ pt: { xs: 8, md: 15 }, pb: 8 }}>
-          <Grid container spacing={8} alignItems="center">
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Stack
-                component={motion.div}
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-                spacing={4}
-              >
-                <motion.div variants={fadeInUp}>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      color: "#6366f1",
-                      fontWeight: 800,
-                      letterSpacing: 4,
-                      mb: 2,
-                      display: "block",
-                    }}
-                  >
-                    THE FUTURE OF SURVEYING
-                  </Typography>
-                  <Typography
-                    variant="h1"
-                    sx={{
-                      fontSize: { xs: "2.5rem", md: "4rem" },
-                      fontWeight: 900,
-                      lineHeight: 1.1,
-                      color: "#111827",
-                      letterSpacing: -1.5,
-                    }}
-                  >
-                    Transforming <br />
-                    <span style={{ color: "#6366f1" }}>Site Engineering</span>
-                  </Typography>
-                </motion.div>
+        {/* Background Elements */}
+        <Box
+          component={motion.div}
+          style={{ y: yBg }}
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 0,
+            opacity: 0.03,
+            pointerEvents: "none",
+            backgroundImage: `url(${BackgroundImage})`,
+            backgroundRepeat: "repeat",
+            willChange: "transform",
+          }}
+        />
 
-                <motion.div variants={fadeInUp}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      color: "#4b5563",
-                      fontWeight: 400,
-                      lineHeight: 1.6,
-                      maxWidth: 600,
-                      fontSize: { xs: "1.1rem", md: "1.25rem" },
-                    }}
-                  >
-                    CADer is an innovative tool designed specifically for site
-                    supervisors, project managers, and engineers to
-                    revolutionize autolevel surveys for roads and waterways.
-                  </Typography>
-                </motion.div>
-
-                <motion.div variants={fadeInUp}>
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                    <Button
-                      variant="contained"
-                      size="large"
-                      sx={{
-                        bgcolor: "#6366f1",
-                        color: "white",
-                        px: 5,
-                        py: 2,
-                        borderRadius: 3,
-                        textTransform: "none",
-                        fontSize: "1.1rem",
-                        fontWeight: 700,
-                        boxShadow: "0 10px 20px -5px rgba(99, 102, 241, 0.4)",
-                        "&:hover": { bgcolor: "#4f46e5" },
-                      }}
-                    >
-                      Start Surveying
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="large"
-                      sx={{
-                        borderColor: "#e5e7eb",
-                        color: "#111827",
-                        px: 5,
-                        py: 2,
-                        borderRadius: 3,
-                        textTransform: "none",
-                        fontSize: "1.1rem",
-                        fontWeight: 700,
-                        "&:hover": {
-                          borderColor: "#6366f1",
-                          bgcolor: "#f3f4ff",
-                        },
-                      }}
-                    >
-                      Watch Demo
-                    </Button>
-                  </Stack>
-                </motion.div>
-              </Stack>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Box
-                component={motion.div}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    bgcolor: "#f8fafc",
-                    borderRadius: 10,
-                    border: "1px solid #e2e8f0",
-                    textAlign: "center",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
+        <Box sx={{ position: "relative", zIndex: 1 }}>
+          {/* Hero Section */}
+          <Container maxWidth="lg" sx={{ pt: { xs: 8, md: 15 }, pb: 8 }}>
+            <Grid container spacing={8} alignItems="center">
+              <Grid size={{ xs: 12, md: 7 }}>
+                <Stack
+                  component={motion.div}
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                  spacing={4}
                 >
-                  <Typography
-                    variant="h2"
-                    sx={{ fontWeight: 900, color: "#6366f1", mb: 1 }}
-                  >
-                    40%
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#1e293b", fontWeight: 700, mb: 1 }}
-                  >
-                    Time Reduction
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#64748b" }}>
-                    Average time saved on-site for professionals conducting
-                    autolevel surveys.
-                  </Typography>
-                </Paper>
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-
-        {/* Value Proposition Section */}
-        <Box sx={{ bgcolor: "#f9fafb", py: { xs: 8, md: 12 } }}>
-          <Container maxWidth="lg">
-            <Grid container spacing={4}>
-              {[
-                {
-                  icon: <CustomIcons.Thunderbolt />,
-                  title: "Maximum Efficiency",
-                  desc: "Significantly streamline the surveying process and reduce physical effort on-site.",
-                },
-                {
-                  icon: <CustomIcons.Safety />,
-                  title: "Zero Error Math",
-                  desc: "Automated calculations ensure absolute precision in road and waterway surveys.",
-                },
-                {
-                  icon: <CustomIcons.Solution />,
-                  title: "Field Precision",
-                  desc: "Built for supervisors and project managers who demand digital accuracy in the field.",
-                },
-              ].map((item, i) => (
-                <Grid size={{ xs: 12, md: 4 }} key={i}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <Paper
-                      elevation={0}
+                  <motion.div variants={fadeInUp}>
+                    <Typography
+                      variant="overline"
                       sx={{
-                        p: 5,
-                        borderRadius: 8,
-                        height: "100%",
-                        bgcolor: "white",
-                        border: "1px solid #f1f5f9",
+                        color: "#6366f1",
+                        fontWeight: 800,
+                        letterSpacing: 4,
+                        mb: 2,
+                        display: "block",
                       }}
                     >
-                      <Box sx={{ color: "#6366f1", mb: 3 }}>{item.icon}</Box>
-                      <Typography
-                        variant="h5"
-                        sx={{ fontWeight: 800, mb: 2, color: "#111827" }}
-                      >
-                        {item.title}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{ color: "#6b7280", lineHeight: 1.7 }}
-                      >
-                        {item.desc}
-                      </Typography>
-                    </Paper>
+                      THE FUTURE OF SURVEYING
+                    </Typography>
+                    <Typography
+                      variant="h1"
+                      sx={{
+                        fontSize: { xs: "2.5rem", md: "4rem" },
+                        fontWeight: 900,
+                        lineHeight: 1.1,
+                        color: "#111827",
+                        letterSpacing: -1.5,
+                      }}
+                    >
+                      Transforming <br />
+                      <span style={{ color: "#6366f1" }}>Site Engineering</span>
+                    </Typography>
                   </motion.div>
-                </Grid>
-              ))}
+
+                  <motion.div variants={fadeInUp}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        color: "#4b5563",
+                        fontWeight: 400,
+                        lineHeight: 1.6,
+                        maxWidth: 600,
+                        fontSize: { xs: "1.1rem", md: "1.25rem" },
+                      }}
+                    >
+                      CADer is an innovative tool designed specifically for site
+                      supervisors, project managers, and engineers to
+                      revolutionize autolevel surveys for roads and waterways.
+                    </Typography>
+                  </motion.div>
+
+                  <motion.div variants={fadeInUp}>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                      <Button
+                        variant="contained"
+                        size="large"
+                        sx={{
+                          bgcolor: "#6366f1",
+                          color: "white",
+                          px: 5,
+                          py: 2,
+                          borderRadius: 3,
+                          textTransform: "none",
+                          fontSize: "1.1rem",
+                          fontWeight: 700,
+                          boxShadow: "0 10px 20px -5px rgba(99, 102, 241, 0.4)",
+                          "&:hover": { bgcolor: "#4f46e5" },
+                        }}
+                      >
+                        Start Surveying
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="large"
+                        sx={{
+                          borderColor: "#e5e7eb",
+                          color: "#111827",
+                          px: 5,
+                          py: 2,
+                          borderRadius: 3,
+                          textTransform: "none",
+                          fontSize: "1.1rem",
+                          fontWeight: 700,
+                          "&:hover": {
+                            borderColor: "#6366f1",
+                            bgcolor: "#f3f4ff",
+                          },
+                        }}
+                      >
+                        Watch Demo
+                      </Button>
+                    </Stack>
+                  </motion.div>
+                </Stack>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Box
+                  component={motion.div}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 4,
+                      bgcolor: "#f8fafc",
+                      borderRadius: 10,
+                      border: "1px solid #e2e8f0",
+                      textAlign: "center",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  >
+                    <Typography
+                      variant="h2"
+                      sx={{ fontWeight: 900, color: "#6366f1", mb: 1 }}
+                    >
+                      40%
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: "#1e293b", fontWeight: 700, mb: 1 }}
+                    >
+                      Time Reduction
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#64748b" }}>
+                      Average time saved on-site for professionals conducting
+                      autolevel surveys.
+                    </Typography>
+                  </Paper>
+                </Box>
+              </Grid>
             </Grid>
           </Container>
-        </Box>
 
-        {/* Institutional Training Section */}
-        <Container maxWidth="lg" sx={{ py: { xs: 8, md: 15 } }}>
-          <Paper
-            elevation={0}
-            component={motion.div}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            sx={{
-              p: { xs: 4, md: 8 },
-              borderRadius: 12,
-              bgcolor: "#111827",
-              color: "white",
-              overflow: "hidden",
-              position: "relative",
-            }}
-          >
-            <Box sx={{ position: "relative", zIndex: 1 }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={2}
-                sx={{ mb: 4 }}
-              >
-                <CustomIcons.Read />
-                <Typography
-                  variant="overline"
-                  sx={{ letterSpacing: 3, fontWeight: 700, color: "#818cf8" }}
-                >
-                  ACADEMIC PARTNERSHIP
-                </Typography>
-              </Stack>
+          {/* Value Proposition Section */}
+          <Box sx={{ bgcolor: "#f9fafb", py: { xs: 8, md: 12 } }}>
+            <Container maxWidth="lg">
+              <Grid container spacing={4}>
+                {[
+                  {
+                    icon: <CustomIcons.Thunderbolt />,
+                    title: "Maximum Efficiency",
+                    desc: "Significantly streamline the surveying process and reduce physical effort on-site.",
+                  },
+                  {
+                    icon: <CustomIcons.Safety />,
+                    title: "Zero Error Math",
+                    desc: "Automated calculations ensure absolute precision in road and waterway surveys.",
+                  },
+                  {
+                    icon: <CustomIcons.Solution />,
+                    title: "Field Precision",
+                    desc: "Built for supervisors and project managers who demand digital accuracy in the field.",
+                  },
+                ].map((item, i) => (
+                  <Grid size={{ xs: 12, md: 4 }} key={i}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 5,
+                          borderRadius: 8,
+                          height: "100%",
+                          bgcolor: "white",
+                          border: "1px solid #f1f5f9",
+                        }}
+                      >
+                        <Box sx={{ color: "#6366f1", mb: 3 }}>{item.icon}</Box>
+                        <Typography
+                          variant="h5"
+                          sx={{ fontWeight: 800, mb: 2, color: "#111827" }}
+                        >
+                          {item.title}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{ color: "#6b7280", lineHeight: 1.7 }}
+                        >
+                          {item.desc}
+                        </Typography>
+                      </Paper>
+                    </motion.div>
+                  </Grid>
+                ))}
+              </Grid>
+            </Container>
+          </Box>
 
-              <Typography
-                variant="h3"
-                sx={{
-                  fontWeight: 900,
-                  mb: 3,
-                  maxWidth: 700,
-                  lineHeight: 1.2,
-                  fontSize: { xs: "2rem", md: "3rem" },
-                }}
-              >
-                Equip your students with{" "}
-                <span style={{ color: "#818cf8" }}>cutting-edge skills</span>
-              </Typography>
-
-              <Typography
-                variant="h6"
-                sx={{
-                  color: "#94a3b8",
-                  fontWeight: 400,
-                  mb: 5,
-                  maxWidth: 800,
-                  fontSize: "1.1rem",
-                }}
-              >
-                We are pleased to offer a specialized CADer training program for
-                students at your esteemed institution, designed to prepare them
-                for today's competitive job market.
-              </Typography>
-
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "white",
-                  color: "#111827",
-                  px: 6,
-                  py: 2,
-                  borderRadius: 4,
-                  fontWeight: 800,
-                  fontSize: "1.1rem",
-                  textTransform: "none",
-                  "&:hover": { bgcolor: "#f1f5f9" },
-                }}
-              >
-                Enquire for Institution
-              </Button>
-            </Box>
-
-            {/* Decorative background glow */}
-            <Box
+          {/* Institutional Training Section */}
+          <Container maxWidth="lg" sx={{ py: { xs: 8, md: 15 } }}>
+            <Paper
+              elevation={0}
+              component={motion.div}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               sx={{
-                position: "absolute",
-                bottom: -100,
-                right: -100,
-                width: 400,
-                height: 400,
-                bgcolor: "#6366f1",
-                filter: "blur(120px)",
-                opacity: 0.15,
-                borderRadius: "50%",
+                p: { xs: 4, md: 8 },
+                borderRadius: 12,
+                bgcolor: "#111827",
+                color: "white",
+                overflow: "hidden",
+                position: "relative",
               }}
-            />
-          </Paper>
-        </Container>
+            >
+              <Box sx={{ position: "relative", zIndex: 1 }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={2}
+                  sx={{ mb: 4 }}
+                >
+                  <CustomIcons.Read />
+                  <Typography
+                    variant="overline"
+                    sx={{ letterSpacing: 3, fontWeight: 700, color: "#818cf8" }}
+                  >
+                    ACADEMIC PARTNERSHIP
+                  </Typography>
+                </Stack>
+
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 900,
+                    mb: 3,
+                    maxWidth: 700,
+                    lineHeight: 1.2,
+                    fontSize: { xs: "2rem", md: "3rem" },
+                  }}
+                >
+                  Equip your students with{" "}
+                  <span style={{ color: "#818cf8" }}>cutting-edge skills</span>
+                </Typography>
+
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#94a3b8",
+                    fontWeight: 400,
+                    mb: 5,
+                    maxWidth: 800,
+                    fontSize: "1.1rem",
+                  }}
+                >
+                  We are pleased to offer a specialized CADer training program
+                  for students at your esteemed institution, designed to prepare
+                  them for today's competitive job market.
+                </Typography>
+
+                <Button
+                  variant="contained"
+                  sx={{
+                    bgcolor: "white",
+                    color: "#111827",
+                    px: 6,
+                    py: 2,
+                    borderRadius: 4,
+                    fontWeight: 800,
+                    fontSize: "1.1rem",
+                    textTransform: "none",
+                    "&:hover": { bgcolor: "#f1f5f9" },
+                  }}
+                >
+                  Enquire for Institution
+                </Button>
+              </Box>
+
+              {/* Decorative background glow */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: -100,
+                  right: -100,
+                  width: 400,
+                  height: 400,
+                  bgcolor: "#6366f1",
+                  filter: "blur(120px)",
+                  opacity: 0.15,
+                  borderRadius: "50%",
+                }}
+              />
+            </Paper>
+          </Container>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

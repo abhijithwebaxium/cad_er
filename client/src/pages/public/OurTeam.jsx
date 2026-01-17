@@ -11,6 +11,7 @@ import {
   Grid, // Reverting to the standard stable Grid component
 } from "@mui/material";
 import { motion } from "framer-motion";
+import ScrollToTop from "../../components/ScrollToTop";
 
 /**
  * Custom SVG Icons for Social Media
@@ -122,263 +123,273 @@ const cardVariants = {
 
 const OurTeam = () => {
   return (
-    <Box
-      sx={{
-        bgcolor: "#ffffff",
-        minHeight: "100vh",
-        pb: 10,
-        overflowX: "hidden",
-      }}
-    >
-      <GlobalStyles
-        styles={{ body: { margin: 0, padding: 0, backgroundColor: "#ffffff" } }}
-      />
-
-      {/* Hero Header */}
+    <>
+      <ScrollToTop />
       <Box
-        component={motion.div}
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
         sx={{
-          pt: 12,
+          bgcolor: "#ffffff",
+          minHeight: "100vh",
           pb: 10,
-          textAlign: "center",
-          background:
-            "radial-gradient(circle at 50% 0%, #f3f4ff 0%, #ffffff 80%)",
+          overflowX: "hidden",
         }}
       >
-        <Container maxWidth="md">
-          <Typography
-            variant="overline"
-            sx={{
-              color: "#6366f1",
-              fontWeight: 800,
-              letterSpacing: 4,
-              display: "block",
-              mb: 1,
-            }}
-          >
-            OUR TALENT
-          </Typography>
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 900,
-              color: "#111827",
-              mb: 3,
-              fontSize: { xs: "2.75rem", md: "4.5rem" },
-              lineHeight: 1,
-              letterSpacing: -1,
-            }}
-          >
-            Meet the minds behind{" "}
-            <span style={{ color: "#6366f1" }}>CADer</span>
-          </Typography>
-          <Typography
-            variant="h6"
-            sx={{
-              color: "#6b7280",
-              fontWeight: 400,
-              lineHeight: 1.7,
-              maxWidth: 650,
-              mx: "auto",
-              fontSize: "1.25rem",
-            }}
-          >
-            We're a diverse group of creators working to redefine the
-            intersection of engineering and design.
-          </Typography>
-        </Container>
-      </Box>
+        <GlobalStyles
+          styles={{
+            body: { margin: 0, padding: 0, backgroundColor: "#ffffff" },
+          }}
+        />
 
-      {/* Team Grid using standard Grid */}
-      <Container maxWidth="lg">
-        <Grid
-          container
-          spacing={4}
-          component={motion.div}
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {teamMembers.map((member, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-              <motion.div variants={cardVariants} whileHover={{ y: -10 }}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    height: "100%",
-                    borderRadius: 10,
-                    textAlign: "center",
-                    border: "1px solid #f1f5f9",
-                    bgcolor: "#ffffff",
-                    position: "relative",
-                    overflow: "hidden",
-                    transition: "all 0.3s ease-in-out",
-                    "&:hover": {
-                      borderColor: "#6366f1",
-                      boxShadow: "0 30px 60px -12px rgba(99, 102, 241, 0.12)",
-                      "& .social-stack": { opacity: 1, y: 0 },
-                      "& .member-avatar": { transform: "scale(1.1)" },
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: "relative",
-                      mb: 4,
-                      width: 150,
-                      height: 150,
-                      mx: "auto",
-                      "&::after": {
-                        content: '""',
-                        position: "absolute",
-                        inset: -6,
-                        borderRadius: "50%",
-                        border: "2px solid #6366f1",
-                        opacity: 0,
-                        transition: "0.3s",
-                        transform: "scale(0.8)",
-                      },
-                      "&:hover::after": {
-                        opacity: 1,
-                        transform: "scale(1)",
-                      },
-                    }}
-                  >
-                    <Avatar
-                      className="member-avatar"
-                      src={member.image}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        transition:
-                          "transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                      }}
-                    />
-                  </Box>
-
-                  <Typography
-                    variant="h5"
-                    sx={{ fontWeight: 800, color: "#111827", mb: 0.5 }}
-                  >
-                    {member.name}
-                  </Typography>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      color: "#6366f1",
-                      fontWeight: 700,
-                      mb: 2,
-                      textTransform: "uppercase",
-                      letterSpacing: 1.5,
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    {member.role}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#64748b",
-                      mb: 4,
-                      lineHeight: 1.7,
-                      fontSize: "0.95rem",
-                    }}
-                  >
-                    {member.bio}
-                  </Typography>
-
-                  {/* Social Box with Motion logic */}
-                  <Stack
-                    direction="row"
-                    spacing={1.5}
-                    justifyContent="center"
-                    className="social-stack"
-                    sx={{
-                      opacity: 0,
-                      y: 20,
-                      transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                    }}
-                  >
-                    {[
-                      <SocialIcons.Twitter />,
-                      <SocialIcons.LinkedIn />,
-                      <SocialIcons.Github />,
-                    ].map((icon, i) => (
-                      <IconButton
-                        key={i}
-                        size="medium"
-                        component={motion.button}
-                        whileHover={{ scale: 1.2, rotate: 8, color: "#6366f1" }}
-                        whileTap={{ scale: 0.9 }}
-                        sx={{
-                          color: "#94a3b8",
-                          bgcolor: "#f8fafc",
-                          transition: "color 0.2s",
-                          "&:hover": { bgcolor: "#eef2ff" },
-                        }}
-                      >
-                        {icon}
-                      </IconButton>
-                    ))}
-                  </Stack>
-                </Paper>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* Bottom CTA Section */}
-      <Container maxWidth="md" sx={{ mt: 15 }}>
+        {/* Hero Header */}
         <Box
           component={motion.div}
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: "easeOut" }}
           sx={{
-            p: 6,
-            borderRadius: 12,
+            pt: 12,
+            pb: 10,
             textAlign: "center",
-            bgcolor: "#111827",
-            color: "white",
-            position: "relative",
-            overflow: "hidden",
+            background:
+              "radial-gradient(circle at 50% 0%, #f3f4ff 0%, #ffffff 80%)",
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 900, mb: 2 }}>
-            Want to join the mission?
-          </Typography>
-          <Typography
-            sx={{ color: "#94a3b8", mb: 4, maxWidth: 500, mx: "auto" }}
+          <Container maxWidth="md">
+            <Typography
+              variant="overline"
+              sx={{
+                color: "#6366f1",
+                fontWeight: 800,
+                letterSpacing: 4,
+                display: "block",
+                mb: 1,
+              }}
+            >
+              OUR TALENT
+            </Typography>
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 900,
+                color: "#111827",
+                mb: 3,
+                fontSize: { xs: "2.75rem", md: "4.5rem" },
+                lineHeight: 1,
+                letterSpacing: -1,
+              }}
+            >
+              Meet the minds behind{" "}
+              <span style={{ color: "#6366f1" }}>CADer</span>
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#6b7280",
+                fontWeight: 400,
+                lineHeight: 1.7,
+                maxWidth: 650,
+                mx: "auto",
+                fontSize: "1.25rem",
+              }}
+            >
+              We're a diverse group of creators working to redefine the
+              intersection of engineering and design.
+            </Typography>
+          </Container>
+        </Box>
+
+        {/* Team Grid using standard Grid */}
+        <Container maxWidth="lg">
+          <Grid
+            container
+            spacing={4}
+            component={motion.div}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
           >
-            We're always looking for talented individuals to help us build the
-            next generation of CAD tools.
-          </Typography>
-          <IconButton
-            component={motion.button}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            {teamMembers.map((member, index) => (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
+                <motion.div variants={cardVariants} whileHover={{ y: -10 }}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 4,
+                      height: "100%",
+                      borderRadius: 10,
+                      textAlign: "center",
+                      border: "1px solid #f1f5f9",
+                      bgcolor: "#ffffff",
+                      position: "relative",
+                      overflow: "hidden",
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        borderColor: "#6366f1",
+                        boxShadow: "0 30px 60px -12px rgba(99, 102, 241, 0.12)",
+                        "& .social-stack": { opacity: 1, y: 0 },
+                        "& .member-avatar": { transform: "scale(1.1)" },
+                      },
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        position: "relative",
+                        mb: 4,
+                        width: 150,
+                        height: 150,
+                        mx: "auto",
+                        "&::after": {
+                          content: '""',
+                          position: "absolute",
+                          inset: -6,
+                          borderRadius: "50%",
+                          border: "2px solid #6366f1",
+                          opacity: 0,
+                          transition: "0.3s",
+                          transform: "scale(0.8)",
+                        },
+                        "&:hover::after": {
+                          opacity: 1,
+                          transform: "scale(1)",
+                        },
+                      }}
+                    >
+                      <Avatar
+                        className="member-avatar"
+                        src={member.image}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          transition:
+                            "transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        }}
+                      />
+                    </Box>
+
+                    <Typography
+                      variant="h5"
+                      sx={{ fontWeight: 800, color: "#111827", mb: 0.5 }}
+                    >
+                      {member.name}
+                    </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        color: "#6366f1",
+                        fontWeight: 700,
+                        mb: 2,
+                        textTransform: "uppercase",
+                        letterSpacing: 1.5,
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      {member.role}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#64748b",
+                        mb: 4,
+                        lineHeight: 1.7,
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      {member.bio}
+                    </Typography>
+
+                    {/* Social Box with Motion logic */}
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      justifyContent="center"
+                      className="social-stack"
+                      sx={{
+                        opacity: 0,
+                        y: 20,
+                        transition:
+                          "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      }}
+                    >
+                      {[
+                        <SocialIcons.Twitter />,
+                        <SocialIcons.LinkedIn />,
+                        <SocialIcons.Github />,
+                      ].map((icon, i) => (
+                        <IconButton
+                          key={i}
+                          size="medium"
+                          component={motion.button}
+                          whileHover={{
+                            scale: 1.2,
+                            rotate: 8,
+                            color: "#6366f1",
+                          }}
+                          whileTap={{ scale: 0.9 }}
+                          sx={{
+                            color: "#94a3b8",
+                            bgcolor: "#f8fafc",
+                            transition: "color 0.2s",
+                            "&:hover": { bgcolor: "#eef2ff" },
+                          }}
+                        >
+                          {icon}
+                        </IconButton>
+                      ))}
+                    </Stack>
+                  </Paper>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+
+        {/* Bottom CTA Section */}
+        <Container maxWidth="md" sx={{ mt: 15 }}>
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
             sx={{
-              bgcolor: "#6366f1",
+              p: 6,
+              borderRadius: 12,
+              textAlign: "center",
+              bgcolor: "#111827",
               color: "white",
-              borderRadius: 3,
-              px: 4,
-              py: 1.5,
-              fontSize: "1rem",
-              fontWeight: 700,
-              "&:hover": { bgcolor: "#4f46e5" },
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            View Open Positions
-          </IconButton>
-        </Box>
-      </Container>
-    </Box>
+            <Typography variant="h4" sx={{ fontWeight: 900, mb: 2 }}>
+              Want to join the mission?
+            </Typography>
+            <Typography
+              sx={{ color: "#94a3b8", mb: 4, maxWidth: 500, mx: "auto" }}
+            >
+              We're always looking for talented individuals to help us build the
+              next generation of CAD tools.
+            </Typography>
+            <IconButton
+              component={motion.button}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              sx={{
+                bgcolor: "#6366f1",
+                color: "white",
+                borderRadius: 3,
+                px: 4,
+                py: 1.5,
+                fontSize: "1rem",
+                fontWeight: 700,
+                "&:hover": { bgcolor: "#4f46e5" },
+              }}
+            >
+              View Open Positions
+            </IconButton>
+          </Box>
+        </Container>
+      </Box>
+    </>
   );
 };
 
