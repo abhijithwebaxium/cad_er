@@ -11,6 +11,7 @@ import organizationRouter from "./routes/organizationRoute.js";
 import userRouter from "./routes/userRoute.js";
 import surveyRouter from "./routes/surveyRoute.js";
 import ticketRouter from "./routes/ticketRoute.js";
+import openingRouter from "./routes/openingRoute.js";
 
 const app = express();
 
@@ -39,11 +40,12 @@ app.use(express.json());
 app.use(cookieParser());
 
 // 🟢 Routes
-app.use("/api", indexRouter);
 app.use("/api/organizations", organizationRouter);
 app.use("/api/users", userRouter);
 app.use("/api/surveys", surveyRouter);
 app.use("/api/tickets", ticketRouter);
+app.use("/api/openings", openingRouter);
+app.use("/api", indexRouter);
 
 // 🟢 Error Handler Middleware (Keep at the End)
 app.use(errorHandler);

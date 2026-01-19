@@ -31,6 +31,7 @@ export const requireAuth = async (req, res, next) => {
       name: user.name,
       email: user.email,
       type: user.type,
+      company: user.company,
       isAuthenticated: true,
     };
 

@@ -2,7 +2,16 @@ import Opening from "../models/opening.js";
 
 export const createOpening = async (req, res, next) => {
   try {
-    const opening = await Opening.create(req.body);
+    const {
+      user: { userId, company },
+    } = req;
+
+    const opening = await Opening.create({
+      ...req.body,
+      tags: [req.body.tags],
+      company,
+      createdBy: userId,
+    });
     res.status(201).json({ success: true, opening });
   } catch (err) {
     next(err);

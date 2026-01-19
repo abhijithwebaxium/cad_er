@@ -126,7 +126,7 @@ const About = () => {
         <CssBaseline />
 
         {/* Background Elements */}
-        <Box
+        {/* <Box
           component={motion.div}
           style={{ y: yBg }}
           sx={{
@@ -142,7 +142,7 @@ const About = () => {
             backgroundRepeat: "repeat",
             willChange: "transform",
           }}
-        />
+        /> */}
 
         <Box sx={{ position: "relative", zIndex: 1 }}>
           {/* Hero Section */}

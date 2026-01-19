@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.js";
 import Company from "../models/company.js";
+import Opening from "../models/opening.js";
 import jwt from "../utils/jwt.js";
 
 export const loginUser = async (req, res, next) => {
@@ -20,7 +21,7 @@ export const loginUser = async (req, res, next) => {
         new Error("Please sign in with Google, not with email/password"),
         {
           statusCode: 401,
-        }
+        },
       );
     }
 
@@ -36,7 +37,7 @@ export const loginUser = async (req, res, next) => {
     if (user.status !== "Active") {
       throw Object.assign(
         new Error(`Login failed. Your account is currently ${user.status}.`),
-        { statusCode: 403 } // Forbidden
+        { statusCode: 403 }, // Forbidden
       );
     }
 
@@ -80,7 +81,7 @@ export const googleLogin = async (req, res, next) => {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      }
+      },
     );
 
     const payload = await googleRes.json();
@@ -97,7 +98,7 @@ export const googleLogin = async (req, res, next) => {
     if (action === "login" && !user) {
       throw Object.assign(
         new Error("Account not found. Please sign up first."),
-        { statusCode: 404 }
+        { statusCode: 404 },
       );
     }
 
@@ -321,7 +322,7 @@ export const logoutUser = (req, res, next) => {
 export const getDashboard = async (req, res, next) => {
   try {
     const {
-      user: { userId, role },
+      user: { userId, role, type },
     } = req;
 
     let stats = {
@@ -345,6 +346,11 @@ export const getDashboard = async (req, res, next) => {
         students,
         professionals,
       };
+    }
+
+    if (type === "Company") {
+      const openings = await Opening.find({ createdBy: userId });
+      stats = { ...stats, openings };
     }
 
     res.status(200).json({

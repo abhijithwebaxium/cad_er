@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Container,
@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import ScrollToTop from "../../components/ScrollToTop";
+import { getAllOpenings } from "../../services/openingServices";
 
 // Custom SVG Icons
 const IconMapPin = () => (
@@ -142,297 +143,23 @@ const IconSearch = () => (
   </svg>
 );
 
-const PLACEMENTS = [
-  {
-    id: "p-01",
-    company: "BuildCorp International",
-    title: "Junior Site Surveyor",
-    location: "Dubai, UAE",
-    stipend: "$2,500/mo",
-    tags: ["Immediate Start", "Housing"],
-    deadline: "Oct 15, 2023",
-  },
-  {
-    id: "p-02",
-    company: "GeoTech Solutions",
-    title: "Civil Engineering Intern",
-    location: "Singapore",
-    stipend: "$1,800/mo",
-    tags: ["Remote Friendly", "Mentorship"],
-    deadline: "Nov 01, 2023",
-  },
-  {
-    id: "p-03",
-    company: "Infrastructure Ltd",
-    title: "Quantity Surveyor Trainee",
-    location: "London, UK",
-    stipend: "£2,200/mo",
-    tags: ["Career Growth", "Travel"],
-    deadline: "Oct 28, 2023",
-  },
-  {
-    id: "p-04",
-    company: "Skyline Erectors",
-    title: "Structural Assistant",
-    location: "Chicago, USA",
-    stipend: "$3,000/mo",
-    tags: ["Skyscrapers", "High-Rise"],
-    deadline: "Nov 10, 2023",
-  },
-  {
-    id: "p-05",
-    company: "Terraform Group",
-    title: "Land Surveyor",
-    location: "Sydney, Australia",
-    stipend: "$4,200 AUD",
-    tags: ["Mining", "Field Work"],
-    deadline: "Oct 20, 2023",
-  },
-  {
-    id: "p-06",
-    company: "AquaStructure",
-    title: "Hydraulic Eng Intern",
-    location: "Amsterdam, NL",
-    stipend: "€1,900/mo",
-    tags: ["Water Management"],
-    deadline: "Dec 05, 2023",
-  },
-  {
-    id: "p-07",
-    company: "Metro Rail Corp",
-    title: "Alignment Engineer",
-    location: "Mumbai, India",
-    stipend: "₹45,000/mo",
-    tags: ["Public Transit", "Rail"],
-    deadline: "Oct 30, 2023",
-  },
-  {
-    id: "p-08",
-    company: "GreenBuild Co",
-    title: "Sustainability Consultant",
-    location: "Portland, USA",
-    stipend: "$2,800/mo",
-    tags: ["LEED", "Solar"],
-    deadline: "Nov 15, 2023",
-  },
-  {
-    id: "p-09",
-    company: "Nordic Civil",
-    title: "Junior Site Manager",
-    location: "Oslo, Norway",
-    stipend: "kr 32,000",
-    tags: ["Tunneling", "Arctic Tech"],
-    deadline: "Nov 22, 2023",
-  },
-  {
-    id: "p-10",
-    company: "Desert Roads",
-    title: "Asphalt Specialist",
-    location: "Riyadh, KSA",
-    stipend: "$3,500/mo",
-    tags: ["Highways", "Expats Welcome"],
-    deadline: "Dec 10, 2023",
-  },
-  {
-    id: "p-11",
-    company: "Urban Scapes",
-    title: "Draftsperson",
-    location: "Toronto, Canada",
-    stipend: "$3,100 CAD",
-    tags: ["AutoCAD", "BIM"],
-    deadline: "Oct 25, 2023",
-  },
-  {
-    id: "p-12",
-    company: "Alpine Bridges",
-    title: "Bridge Inspector",
-    location: "Zurich, Switzerland",
-    stipend: "CHF 4,500",
-    tags: ["Steel Structures"],
-    deadline: "Jan 15, 2024",
-  },
-  {
-    id: "p-13",
-    company: "Pacific Dredging",
-    title: "Coastal Engineer",
-    location: "Auckland, NZ",
-    stipend: "$3,800 NZD",
-    tags: ["Marine Tech"],
-    deadline: "Nov 30, 2023",
-  },
-  {
-    id: "p-14",
-    company: "Smart City Lab",
-    title: "IoT Site Coordinator",
-    location: "Seoul, S. Korea",
-    stipend: "₩2,800,000",
-    tags: ["Smart Tech", "Innovation"],
-    deadline: "Nov 05, 2023",
-  },
-  {
-    id: "p-15",
-    company: "Heritage Restorations",
-    title: "Masonry Apprentice",
-    location: "Rome, Italy",
-    stipend: "€1,600/mo",
-    tags: ["Historic", "Artisan"],
-    deadline: "Dec 20, 2023",
-  },
-  {
-    id: "p-16",
-    company: "Concrete Masters",
-    title: "Quality Control Tech",
-    location: "Berlin, Germany",
-    stipend: "€2,400/mo",
-    tags: ["Lab Work", "Precast"],
-    deadline: "Oct 31, 2023",
-  },
-  {
-    id: "p-17",
-    company: "Peak Power",
-    title: "Solar Farm Surveyor",
-    location: "Madrid, Spain",
-    stipend: "€2,100/mo",
-    tags: ["Energy", "Outdoor"],
-    deadline: "Nov 12, 2023",
-  },
-  {
-    id: "p-18",
-    company: "Titan Foundation",
-    title: "Piling Assistant",
-    location: "Tokyo, Japan",
-    stipend: "¥350,000",
-    tags: ["Seismic Tech"],
-    deadline: "Jan 05, 2024",
-  },
-  {
-    id: "p-19",
-    company: "QuickBuild Prefab",
-    title: "Assembly Supervisor",
-    location: "Austin, USA",
-    stipend: "$2,900/mo",
-    tags: ["Modular", "Fast-Track"],
-    deadline: "Dec 15, 2023",
-  },
-  {
-    id: "p-20",
-    company: "River Flow Ltd",
-    title: "Dam Safety Intern",
-    location: "Cairo, Egypt",
-    stipend: "$1,200/mo",
-    tags: ["Geotechnical"],
-    deadline: "Nov 18, 2023",
-  },
-  {
-    id: "p-21",
-    company: "Apex Mapping",
-    title: "GIS Analyst",
-    location: "Denver, USA",
-    stipend: "$3,200/mo",
-    tags: ["Data Science", "Drones"],
-    deadline: "Oct 29, 2023",
-  },
-  {
-    id: "p-22",
-    company: "Euro Tunnel",
-    title: "Excavation Trainee",
-    location: "Calais, France",
-    stipend: "€2,300/mo",
-    tags: ["Heavy Machinery"],
-    deadline: "Dec 01, 2023",
-  },
-  {
-    id: "p-23",
-    company: "Vista Development",
-    title: "Junior Planner",
-    location: "Cape Town, SA",
-    stipend: "R 25,000",
-    tags: ["Residential", "Urban Design"],
-    deadline: "Nov 25, 2023",
-  },
-  {
-    id: "p-24",
-    company: "Blueprint Civil",
-    title: "Estimation Engineer",
-    location: "Bangkok, Thailand",
-    stipend: "฿40,000",
-    tags: ["Costing", "Procurement"],
-    deadline: "Oct 27, 2023",
-  },
-  {
-    id: "p-25",
-    company: "Iron & Steel Co",
-    title: "Welding Inspector",
-    location: "Pittsburgh, USA",
-    stipend: "$3,400/mo",
-    tags: ["Manufacturing"],
-    deadline: "Nov 08, 2023",
-  },
-  {
-    id: "p-26",
-    company: "Island Infra",
-    title: "Pavement Engineer",
-    location: "Bali, Indonesia",
-    stipend: "Rp 15,000k",
-    tags: ["Rural Dev"],
-    deadline: "Dec 30, 2023",
-  },
-  {
-    id: "p-27",
-    company: "Nova Surveying",
-    title: "LiDAR Technician",
-    location: "Seattle, USA",
-    stipend: "$3,600/mo",
-    tags: ["Laser Scanning"],
-    deadline: "Nov 20, 2023",
-  },
-  {
-    id: "p-28",
-    company: "Canal Builders",
-    title: "Logistics Assistant",
-    location: "Panama City, PA",
-    stipend: "$2,000/mo",
-    tags: ["Transport"],
-    deadline: "Oct 22, 2023",
-  },
-  {
-    id: "p-29",
-    company: "Solid Rock Eng",
-    title: "Blasting Trainee",
-    location: "Johannesburg, SA",
-    stipend: "R 28,000",
-    tags: ["Quarrying"],
-    deadline: "Nov 14, 2023",
-  },
-  {
-    id: "p-30",
-    company: "Deep Blue Marine",
-    title: "Underwater Surveyor",
-    location: "Miami, USA",
-    stipend: "$4,500/mo",
-    tags: ["Diving Required"],
-    deadline: "Jan 10, 2024",
-  },
-];
-
 const ITEMS_PER_PAGE = 5;
 
 const Placements = () => {
+  const [placements, setPlacements] = useState([]);
   const [selectedOpening, setSelectedOpening] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter logic (Text-based search)
   const filteredPlacements = useMemo(() => {
-    return PLACEMENTS.filter(
+    return placements.filter(
       (p) =>
-        p.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.title.toLowerCase().includes(searchQuery.toLowerCase())
+        p?.company?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [searchQuery]);
+  }, [placements, searchQuery]);
 
-  // Pagination logic
   const paginatedPlacements = useMemo(() => {
     const startIndex = (page - 1) * ITEMS_PER_PAGE;
     return filteredPlacements.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -447,7 +174,7 @@ const Placements = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setPage(1); // Reset to first page on search
+    setPage(1);
   };
 
   const handleSubmit = (e) => {
@@ -458,6 +185,18 @@ const Placements = () => {
       setSelectedOpening(null);
     }, 5000);
   };
+
+  useEffect(() => {
+    const fetchPlacements = async () => {
+      try {
+        const { data } = await getAllOpenings();
+        setPlacements(data?.openings || []);
+      } catch (error) {
+        console.error("Error fetching placements:", error);
+      }
+    };
+    fetchPlacements();
+  }, []);
 
   return (
     <>
@@ -549,14 +288,14 @@ const Placements = () => {
                       variant="body2"
                       sx={{ color: "#64748b", whiteSpace: "nowrap" }}
                     >
-                      Showing {filteredPlacements.length} results
+                      Showing {filteredPlacements?.length || 0} results
                     </Typography>
                   </Paper>
 
-                  {paginatedPlacements.length > 0 ? (
-                    paginatedPlacements.map((opening) => (
+                  {paginatedPlacements?.length > 0 ? (
+                    paginatedPlacements?.map((opening) => (
                       <Paper
-                        key={opening.id}
+                        key={opening._id}
                         elevation={0}
                         sx={{
                           p: 4,
@@ -597,7 +336,7 @@ const Placements = () => {
                                   textTransform: "uppercase",
                                 }}
                               >
-                                {opening.company}
+                                {opening.company?.name}
                               </Typography>
                             </Stack>
                             <Typography
@@ -651,7 +390,8 @@ const Placements = () => {
                               variant="caption"
                               sx={{ color: "#94a3b8", display: "block", mt: 1 }}
                             >
-                              Deadline: {opening.deadline}
+                              Deadline:{" "}
+                              {new Date(opening?.deadline)?.toDateString()}
                             </Typography>
                           </Grid>
                           <Grid
@@ -733,7 +473,8 @@ const Placements = () => {
                         variant="body1"
                         sx={{ color: "#64748b", mb: 5 }}
                       >
-                        Position at <strong>{selectedOpening.company}</strong>.
+                        Position at{" "}
+                        <strong>{selectedOpening.company?.name}</strong>.
                         Provide your details for the placement coordinator.
                       </Typography>
 
@@ -876,8 +617,8 @@ const Placements = () => {
                         }}
                       >
                         Your profile has been shared with the placement team at{" "}
-                        {selectedOpening.company}. Check your email for further
-                        instructions on the interview schedule.
+                        {selectedOpening.company?.name}. Check your email for
+                        further instructions on the interview schedule.
                       </Typography>
                       <Button
                         variant="outlined"

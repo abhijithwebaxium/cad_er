@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Stack,
@@ -20,6 +20,8 @@ import ImageAvatars from "../../../components/ImageAvatar";
 import BackgroundImage from "../../../assets/background-img.png";
 import logo from "../../../assets/logo/CADer logo-main.png";
 import { motion } from "framer-motion";
+import AddNewOpening from "./AddNewOpening";
+import AlertDialogSlide from "../../../components/AlertDialogSlide";
 
 // 1. Define Animation Variants
 const containerVariants = {
@@ -41,42 +43,42 @@ const cardVariants = {
   },
 };
 
-// Mock Data based on your structure
-const INITIAL_OPENINGS = [
-  {
-    id: "p-01",
-    company: "BuildCorp International",
-    title: "Junior Site Surveyor",
-    location: "Dubai, UAE",
-    stipend: "$2,500/mo",
-    tags: ["Immediate Start", "Housing"],
-    deadline: "Oct 15, 2023",
-  },
-  {
-    id: "p-02",
-    company: "GeoTech Solutions",
-    title: "Civil Engineering Intern",
-    location: "Singapore",
-    stipend: "$1,800/mo",
-    tags: ["Remote Friendly", "Mentorship"],
-    deadline: "Nov 01, 2023",
-  },
-  {
-    id: "p-03",
-    company: "Infrastructure Ltd",
-    title: "Quantity Surveyor Trainee",
-    location: "London, UK",
-    stipend: "£2,200/mo",
-    tags: ["Career Growth", "Travel"],
-    deadline: "Oct 28, 2023",
-  },
-];
+const CompanyDashboard = ({ user, data }) => {
+  const [openings, setOpenings] = useState([]);
+  const [open, setOpen] = useState(false);
 
-const CompanyDashboard = ({ user }) => {
-  const [openings, setOpenings] = useState(INITIAL_OPENINGS);
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (newOpening) => {
+    if (newOpening) {
+      setOpenings((prev) => [...prev, newOpening]);
+    }
+
+    setOpen(false);
+  };
+
+  const openingAlertData = {
+    title: "New Opening",
+    description: "",
+    content: <AddNewOpening onClose={handleClose} />,
+  };
+
+  useEffect(() => {
+    if (data) {
+      console.log(data.openings);
+      setOpenings(data.openings || []);
+    }
+  }, [data]);
 
   return (
     <Stack spacing={2} sx={{ userSelect: "none" }} overflow={"hidden"}>
+      <AlertDialogSlide
+        {...openingAlertData}
+        open={open}
+        onCancel={handleClose}
+      />
       <Stack
         p={2}
         height={"155px"}
@@ -150,7 +152,7 @@ const CompanyDashboard = ({ user }) => {
               Active Job Openings
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              You have {openings.length} live listings
+              You have {openings?.length || 0} live listings
             </Typography>
           </Box>
           <Button
@@ -165,20 +167,17 @@ const CompanyDashboard = ({ user }) => {
               px: 3,
               bgcolor: "#0A3BAF",
             }}
+            onClick={handleOpen}
           >
             New Opening
           </Button>
         </Stack>
 
         {/* 2. Wrap Grid in motion.div for the entrance stagger */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <motion.div variants={containerVariants} animate="visible">
           <Grid container spacing={2.5}>
-            {openings.map((job) => (
-              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={job.id}>
+            {openings?.map((job) => (
+              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={job._id}>
                 {/* 3. Wrap each card in motion.div */}
                 <motion.div variants={cardVariants}>
                   <Card
@@ -247,7 +246,9 @@ const CompanyDashboard = ({ user }) => {
                                 variant="body2"
                                 color="text.secondary"
                               >
-                                {job.deadline}
+                                {new Date(job.deadline)?.toLocaleDateString(
+                                  "en-IN",
+                                )}
                               </Typography>
                             </Stack>
                           </Stack>

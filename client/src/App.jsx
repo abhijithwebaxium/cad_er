@@ -34,20 +34,25 @@ import About from "./pages/public/About";
 import Careers from "./pages/public/Careers";
 import Placements from "./pages/public/Placements";
 import Pricing from "./pages/public/Pricing";
+import PublicAppBarLayout from "./layout/PublicAppBarLayout";
 
 function App() {
   return (
     <>
       <BrowserRouter>
         <Routes>
-          <Route path="/our-team" element={<OurTeam />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/careers" element={<Careers />} />
-          <Route path="/placements" element={<Placements />} />
-          <Route path="/pricing" element={<Pricing />} />
+          <Route element={<PublicAppBarLayout />}>
+            <Route path="/our-team" element={<OurTeam />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/placements" element={<Placements />} />
+            <Route path="/pricing" element={<Pricing />} />
+          </Route>
 
           <Route element={<PublicRoute />}>
-            <Route path="/landing" element={<Landing />} />
+            <Route element={<PublicAppBarLayout />}>
+              <Route path="/landing" element={<Landing />} />
+            </Route>
             <Route path="/login" element={<SignIn />} />
             <Route path="/register" element={<SignUp />} />
           </Route>

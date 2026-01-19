@@ -271,7 +271,7 @@ const Pricing = () => {
                 checked={billingCycle === "yearly"}
                 onChange={() =>
                   setBillingCycle(
-                    billingCycle === "monthly" ? "yearly" : "monthly"
+                    billingCycle === "monthly" ? "yearly" : "monthly",
                   )
                 }
                 sx={{
@@ -309,7 +309,7 @@ const Pricing = () => {
           {/* Cards */}
           <Grid container spacing={4} sx={{ mb: 15 }}>
             {plans.map((plan, index) => (
-              <Grid item xs={12} md={4} key={index}>
+              <Grid size={{ xs: 12, md: 4 }} key={index}>
                 <PricingCard {...plan} />
               </Grid>
             ))}
