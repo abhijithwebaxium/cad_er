@@ -3,6 +3,8 @@ import User from "../models/user.js";
 import Company from "../models/company.js";
 import Opening from "../models/opening.js";
 import jwt from "../utils/jwt.js";
+import { send_mail } from "../utils/mailer.js";
+import { EMAIL_TEMPLATES } from "../utils/emails/templates.js";
 
 export const loginUser = async (req, res, next) => {
   try {
@@ -356,6 +358,54 @@ export const getDashboard = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       stats,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const contactForm = async (req, res, next) => {
+  try {
+    const { name, email, phone, message } = req.body;
+
+    if (!name || !email || !message) {
+      throw Object.assign(new Error("All fields are required"), {
+        statusCode: 400,
+      });
+    }
+
+    const adminEmail = process.env.SUPPORT_EMAILS;
+
+    if (!adminEmail) {
+      throw Object.assign(new Error("Admin email not configured"), {
+        statusCode: 500,
+      });
+    }
+
+    const data = { name, email, phone, message };
+
+    const [adminMailSent, clientMailSent] = await Promise.all([
+      send_mail(
+        adminEmail,
+        "New Contact Form Submission",
+        EMAIL_TEMPLATES.CONTACT_FORM_ADMIN(data),
+      ),
+      send_mail(
+        email,
+        "Thank you for contacting us!",
+        EMAIL_TEMPLATES.CONTACT_FORM_CLIENT(data),
+      ),
+    ]);
+
+    if (!adminMailSent || !clientMailSent) {
+      throw Object.assign(new Error("Failed to send emails"), {
+        statusCode: 500,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Message sent successfully",
     });
   } catch (err) {
     next(err);

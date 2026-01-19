@@ -23,3 +23,7 @@ export const logoutUser = () => {
 export const getDashboard = () => {
   return axiosInstance.get("/");
 };
+
+export const contactForm = (formData) => {
+  return axiosInstance.post("contact", formData);
+};

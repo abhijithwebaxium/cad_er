@@ -224,7 +224,7 @@ const LandingFooter = () => {
           spacing={2}
         >
           <Typography variant="caption" color="text.disabled">
-            © 2025 CADer Engineering Solutions. All rights reserved.
+            © 2025 CADer. All rights reserved.
           </Typography>
           <Stack direction="row" spacing={3}>
             <StyledLink to="#">Privacy Policy</StyledLink>

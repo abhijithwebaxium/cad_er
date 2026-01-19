@@ -38,4 +38,66 @@ export const EMAIL_TEMPLATES = {
   <p>CADer Support Team</p>
 </div>
 `,
+
+  CONTACT_FORM_ADMIN: (data) => `
+  <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+    <h2 style="color: #000;">📩 New Contact Form Submission</h2>
+
+    <p>You have received a new inquiry from your website.</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+      <tr>
+        <td style="padding: 8px; font-weight: bold;">Full Name:</td>
+        <td style="padding: 8px;">${data.name}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; font-weight: bold;">Email:</td>
+        <td style="padding: 8px;">${data.email}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; font-weight: bold;">Phone:</td>
+        <td style="padding: 8px;">${data.phone}</td>
+      </tr>
+    </table>
+
+    <p style="margin-top: 16px;"><strong>Message:</strong></p>
+    <div style="background: #f5f5f5; padding: 12px; border-radius: 6px;">
+      ${data.message}
+    </div>
+
+    <p style="margin-top: 20px;">Please respond to the client as soon as possible.</p>
+
+    <p style="font-size: 12px; color: #777;">
+      This email was generated automatically from your website contact form.
+    </p>
+  </div>
+  `,
+  CONTACT_FORM_CLIENT: (data) => `
+  <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+    <h2 style="color: #000;">Thank you for contacting us! 🙌</h2>
+
+    <p>Hi ${data.name},</p>
+
+    <p>
+      We’ve received your message and our team is reviewing your request.
+      Someone from our team will get back to you within <strong>24–48 hours</strong>.
+    </p>
+
+    <p><strong>Your message:</strong></p>
+    <div style="background: #f5f5f5; padding: 12px; border-radius: 6px;">
+      ${data.message}
+    </div>
+
+    <p>If your request is urgent, you can reply to this email.</p>
+
+    <p style="margin-top: 20px;">
+      Best regards,<br/>
+      <strong>CADer Support Team</strong>
+    </p>
+
+    <p style="font-size: 12px; color: #777;">
+      This is an automated confirmation email. Please do not reply unless necessary.
+    </p>
+  </div>
+  `,
 };

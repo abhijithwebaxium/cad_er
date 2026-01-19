@@ -11,6 +11,7 @@ import {
   logoutUser,
   getDashboard,
   registerAccountType,
+  contactForm,
 } from "../controllers/indexController.js";
 
 router.post("/login", loginUser);
@@ -22,6 +23,8 @@ router.post("/register", registerUser);
 router.post("/register-account-type", requireAuth, registerAccountType);
 
 router.get("/logout", logoutUser);
+
+router.post("/contact", contactForm);
 
 router.use(requireAuth, isAuthenticated);
 

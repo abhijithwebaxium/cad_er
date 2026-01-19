@@ -1,6 +1,6 @@
 import Ticket from "../models/tickets.js";
 import { EMAIL_TEMPLATES } from "../utils/emails/templates.js";
-import { send_support_mail } from "../utils/mailer.js";
+import { send_mail } from "../utils/mailer.js";
 
 export const createTicket = async (req, res, next) => {
   try {
@@ -18,16 +18,16 @@ export const createTicket = async (req, res, next) => {
 
     ticket = await ticket.populate("createdBy", "name email");
 
-    await send_support_mail(
+    await send_mail(
       process.env.SUPPORT_EMAILS,
       `New Ticket: ${ticket.feedbackType}`,
-      EMAIL_TEMPLATES.TICKET_CREATED_ADMIN(ticket, req.user)
+      EMAIL_TEMPLATES.TICKET_CREATED_ADMIN(ticket, req.user),
     );
 
-    await send_support_mail(
+    await send_mail(
       ticket.createdBy.email,
       `Ticket Confirmation: ${ticket.ticketNo}`,
-      EMAIL_TEMPLATES.TICKET_CREATED_USER(ticket)
+      EMAIL_TEMPLATES.TICKET_CREATED_USER(ticket),
     );
 
     res.status(201).json({ success: true, ticket });
@@ -79,7 +79,7 @@ export const getTicketById = async (req, res) => {
 
     // Optional: sort followups chronologically
     ticket.followups = ticket.followups.sort(
-      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     );
 
     res.status(200).json({ success: true, ticket });
@@ -94,7 +94,7 @@ export const updateTicketStatus = async (req, res, next) => {
 
     const ticket = await Ticket.findById(req.params.id).populate(
       "createdBy",
-      "name email"
+      "name email",
     );
     if (!ticket) return res.status(404).json({ message: "Ticket not found" });
 
@@ -119,10 +119,10 @@ export const updateTicketStatus = async (req, res, next) => {
     await ticket.save();
 
     if (status === "RESOLVED") {
-      await send_support_mail(
+      await send_mail(
         ticket.createdBy.email,
         `Ticket Resolved: ${ticket.ticketNo}`,
-        EMAIL_TEMPLATES.TICKET_RESOLVED_USER(ticket)
+        EMAIL_TEMPLATES.TICKET_RESOLVED_USER(ticket),
       );
     }
 

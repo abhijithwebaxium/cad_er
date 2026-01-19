@@ -11,7 +11,7 @@ const mailTransporter = nodemailer.createTransport({
   },
 });
 
-const send_support_mail = async (emails, subject, htmlContent) => {
+const send_mail = async (emails, subject, htmlContent) => {
   try {
     const mailDetails = {
       from: process.env.GMAIL_USER,
@@ -28,4 +28,4 @@ const send_support_mail = async (emails, subject, htmlContent) => {
   }
 };
 
-export { send_support_mail };
+export { send_mail };

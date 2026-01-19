@@ -1,3 +1,4 @@
+import * as Yup from "yup";
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -20,6 +21,10 @@ import TrainingCard from "./components/TrainingCard";
 import Preloader from "./components/Preloader";
 import ValidateCertificate from "../../components/ValidateCertificate";
 import AlertDialogSlide from "../../components/AlertDialogSlide";
+import { useDispatch } from "react-redux";
+import { contactForm } from "../../services/indexServices";
+import { handleFormError } from "../../utils/handleFormError";
+import { showAlert } from "../../redux/alertSlice";
 
 const MotionButton = motion.create(Button);
 const MotionStack = motion.create(Stack);
@@ -309,7 +314,13 @@ const float = {
   },
 };
 
-const CustomInput = ({ label, placeholder, type = "text" }) => (
+const CustomInput = ({
+  label,
+  placeholder,
+  type = "text",
+  onChange,
+  ...rest
+}) => (
   <Box sx={{ width: "100%" }}>
     <Typography
       sx={{
@@ -326,7 +337,9 @@ const CustomInput = ({ label, placeholder, type = "text" }) => (
       fullWidth
       placeholder={placeholder}
       variant="outlined"
+      onChange={onChange}
       type={type}
+      {...rest}
       sx={{
         bgcolor: "rgba(255,255,255,0.08)",
         borderRadius: 2,
@@ -345,8 +358,25 @@ const CustomInput = ({ label, placeholder, type = "text" }) => (
   </Box>
 );
 
+const schema = Yup.object().shape({
+  name: Yup.string().required("Name is required"),
+  email: Yup.string().required("Email is required"),
+  phone: Yup.string().required("Phone is required"),
+  message: Yup.string().required("Message is required"),
+});
+
+const initialFormValues = {
+  name: "",
+  email: "",
+  phone: "",
+  message: "",
+};
+
 const Landing = () => {
+  const dispatch = useDispatch();
+
   const navigate = useNavigate();
+
   const [openValidateCert, setOpenValidateCert] = useState(false);
   const [loading, setLoading] = useState(() => {
     const hasSeenPreloader = sessionStorage.getItem("hasSeenPreloader");
@@ -367,6 +397,50 @@ const Landing = () => {
     content: (
       <ValidateCertificate onCancel={() => setOpenValidateCert(false)} />
     ),
+  };
+
+  const [formValues, setFormValues] = useState(initialFormValues);
+
+  const [formErrors, setFormErrors] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleInputChange = async (event) => {
+    const { name, value } = event.target;
+
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    try {
+      await Yup.reach(schema, name).validate(value);
+
+      setFormErrors({ ...formErrors, [name]: null });
+    } catch (error) {
+      setFormErrors({ ...formErrors, [name]: error.message });
+    }
+  };
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      await schema.validate(formValues, { abortEarly: false });
+
+      await contactForm(formValues);
+      setFormValues(initialFormValues);
+
+      dispatch(
+        showAlert({
+          type: "success",
+          message: "Message sent successfully",
+        }),
+      );
+    } catch (error) {
+      handleFormError(error, setFormErrors, dispatch, navigate);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -1255,18 +1329,33 @@ const Landing = () => {
                             <CustomInput
                               label="Full Name"
                               placeholder="Jane Smith"
+                              name="name"
+                              onChange={handleInputChange}
+                              error={!!formErrors?.name}
+                              helperText={formErrors?.name}
+                              value={formValues?.name}
                             />
                           </Grid>
                           <Grid size={{ xs: 12, lg: 6 }}>
                             <CustomInput
                               label="Work Email"
                               placeholder="jane@university.edu"
+                              name="email"
+                              onChange={handleInputChange}
+                              error={!!formErrors?.email}
+                              helperText={formErrors?.email}
+                              value={formValues?.email}
                             />
                           </Grid>
                           <Grid size={{ xs: 12 }}>
                             <CustomInput
                               label="Phone Number"
                               placeholder="+91 9999999999"
+                              name="phone"
+                              onChange={handleInputChange}
+                              error={!!formErrors?.phone}
+                              helperText={formErrors?.phone}
+                              value={formValues?.phone}
                             />
                           </Grid>
                           <Grid size={{ xs: 12 }}>
@@ -1288,6 +1377,11 @@ const Landing = () => {
                                 rows={4}
                                 placeholder="Tell us about your requirements..."
                                 variant="outlined"
+                                name="message"
+                                onChange={handleInputChange}
+                                error={!!formErrors?.message}
+                                helperText={formErrors?.message}
+                                value={formValues?.message}
                                 sx={{
                                   bgcolor: "rgba(255,255,255,0.08)",
                                   borderRadius: 2,
@@ -1327,6 +1421,8 @@ const Landing = () => {
                                 },
                                 transition: "all 0.2s ease",
                               }}
+                              onClick={handleSubmit}
+                              loading={isLoading}
                             >
                               Send Message
                             </Button>
