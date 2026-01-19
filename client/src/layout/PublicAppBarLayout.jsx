@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
-import LandingAppBar from "../components/LandingAppbar";
+import LandingAppBar from "../components/LandingAppBar";
 import LandingFooter from "../components/LandingFooter";
 
 const PublicAppBarLayout = () => {
