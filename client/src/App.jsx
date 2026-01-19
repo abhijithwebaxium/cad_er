@@ -50,9 +50,7 @@ function App() {
           </Route>
 
           <Route element={<PublicRoute />}>
-            <Route element={<PublicAppBarLayout />}>
-              <Route path="/landing" element={<Landing />} />
-            </Route>
+            <Route path="/landing" element={<Landing />} />
             <Route path="/login" element={<SignIn />} />
             <Route path="/register" element={<SignUp />} />
           </Route>

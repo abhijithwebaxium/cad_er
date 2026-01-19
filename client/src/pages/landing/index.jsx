@@ -14,6 +14,7 @@ import {
   CssBaseline,
 } from "@mui/material";
 
+import Lenis from "@studio-freight/lenis";
 import { FaArrowRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,8 @@ import { useDispatch } from "react-redux";
 import { contactForm } from "../../services/indexServices";
 import { handleFormError } from "../../utils/handleFormError";
 import { showAlert } from "../../redux/alertSlice";
+import LandingAppBar from "../../components/LandingAppBar";
+import LandingFooter from "../../components/LandingFooter";
 
 const MotionButton = motion.create(Button);
 const MotionStack = motion.create(Stack);
@@ -455,8 +458,28 @@ const Landing = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.8,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smooth: true,
+      smoothTouch: false,
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy(); // cleanup
+    };
+  }, []);
+
   return (
-    <>
+    <Box sx={{ bgcolor: "#fff", minHeight: "100vh" }}>
       <AnimatePresence>
         {loading && (
           <Preloader
@@ -482,6 +505,8 @@ const Landing = () => {
               open={openValidateCert}
               onCancel={() => setOpenValidateCert(false)}
             />
+
+            <LandingAppBar />
 
             {/* Hero Section */}
             <Box
@@ -1437,7 +1462,9 @@ const Landing = () => {
           </ThemeProvider>
         </motion.div>
       )}
-    </>
+
+      <LandingFooter />
+    </Box>
   );
 };
 
