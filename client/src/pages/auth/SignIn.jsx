@@ -1,15 +1,15 @@
 import * as React from "react";
 import * as Yup from "yup";
+import { motion } from "framer-motion";
 import {
   Box,
   Divider,
   Link,
   Typography,
-  Stack,
   Card as MuiCard,
   Container,
-  useMediaQuery,
   Grid,
+  Stack,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -23,9 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { setUser } from "../../redux/userSlice";
 import BasicButtons from "../../components/BasicButton";
 import BasicInput from "../../components/BasicInput";
-import BackgroundImage2 from "../../assets/back-ground-img.png";
 import { useTheme } from "@mui/material/styles";
-import { motion, useAnimationFrame } from "framer-motion";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -92,6 +90,8 @@ const SignIn = () => {
   const [formErrors, setFormErrors] = React.useState(null);
 
   const [loading, setLoading] = React.useState(false);
+
+  const [coords, setCoords] = React.useState({ x: "42.3601", y: "71.0589" });
 
   const handleSuccessLogin = (user) => {
     const isQuizPending = user?.type === "Student" && !user?.isQuizCompleted;
@@ -175,10 +175,6 @@ const SignIn = () => {
     dispatch(stopLoading());
   }, []);
 
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  const [coords, setCoords] = React.useState({ x: "42.3601", y: "71.0589" });
-
   React.useEffect(() => {
     const interval = setInterval(() => {
       setCoords({
@@ -197,6 +193,7 @@ const SignIn = () => {
         display: "flex",
         width: "100vw",
         height: "100vh",
+        overflowX: "auto",
       }}
     >
       <Box
@@ -350,29 +347,32 @@ const SignIn = () => {
                 }}
               >
                 <Card variant="outlined" sx={{ zIndex: 1 }}>
-                  {/* <img src={Logo2} alt="logo" width={100} /> */}
-                  <Typography
-                    variant="h6"
-                    color="black"
-                    sx={{
-                      fontWeight: 900,
-                      fontSize: "1.4rem",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => navigate("/")}
-                  >
-                    CAD<span style={{ color: "#6366f1" }}>er.</span>
-                  </Typography>
-                  <Typography
-                    component="h1"
-                    variant="h4"
-                    sx={{
-                      width: "100%",
-                      fontSize: "clamp(1.5rem, 10vw, 1.6rem)",
-                    }}
-                  >
-                    Sign in
-                  </Typography>
+                  <Stack spacing={1}>
+                    <Typography
+                      variant="h6"
+                      color="black"
+                      mb={0}
+                      sx={{
+                        fontWeight: 900,
+                        fontSize: "1.4rem",
+                        cursor: "pointer",
+                        display: { xs: "block", md: "none" },
+                      }}
+                    >
+                      CAD<span style={{ color: "#6366f1" }}>er.</span>
+                    </Typography>
+                    <Typography
+                      component="h1"
+                      variant="h4"
+                      sx={{
+                        width: "100%",
+                        fontWeight: 700,
+                        fontSize: "clamp(2rem, 10vw, 2rem)",
+                      }}
+                    >
+                      Sign in
+                    </Typography>
+                  </Stack>
 
                   {/* Email & Password */}
                   <Box
