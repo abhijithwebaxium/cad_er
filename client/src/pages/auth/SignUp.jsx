@@ -379,6 +379,7 @@ export default function SignUp() {
                       error={formErrors.name}
                       onChange={handleInputChange}
                       variant="filled"
+                      placeholder="Full Name"
                     />
 
                     <BasicInput
@@ -388,6 +389,7 @@ export default function SignUp() {
                       error={formErrors.email}
                       onChange={handleInputChange}
                       variant="filled"
+                      placeholder="name@gmail.com"
                     />
 
                     {/* Password */}
@@ -400,6 +402,7 @@ export default function SignUp() {
                         error={formErrors.password}
                         onChange={handleInputChange}
                         variant="filled"
+                        placeholder="********"
                       />
                       <IconButton
                         onClick={() => setShowPassword((p) => !p)}
@@ -419,6 +422,7 @@ export default function SignUp() {
                         error={formErrors.confirmPassword}
                         onChange={handleInputChange}
                         variant="filled"
+                        placeholder="********"
                       />
                       <IconButton
                         onClick={() => setShowConfirmPassword((p) => !p)}
