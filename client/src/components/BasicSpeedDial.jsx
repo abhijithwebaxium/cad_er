@@ -20,16 +20,24 @@ export default function BasicSpeedDial({ actions, direction, sx = {} }) {
             key={action.name}
             icon={action.icon}
             onClick={action.onClick}
-            tooltipOpen
             slotProps={{
               tooltip: {
+                open: true,
                 title: action.name,
                 placement: "left",
+              },
+              fab: {
+                size: "large",
               },
             }}
             sx={{
               fontSize: 20,
               fontWeight: 900,
+
+              "& .MuiFab-sizeLarge": {
+                fontSize: 17,
+                color: "#000",
+              },
 
               "& .MuiSpeedDialAction-staticTooltipLabel": {
                 backgroundColor: "#1976d2",
