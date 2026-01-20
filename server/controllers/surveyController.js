@@ -101,7 +101,7 @@ const createSurvey = async (req, res, next) => {
     ) {
       throw createHttpError(
         400,
-        "All fields (Project, Purpose, Instrument No, Reduced Level, Back Sight, Chainage Multiple, Agreement No, Contractor, department) are required"
+        "All fields (Project, Purpose, Instrument No, Reduced Level, Back Sight, Chainage Multiple, Agreement No, Contractor, department) are required",
       );
     }
 
@@ -130,7 +130,7 @@ const createSurvey = async (req, res, next) => {
     if (!isPublicProject && !isPrivateProject) {
       throw createHttpError(
         400,
-        "Please provide either Administrative units or External parties"
+        "Please provide either Administrative units or External parties",
       );
     }
 
@@ -152,7 +152,7 @@ const createSurvey = async (req, res, next) => {
           ...(isPrivateProject ? { consultant, client } : {}),
         },
       ],
-      { session }
+      { session },
     );
 
     const surveyDoc = survey[0];
@@ -167,7 +167,7 @@ const createSurvey = async (req, res, next) => {
           isSurveyFinish: false,
         },
       ],
-      { session }
+      { session },
     );
 
     const purposeObj = purposeDoc[0];
@@ -184,11 +184,11 @@ const createSurvey = async (req, res, next) => {
           remarks: ["TBM"],
           reducedLevels: [Number(reducedLevel).toFixed(3)],
           heightOfInstrument: Number(
-            Number(reducedLevel) + Number(backSight)
+            Number(reducedLevel) + Number(backSight),
           ).toFixed(3),
         },
       ],
-      { session }
+      { session },
     );
 
     // 🔹 Optionally create a History log
@@ -202,7 +202,7 @@ const createSurvey = async (req, res, next) => {
           performedBy: userId,
         },
       ],
-      { session }
+      { session },
     );
 
     // ✅ Commit transaction
@@ -356,12 +356,13 @@ const createSurveyRow = async (req, res, next) => {
       throw createHttpError(400, `Invalid or missing row type: ${type}`);
 
     const missing = types[type].filter(
-      (f) => !req.body[f] || (Array.isArray(req.body[f]) && !req.body[f].length)
+      (f) =>
+        !req.body[f] || (Array.isArray(req.body[f]) && !req.body[f].length),
     );
     if (missing.length)
       throw createHttpError(
         400,
-        `Missing required fields: ${missing.join(", ")}`
+        `Missing required fields: ${missing.join(", ")}`,
       );
 
     // 🔹 Remarks logic
@@ -378,7 +379,7 @@ const createSurveyRow = async (req, res, next) => {
     }
 
     const initialSurvey = survey.purposes?.find(
-      (p) => p.type === "Initial Level"
+      (p) => p.type === "Initial Level",
     );
 
     if (isProposal) {
@@ -387,7 +388,7 @@ const createSurveyRow = async (req, res, next) => {
 
       const totalReadings = filteredInitialSurvey.length;
       const currentIndex = filteredInitialSurvey.findIndex(
-        (entry) => entry.chainage === chainage
+        (entry) => entry.chainage === chainage,
       );
 
       if (currentIndex === -1) {
@@ -418,8 +419,8 @@ const createSurveyRow = async (req, res, next) => {
         type === "Chainage"
           ? (intermediateSight || []).map((n) => Number(n).toFixed(3))
           : intermediateSight
-          ? [intermediateSight]
-          : undefined,
+            ? [intermediateSight]
+            : undefined,
 
       offsets: (offsets || []).map((n) => Number(n).toFixed(3)),
 
@@ -441,7 +442,7 @@ const createSurveyRow = async (req, res, next) => {
       if (lastRow.type !== "CP") {
         throw createHttpError(
           400,
-          "Invalid state: last row must be CP when resuming a paused survey."
+          "Invalid state: last row must be CP when resuming a paused survey.",
         );
       }
 
@@ -454,13 +455,13 @@ const createSurveyRow = async (req, res, next) => {
           heightOfInstrument: newReading.heightOfInstrument,
           remarks,
         },
-        { new: true, session }
+        { new: true, session },
       );
 
       if (!newRow) {
         throw createHttpError(
           500,
-          "Failed to update CP row while resuming survey."
+          "Failed to update CP row while resuming survey.",
         );
       }
 
@@ -587,7 +588,7 @@ const createSurveyPurpose = async (req, res, next) => {
 
       // Check if any of the always-required fields are missing
       const missingRequired = requiredFields.some(
-        (field) => field === undefined || field === null || field === ""
+        (field) => field === undefined || field === null || field === "",
       );
 
       if (missingRequired) {
@@ -609,14 +610,14 @@ const createSurveyPurpose = async (req, res, next) => {
       if (!hasCsPair && !hasCsCamper) {
         throw createHttpError(
           400,
-          "Please provide either (Cross section slop) or Cross section camper"
+          "Please provide either (Cross section slop) or Cross section camper",
         );
       }
     } else {
       const requiredFields = [reducedLevel, backSight];
 
       const missingRequired = requiredFields.some(
-        (field) => field === undefined || field === null || field === ""
+        (field) => field === undefined || field === null || field === "",
       );
 
       if (missingRequired) {
@@ -657,13 +658,13 @@ const createSurveyPurpose = async (req, res, next) => {
     // 🔹 Check for duplicate proposal relation
     if (proposal) {
       const existingProposal = survey.purposes?.find(
-        (p) => p.relation?.type === purpose && p.type === proposal
+        (p) => p.relation?.type === purpose && p.type === proposal,
       );
 
       if (existingProposal) {
         throw createHttpError(
           409,
-          `A proposal between "${purpose}" and "${proposal}" already exists`
+          `A proposal between "${purpose}" and "${proposal}" already exists`,
         );
       }
 
@@ -694,7 +695,7 @@ const createSurveyPurpose = async (req, res, next) => {
           }),
         },
       ],
-      { session }
+      { session },
     );
 
     if (!proposal) {
@@ -710,11 +711,11 @@ const createSurveyPurpose = async (req, res, next) => {
             remarks: ["TBM"],
             reducedLevels: [Number(reducedLevel).toFixed(3)],
             heightOfInstrument: Number(
-              Number(reducedLevel) + Number(backSight)
+              Number(reducedLevel) + Number(backSight),
             ).toFixed(3),
           },
         ],
-        { session }
+        { session },
       );
     }
 
@@ -802,7 +803,7 @@ const endSurveyPurpose = async (req, res, next) => {
     if (survey.isSurveyFinish)
       throw createHttpError(
         400,
-        "Cannot finish purpose — survey already finished"
+        "Cannot finish purpose — survey already finished",
       );
 
     if (purpose.phase === "Actual") {
@@ -820,6 +821,7 @@ const endSurveyPurpose = async (req, res, next) => {
 
     if (purpose.type === "Final Level") {
       survey.isSurveyFinish = true;
+      survey.status = "Completed";
       survey.surveyFinishDate = new Date();
 
       await survey.save({ session });
@@ -864,11 +866,12 @@ const endSurvey = async (req, res, next) => {
     if (pendingPurpose) {
       throw createHttpError(
         400,
-        `Cannot end survey — purpose "${pendingPurpose.type}" is still pending`
+        `Cannot end survey — purpose "${pendingPurpose.type}" is still pending`,
       );
     }
 
     survey.isSurveyFinish = true;
+    survey.status = "Completed";
     survey.surveyFinishDate = new Date();
     await survey.save({ session });
 
@@ -902,9 +905,8 @@ const updateSurveyRow = async (req, res, next) => {
       },
     } = req;
 
-    const isPurposeExist = await SurveyPurpose.findById(id).populate(
-      "surveyId"
-    );
+    const isPurposeExist =
+      await SurveyPurpose.findById(id).populate("surveyId");
     if (
       !isPurposeExist ||
       isPurposeExist?.deleted ||
@@ -919,7 +921,7 @@ const updateSurveyRow = async (req, res, next) => {
     if (type === "Instrument setup") {
       isRowExist.backSight = Number(backSight).toFixed(3);
       isRowExist.heightOfInstrument = Number(
-        Number(isRowExist.reducedLevels[0]) + Number(backSight)
+        Number(isRowExist.reducedLevels[0]) + Number(backSight),
       ).toFixed(3);
 
       isRowExist.remarks[0] = remark;
@@ -970,11 +972,11 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.reducedLevels = isProposal
         ? (reducedLevels || []).map((n) => Number(n).toFixed(3))
         : (intermediateSight || [])?.map((n) =>
-            (Number(prevRowHI) - Number(n || 0)).toFixed(3)
+            (Number(prevRowHI) - Number(n || 0)).toFixed(3),
           );
 
       isRowExist.intermediateSight = (intermediateSight || []).map((n) =>
-        Number(n).toFixed(3)
+        Number(n).toFixed(3),
       );
 
       isRowExist.offsets = (offsets || []).map((n) => Number(n).toFixed(3));
@@ -999,9 +1001,8 @@ const deleteSurveyRow = async (req, res, next) => {
       params: { id, rowId },
     } = req;
 
-    const isPurposeExist = await SurveyPurpose.findById(id).populate(
-      "surveyId"
-    );
+    const isPurposeExist =
+      await SurveyPurpose.findById(id).populate("surveyId");
     if (
       !isPurposeExist ||
       isPurposeExist?.deleted ||
@@ -1052,7 +1053,7 @@ const pauseSurveyPurpose = async (req, res, next) => {
     if (survey.isPurposeFinish) {
       throw createHttpError(
         400,
-        "This survey has already been finished. Cannot pause."
+        "This survey has already been finished. Cannot pause.",
       );
     }
 
@@ -1063,7 +1064,7 @@ const pauseSurveyPurpose = async (req, res, next) => {
     if (survey.type !== "Initial Level") {
       throw createHttpError(
         400,
-        "This operation is allowed only for Initial Level surveys."
+        "This operation is allowed only for Initial Level surveys.",
       );
     }
 
@@ -1082,7 +1083,7 @@ const pauseSurveyPurpose = async (req, res, next) => {
           purposeId: survey._id,
         },
       ],
-      { session }
+      { session },
     );
 
     await session.commitTransaction();
@@ -1130,13 +1131,13 @@ const generateSurveyPurpose = async (req, res, next) => {
     // const requiredFields = [quantity, lSection, lsSlop, length];
     const requiredFields = [quantity, length, width];
     const missingRequired = requiredFields.some(
-      (x) => x === undefined || x === null || x === ""
+      (x) => x === undefined || x === null || x === "",
     );
 
     if (missingRequired) {
       throw createHttpError(
         400,
-        "Missing required fields for proposal generation."
+        "Missing required fields for proposal generation.",
       );
     }
 
@@ -1149,7 +1150,7 @@ const generateSurveyPurpose = async (req, res, next) => {
     if (!hasCsPair && !hasCsCamper) {
       throw createHttpError(
         400,
-        "Please enter either both cross-section slope fields or a cross-section camber."
+        "Please enter either both cross-section slope fields or a cross-section camber.",
       );
     }
 
@@ -1179,19 +1180,19 @@ const generateSurveyPurpose = async (req, res, next) => {
     if (isProposalExist) {
       throw createHttpError(
         409,
-        `A survey with the name "${proposal}" already exists.`
+        `A survey with the name "${proposal}" already exists.`,
       );
     }
 
     // 🔹 Check if relationship already exists
     const existingProposal = survey.purposes?.find(
-      (p) => p.relation?.type === purpose && p.type === proposal
+      (p) => p.relation?.type === purpose && p.type === proposal,
     );
 
     if (existingProposal) {
       throw createHttpError(
         409,
-        `A proposal between "${purpose}" and "${proposal}" already exists.`
+        `A proposal between "${purpose}" and "${proposal}" already exists.`,
       );
     }
 
@@ -1206,13 +1207,13 @@ const generateSurveyPurpose = async (req, res, next) => {
 
     // 🔹 Filter chainage rows from base purpose
     const readingsToCreate = basePurpose.rows?.filter(
-      (r) => r.type === "Chainage"
+      (r) => r.type === "Chainage",
     );
 
     if (!readingsToCreate?.length) {
       throw createHttpError(
         409,
-        `No chainage readings found to generate "${proposal}".`
+        `No chainage readings found to generate "${proposal}".`,
       );
     }
 
@@ -1238,7 +1239,7 @@ const generateSurveyPurpose = async (req, res, next) => {
           purposeFinishDate: new Date(),
         },
       ],
-      { session }
+      { session },
     );
 
     // -----------------------------
@@ -1254,7 +1255,7 @@ const generateSurveyPurpose = async (req, res, next) => {
     const bulkOps = readingsToCreate.map((reading) => {
       const totalReadingReducedLevel = reading.reducedLevels.reduce(
         (acc, curr) => acc + Number(curr),
-        0
+        0,
       );
 
       const avgReadingReducedLevel =
@@ -1263,7 +1264,7 @@ const generateSurveyPurpose = async (req, res, next) => {
       const height = (limit * roadWidth) / safeQuantity;
 
       const reducedLevels = reading.reducedLevels.map(() =>
-        Number(avgReadingReducedLevel + height).toFixed(3)
+        Number(avgReadingReducedLevel + height).toFixed(3),
       );
 
       return {
@@ -1345,7 +1346,7 @@ const editSurveyPurpose = async (req, res, next) => {
       if (survey.purposes.length > 1)
         throw new Error(
           "Cannot update the survey reduced level because this survey has multiple purposes. " +
-            "Reduced level can only be updated when the survey has a single purpose."
+            "Reduced level can only be updated when the survey has a single purpose.",
         );
 
       survey.reducedLevel = Number(startRl);
@@ -1370,7 +1371,7 @@ const editSurveyPurpose = async (req, res, next) => {
         case "Chainage":
         case "TBM":
           row.reducedLevels = row.intermediateSight.map((is) =>
-            (hi - Number(is)).toFixed(3)
+            (hi - Number(is)).toFixed(3),
           );
           break;
 
@@ -1489,7 +1490,7 @@ const updateReducedLevels = async (req, res, next) => {
       if (oldRL.length !== s.data.length || oldIS.length !== s.data.length) {
         throw createHttpError(
           400,
-          "Reduced levels and intermediate sight length mismatch"
+          "Reduced levels and intermediate sight length mismatch",
         );
       }
 

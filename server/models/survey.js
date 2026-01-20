@@ -15,9 +15,17 @@ const SurveySchema = new Schema(
     client: { type: String, trim: true },
     status: {
       type: String,
-      enum: ["Active", "Deleted"],
+      enum: ["Active", "Completed", "Deleted"],
       required: true,
       default: "Active",
+    },
+    branchDetails: {
+      isBranch: { type: Boolean, default: false },
+      rootBranch: { type: Types.ObjectId, ref: "Survey" },
+      parentBranch: { type: Types.ObjectId, ref: "Survey" },
+      isBranchStart: { type: Boolean, default: false },
+      isBranchEnd: { type: Boolean, default: false },
+      currentBranch: { type: Types.ObjectId, ref: "Survey" },
     },
     instrumentNo: { type: String, required: true, trim: true },
     chainageMultiple: { type: Number, required: true },
@@ -29,7 +37,7 @@ const SurveySchema = new Schema(
     surveyFinishDate: Date,
     deleted: { type: Boolean, default: false, index: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // --- Virtuals ---
