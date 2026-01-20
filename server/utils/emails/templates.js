@@ -88,15 +88,13 @@ export const EMAIL_TEMPLATES = {
       ${data.message}
     </div>
 
-    <p>If your request is urgent, you can reply to this email.</p>
-
     <p style="margin-top: 20px;">
       Best regards,<br/>
       <strong>CADer Support Team</strong>
     </p>
 
     <p style="font-size: 12px; color: #777;">
-      This is an automated confirmation email. Please do not reply unless necessary.
+      This is an automated confirmation email. Please do not reply to this email.
     </p>
   </div>
   `,

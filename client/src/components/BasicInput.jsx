@@ -11,7 +11,7 @@ const StyledInput = styled(Input)(({ theme }) => ({
   fontSize: "0.95rem",
   transition: theme.transitions.create(
     ["border-color", "box-shadow", "background-color"],
-    { duration: theme.transitions.duration.shorter }
+    { duration: theme.transitions.duration.shorter },
   ),
 
   "&:hover": {
@@ -64,10 +64,10 @@ const BasicInput = ({
             color: error
               ? "error.main"
               : warning
-              ? "warning.main"
-              : labelColor
-              ? labelColor
-              : "black",
+                ? "warning.main"
+                : labelColor
+                  ? labelColor
+                  : "black",
           }}
         >
           {label}

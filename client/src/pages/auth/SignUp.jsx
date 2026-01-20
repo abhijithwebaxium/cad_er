@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   Box,
   Divider,
-  Link,
   Typography,
   Stack,
   Card as MuiCard,
@@ -12,6 +11,7 @@ import {
   Container,
   Grid,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { styled, useTheme } from "@mui/material/styles";
 import { useDispatch } from "react-redux";
@@ -43,6 +43,34 @@ const Card = styled(MuiCard)(({ theme }) => ({
   boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.08)",
   [theme.breakpoints.up("sm")]: {
     maxWidth: "480px",
+  },
+}));
+
+const StyledLink = styled(RouterLink)(({ theme }) => ({
+  fontSize: 15,
+  color: "#1976d2",
+  textDecoration: "none",
+  position: "relative",
+  transition: "color 0.2s ease",
+  width: "fit-content",
+  fontWeight: 500,
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    width: "0%",
+    height: "1px",
+    bottom: 0,
+    left: 0,
+    backgroundColor: "#6366f1",
+    transition: "width 0.25s ease",
+  },
+
+  "&:hover": {
+    color: "#6366f1",
+  },
+
+  "&:hover::after": {
+    width: "100%",
   },
 }));
 
@@ -330,169 +358,173 @@ export default function SignUp() {
             </Box>
           </Box>
 
-          <Grid container spacing={6}>
-            <Grid size={{ xs: 12, md: 6 }} width={"500px"}>
+          <Grid container spacing={6} maxWidth={1100}>
+            <Grid size={{ xs: 12, md: 6 }} width={500}>
               {/* LEFT SIDE */}
               <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  position: "relative",
-                  zIndex: 4000,
-                  p: { xs: 2, md: 3 },
+                component="form"
+                noValidate
+                autoComplete="off"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
                 }}
               >
-                <Card variant="outlined" sx={{ zIndex: 1 }}>
-                  <Stack spacing={1}>
-                    <Typography
-                      variant="h6"
-                      color="black"
-                      mb={0}
-                      sx={{
-                        fontWeight: 900,
-                        fontSize: "1.4rem",
-                        cursor: "pointer",
-                        display: { xs: "block", md: "none" },
-                      }}
-                    >
-                      CAD<span style={{ color: "#6366f1" }}>er.</span>
-                    </Typography>
-                    <Typography
-                      component="h1"
-                      variant="h4"
-                      sx={{
-                        width: "100%",
-                        fontWeight: 700,
-                        fontSize: "clamp(2rem, 10vw, 2rem)",
-                      }}
-                    >
-                      Sign up
-                    </Typography>
-                  </Stack>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative",
+                    zIndex: 4000,
+                    p: { xs: 2, md: 3 },
+                  }}
+                >
+                  <Card variant="outlined" sx={{ zIndex: 1 }}>
+                    <Stack spacing={1}>
+                      <Typography
+                        variant="h6"
+                        color="black"
+                        mb={0}
+                        sx={{
+                          fontWeight: 900,
+                          fontSize: "1.4rem",
+                          cursor: "pointer",
+                          display: { xs: "block", md: "none" },
+                        }}
+                      >
+                        CAD<span style={{ color: "#6366f1" }}>er.</span>
+                      </Typography>
+                      <Typography
+                        component="h1"
+                        variant="h4"
+                        sx={{
+                          width: "100%",
+                          fontWeight: 700,
+                          fontSize: "clamp(2rem, 10vw, 2rem)",
+                        }}
+                      >
+                        Sign up
+                      </Typography>
+                    </Stack>
 
-                  <Stack spacing={2}>
-                    <BasicInput
-                      label="Full Name"
-                      name="name"
-                      value={formValues.name}
-                      error={formErrors.name}
-                      onChange={handleInputChange}
-                      variant="filled"
-                      placeholder="Full Name"
-                    />
-
-                    <BasicInput
-                      label="Email"
-                      name="email"
-                      value={formValues.email}
-                      error={formErrors.email}
-                      onChange={handleInputChange}
-                      variant="filled"
-                      placeholder="name@gmail.com"
-                    />
-
-                    {/* Password */}
-                    <Box position="relative">
+                    <Stack spacing={2}>
                       <BasicInput
-                        label="Password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formValues.password}
-                        error={formErrors.password}
+                        label="Full Name"
+                        name="name"
+                        value={formValues.name}
+                        error={formErrors.name}
                         onChange={handleInputChange}
                         variant="filled"
-                        placeholder="********"
+                        placeholder="Full Name"
                       />
-                      <IconButton
-                        onClick={() => setShowPassword((p) => !p)}
-                        sx={{ position: "absolute", top: 25, right: 8 }}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                      </IconButton>
-                    </Box>
 
-                    {/* Confirm Password */}
-                    <Box position="relative">
                       <BasicInput
-                        label="Confirm Password"
-                        name="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={formValues.confirmPassword}
-                        error={formErrors.confirmPassword}
+                        label="Email"
+                        name="email"
+                        value={formValues.email}
+                        error={formErrors.email}
                         onChange={handleInputChange}
                         variant="filled"
-                        placeholder="********"
+                        placeholder="name@gmail.com"
                       />
-                      <IconButton
-                        onClick={() => setShowConfirmPassword((p) => !p)}
-                        sx={{ position: "absolute", top: 25, right: 8 }}
-                      >
-                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                      </IconButton>
-                    </Box>
 
-                    <BasicButtons
-                      value="Create Account"
-                      fullWidth
-                      loading={loading}
-                      onClick={handleSubmit}
-                      sx={{
-                        textTransform: "none",
-                        height: "2.5rem",
-                        color: "white",
-                        backgroundColor: "hsl(220, 35%, 3%)",
-                        backgroundImage:
-                          "linear-gradient(to bottom, hsl(220, 20%, 25%), hsl(220, 30%, 6%))",
-                        boxShadow:
-                          "inset 0 1px 0 hsl(220, 20%, 35%), inset 0 -1px 0 1px hsl(220, 0%, 0%)",
-                        border: "1px solid hsl(220, 20%, 25%)",
-                        "&:hover": {
-                          backgroundImage: "none",
-                          backgroundColor: "rgb(51, 60, 77)",
+                      {/* Password */}
+                      <Box position="relative">
+                        <BasicInput
+                          label="Password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formValues.password}
+                          error={formErrors.password}
+                          onChange={handleInputChange}
+                          variant="filled"
+                          placeholder="********"
+                        />
+                        <IconButton
+                          onClick={() => setShowPassword((p) => !p)}
+                          sx={{ position: "absolute", top: 25, right: 8 }}
+                        >
+                          {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </IconButton>
+                      </Box>
+
+                      {/* Confirm Password */}
+                      <Box position="relative">
+                        <BasicInput
+                          label="Confirm Password"
+                          name="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={formValues.confirmPassword}
+                          error={formErrors.confirmPassword}
+                          onChange={handleInputChange}
+                          variant="filled"
+                          placeholder="********"
+                        />
+                        <IconButton
+                          onClick={() => setShowConfirmPassword((p) => !p)}
+                          sx={{ position: "absolute", top: 25, right: 8 }}
+                        >
+                          {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                        </IconButton>
+                      </Box>
+
+                      <BasicButtons
+                        value="Create Account"
+                        fullWidth
+                        loading={loading}
+                        sx={{
+                          textTransform: "none",
+                          height: "2.5rem",
+                          color: "white",
+                          backgroundColor: "hsl(220, 35%, 3%)",
+                          backgroundImage:
+                            "linear-gradient(to bottom, hsl(220, 20%, 25%), hsl(220, 30%, 6%))",
+                          boxShadow:
+                            "inset 0 1px 0 hsl(220, 20%, 35%), inset 0 -1px 0 1px hsl(220, 0%, 0%)",
+                          border: "1px solid hsl(220, 20%, 25%)",
+                          "&:hover": {
+                            backgroundImage: "none",
+                            backgroundColor: "rgb(51, 60, 77)",
+                            boxShadow: "none",
+                          },
+                        }}
+                        type="submit"
+                      />
+
+                      <Divider>or</Divider>
+
+                      {/* ✅ Google Register Button */}
+                      <BasicButtons
+                        fullWidth={true}
+                        variant="outlined"
+                        onClick={() => googleAuth()}
+                        startIcon={<GoogleIcon />}
+                        value={"Sign in with Google"}
+                        sx={{
+                          textTransform: "none",
+                          height: "2.5rem",
+                          color: "black",
+                          backgroundColor: "#f5f6fa4d",
                           boxShadow: "none",
-                        },
-                      }}
-                    />
+                          transition:
+                            "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+                          border: "1px solid hsl(220, 20%, 88%)",
+                          "&:hover": {
+                            backgroundImage: "none",
+                            backgroundColor: "hsl(220, 30%, 94%)",
+                            borderColor: "hsl(220, 20%, 80%)",
+                          },
+                        }}
+                      />
+                    </Stack>
 
-                    <Divider>or</Divider>
-
-                    {/* ✅ Google Register Button */}
-                    <BasicButtons
-                      fullWidth={true}
-                      variant="outlined"
-                      onClick={() => googleAuth()}
-                      startIcon={<GoogleIcon />}
-                      value={"Sign in with Google"}
-                      sx={{
-                        textTransform: "none",
-                        height: "2.5rem",
-                        color: "black",
-                        backgroundColor: "#f5f6fa4d",
-                        boxShadow: "none",
-                        transition:
-                          "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-                        border: "1px solid hsl(220, 20%, 88%)",
-                        "&:hover": {
-                          backgroundImage: "none",
-                          backgroundColor: "hsl(220, 30%, 94%)",
-                          borderColor: "hsl(220, 20%, 80%)",
-                        },
-                      }}
-                    />
-                  </Stack>
-
-                  <Typography textAlign="center">
-                    Already have an account?{" "}
-                    <Link
-                      component="button"
-                      variant="body2"
-                      onClick={() => navigate("/login")}
-                    >
-                      Sign in
-                    </Link>
-                  </Typography>
-                </Card>
+                    <Typography textAlign="center">
+                      Already have an account?{" "}
+                      <StyledLink to={"/login"}>Sign in</StyledLink>
+                    </Typography>
+                  </Card>
+                </Box>
               </Box>
             </Grid>
 

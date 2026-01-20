@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import {
   Box,
   Divider,
-  Link,
   Typography,
   Card as MuiCard,
   Container,
   Grid,
   Stack,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { styled } from "@mui/material/styles";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
@@ -38,6 +38,34 @@ const Card = styled(MuiCard)(({ theme }) => ({
   boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.08)",
   [theme.breakpoints.up("sm")]: {
     maxWidth: "480px",
+  },
+}));
+
+const StyledLink = styled(RouterLink)(({ theme }) => ({
+  fontSize: 15,
+  color: "#1976d2",
+  textDecoration: "none",
+  position: "relative",
+  transition: "color 0.2s ease",
+  width: "fit-content",
+  fontWeight: 500,
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    width: "0%",
+    height: "1px",
+    bottom: 0,
+    left: 0,
+    backgroundColor: "#6366f1",
+    transition: "width 0.25s ease",
+  },
+
+  "&:hover": {
+    color: "#6366f1",
+  },
+
+  "&:hover::after": {
+    width: "100%",
   },
 }));
 
@@ -333,152 +361,149 @@ const SignIn = () => {
             </Box>
           </Box>
 
-          <Grid container spacing={6}>
-            <Grid size={{ xs: 12, md: 6 }} width={"500px"}>
+          <Grid container spacing={6} maxWidth={1100}>
+            <Grid size={{ xs: 12, md: 6 }} width={500}>
               {/* LEFT SIDE */}
               <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  position: "relative",
-                  zIndex: 4000,
-                  p: { xs: 2, md: 3 },
+                component="form"
+                noValidate
+                autoComplete="off"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
                 }}
               >
-                <Card variant="outlined" sx={{ zIndex: 1 }}>
-                  <Stack spacing={1}>
-                    <Typography
-                      variant="h6"
-                      color="black"
-                      mb={0}
-                      sx={{
-                        fontWeight: 900,
-                        fontSize: "1.4rem",
-                        cursor: "pointer",
-                        display: { xs: "block", md: "none" },
-                      }}
-                    >
-                      CAD<span style={{ color: "#6366f1" }}>er.</span>
-                    </Typography>
-                    <Typography
-                      component="h1"
-                      variant="h4"
-                      sx={{
-                        width: "100%",
-                        fontWeight: 700,
-                        fontSize: "clamp(2rem, 10vw, 2rem)",
-                      }}
-                    >
-                      Sign in
-                    </Typography>
-                  </Stack>
-
-                  {/* Email & Password */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      width: "100%",
-                      gap: 2,
-                    }}
-                  >
-                    {inputData.map((input, index) => (
-                      <Box
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative",
+                    zIndex: 4000,
+                    p: { xs: 2, md: 3 },
+                  }}
+                >
+                  <Card variant="outlined" sx={{ zIndex: 1 }}>
+                    <Stack spacing={1}>
+                      <Typography
+                        variant="h6"
+                        color="black"
+                        mb={0}
                         sx={{
-                          "& .MuiOutlinedInput-root, & .MuiFilledInput-root": {
-                            borderRadius: "15px",
-                          },
-                          width: "100%",
+                          fontWeight: 900,
+                          fontSize: "1.4rem",
+                          cursor: "pointer",
+                          display: { xs: "block", md: "none" },
                         }}
-                        key={index}
                       >
-                        <BasicInput
-                          {...input}
-                          value={formValues[input.name] || ""}
-                          error={(formErrors && formErrors[input.name]) || ""}
-                          variant="filled"
-                          sx={{ width: "100%" }}
-                          onChange={(e) => handleInputChange(e)}
-                        />
+                        CAD<span style={{ color: "#6366f1" }}>er.</span>
+                      </Typography>
+                      <Typography
+                        component="h1"
+                        variant="h4"
+                        sx={{
+                          width: "100%",
+                          fontWeight: 700,
+                          fontSize: "clamp(2rem, 10vw, 2rem)",
+                        }}
+                      >
+                        Sign in
+                      </Typography>
+                    </Stack>
+
+                    {/* Email & Password */}
+                    <Stack spacing={2}>
+                      {inputData.map((input, index) => (
+                        <Box
+                          sx={{
+                            "& .MuiOutlinedInput-root, & .MuiFilledInput-root":
+                              {
+                                borderRadius: "15px",
+                              },
+                            width: "100%",
+                          }}
+                          key={index}
+                        >
+                          <BasicInput
+                            {...input}
+                            value={formValues[input.name] || ""}
+                            error={(formErrors && formErrors[input.name]) || ""}
+                            variant="filled"
+                            sx={{ width: "100%" }}
+                            onChange={(e) => handleInputChange(e)}
+                          />
+                        </Box>
+                      ))}
+
+                      <BasicButtons
+                        value={"Sign in"}
+                        sx={{
+                          textTransform: "none",
+                          height: "2.5rem",
+                          color: "white",
+                          backgroundColor: "hsl(220, 35%, 3%)",
+                          backgroundImage:
+                            "linear-gradient(to bottom, hsl(220, 20%, 25%), hsl(220, 30%, 6%))",
+                          boxShadow:
+                            "inset 0 1px 0 hsl(220, 20%, 35%), inset 0 -1px 0 1px hsl(220, 0%, 0%)",
+                          border: "1px solid hsl(220, 20%, 25%)",
+                          "&:hover": {
+                            backgroundImage: "none",
+                            backgroundColor: "rgb(51, 60, 77)",
+                            boxShadow: "none",
+                          },
+                        }}
+                        fullWidth={true}
+                        loading={loading}
+                        type="submit"
+                      />
+
+                      <Box display={"flex"} justifyContent={"center"}>
+                        <StyledLink
+                          to={"#"}
+                          onClick={() => alert("This feature in progress !!")}
+                        >
+                          Forgot your password?
+                        </StyledLink>
                       </Box>
-                    ))}
+                    </Stack>
 
-                    <BasicButtons
-                      value={"Sign in"}
-                      sx={{
-                        textTransform: "none",
-                        height: "2.5rem",
-                        color: "white",
-                        backgroundColor: "hsl(220, 35%, 3%)",
-                        backgroundImage:
-                          "linear-gradient(to bottom, hsl(220, 20%, 25%), hsl(220, 30%, 6%))",
-                        boxShadow:
-                          "inset 0 1px 0 hsl(220, 20%, 35%), inset 0 -1px 0 1px hsl(220, 0%, 0%)",
-                        border: "1px solid hsl(220, 20%, 25%)",
-                        "&:hover": {
-                          backgroundImage: "none",
-                          backgroundColor: "rgb(51, 60, 77)",
-                          boxShadow: "none",
-                        },
-                      }}
-                      fullWidth={true}
-                      onClick={handleSubmit}
-                      loading={loading}
-                    />
+                    <Divider>or</Divider>
 
-                    <Link
-                      component="button"
-                      type="button"
-                      variant="body2"
-                      sx={{ alignSelf: "center" }}
-                      onClick={() => alert("This feature in progress !!")}
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                     >
-                      Forgot your password?
-                    </Link>
-                  </Box>
+                      {/* ✅ Google Login Button */}
+                      <BasicButtons
+                        fullWidth={true}
+                        variant="outlined"
+                        onClick={() => googleAuth()}
+                        startIcon={<GoogleIcon />}
+                        value={"Sign in with Google"}
+                        sx={{
+                          textTransform: "none",
+                          height: "2.5rem",
+                          color: "black",
+                          backgroundColor: "#f5f6fa4d",
+                          boxShadow: "none",
+                          transition:
+                            "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+                          border: "1px solid hsl(220, 20%, 88%)",
+                          "&:hover": {
+                            backgroundImage: "none",
+                            backgroundColor: "hsl(220, 30%, 94%)",
+                            borderColor: "hsl(220, 20%, 80%)",
+                          },
+                        }}
+                      />
 
-                  <Divider>or</Divider>
-
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                  >
-                    {/* ✅ Google Login Button */}
-                    <BasicButtons
-                      fullWidth={true}
-                      variant="outlined"
-                      onClick={() => googleAuth()}
-                      startIcon={<GoogleIcon />}
-                      value={"Sign in with Google"}
-                      sx={{
-                        textTransform: "none",
-                        height: "2.5rem",
-                        color: "black",
-                        backgroundColor: "#f5f6fa4d",
-                        boxShadow: "none",
-                        transition:
-                          "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-                        border: "1px solid hsl(220, 20%, 88%)",
-                        "&:hover": {
-                          backgroundImage: "none",
-                          backgroundColor: "hsl(220, 30%, 94%)",
-                          borderColor: "hsl(220, 20%, 80%)",
-                        },
-                      }}
-                    />
-
-                    <Typography sx={{ textAlign: "center" }}>
-                      Don&apos;t have an account?{" "}
-                      <Link
-                        component="button"
-                        variant="body2"
-                        onClick={() => navigate("/register")}
-                      >
-                        Sign up
-                      </Link>
-                    </Typography>
-                  </Box>
-                </Card>
+                      <Typography sx={{ textAlign: "center" }}>
+                        Don&apos;t have an account?{" "}
+                        <StyledLink to={"/register"}>Sign up</StyledLink>
+                      </Typography>
+                    </Box>
+                  </Card>
+                </Box>
               </Box>
             </Grid>
 
@@ -575,7 +600,7 @@ const SignIn = () => {
           </Grid>
 
           {/* 4. Animated Surveying Orbits */}
-          {[...Array(2)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <Box
               key={i}
               component={motion.div}
