@@ -5,7 +5,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { handleFormError } from "../../utils/handleFormError";
 import { startLoading, stopLoading } from "../../redux/loadingSlice";
-import { Box, Stack, Typography, Grid, InputAdornment } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Typography,
+  Grid,
+  InputAdornment,
+  Tooltip,
+} from "@mui/material";
 import BasicButtons from "../../components/BasicButton";
 import { IoAdd, IoPauseCircleOutline } from "react-icons/io5";
 import { IoIosAddCircleOutline, IoIosArrowForward } from "react-icons/io";
@@ -36,6 +43,8 @@ import BasicDivider from "../../components/BasicDevider";
 import EditPreviousReading from "./components/EditPreviousReading";
 import SmallHeader from "../../components/SmallHeader";
 import useHardBackLock from "../../hooks/useHardBackLock";
+import AddBranch from "./components/AddBranch";
+import EnterBranch from "./components/EnterBranch";
 
 const colors = {
   Initial: "green",
@@ -136,6 +145,9 @@ const RoadSurveyRowsForm = () => {
   const [alertData, setAlertData] = useState(null);
   const [compareData, setCompareData] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [openAddBranch, setOpenAddBranch] = useState(false);
+  const [openEnterBranch, setOpenEnterBranch] = useState(false);
+  const [upcomingBranches, setUpcomingBranches] = useState([]);
 
   const schema = Yup.object().shape({
     type: Yup.string().required("Type is required"),
@@ -147,14 +159,14 @@ const RoadSurveyRowsForm = () => {
           .required("Chainage is required")
           .matches(
             /^\d+(\/|\+|,)\d+(\.\d{1,3})?$/,
-            "Invalid chainage format. Use ####/###.### or '####+###.###' or '####,###.###'"
+            "Invalid chainage format. Use ####/###.### or '####+###.###' or '####,###.###'",
           ),
       otherwise: (schema) => schema.nullable(),
     }),
 
     roadWidth: Yup.number()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("type", {
         is: "Chainage",
@@ -167,7 +179,7 @@ const RoadSurveyRowsForm = () => {
 
     spacing: Yup.number()
       .transform((value, originalValue) =>
-        originalValue === "" ? null : value
+        originalValue === "" ? null : value,
       )
       .when("type", {
         is: "Chainage",
@@ -207,7 +219,7 @@ const RoadSurveyRowsForm = () => {
             .typeError("Offset is required")
             .required("Offset is required"),
           remark: Yup.string().required("Remark is required"),
-        })
+        }),
       )
       .when("type", {
         is: "Chainage",
@@ -274,16 +286,47 @@ const RoadSurveyRowsForm = () => {
     inpPLS.value = e.target.checked ? "0.000" : "";
   };
 
+  const handleOpenAddBranch = () => {
+    setOpenAddBranch(true);
+  };
+
+  const handleCloseAddBranch = () => {
+    setOpenAddBranch(false);
+  };
+
+  const handleOpenEnterBranch = () => {
+    if (!upcomingBranches?.length) {
+      return dispatch(
+        showAlert({
+          type: "error",
+          message: "You can't enter a branch if there is no upcoming branch",
+        }),
+      );
+    }
+
+    setOpenEnterBranch(true);
+  };
+
+  const handleCloseEnterBranch = () => {
+    setOpenEnterBranch(false);
+  };
+
   const speedDialActions = [
-    {
-      icon: <PiLinkSimpleBreakBold />,
-      name: "Add Break",
-      onClick: () => {},
-      show: true,
-    },
     {
       icon: <IoGitBranchOutline />,
       name: "Add Branch",
+      onClick: () => handleOpenAddBranch(),
+      show: purpose && purpose?.type === "Initial Level",
+    },
+    {
+      icon: <IoGitBranchOutline />,
+      name: "Enter Branch",
+      onClick: () => handleOpenEnterBranch(),
+      show: purpose && purpose?.type !== "Initial Level",
+    },
+    {
+      icon: <PiLinkSimpleBreakBold />,
+      name: "Add Break",
       onClick: () => {},
       show: true,
     },
@@ -293,7 +336,7 @@ const RoadSurveyRowsForm = () => {
       onClick: () => handleClickOpen("Pause Survey"),
       show:
         purpose &&
-        purpose?.type === "Initial Level" &&
+        purpose?.phase === "Actual" &&
         purpose?.status !== "Paused" &&
         page === 0,
     },
@@ -301,7 +344,7 @@ const RoadSurveyRowsForm = () => {
       icon: <MdDone />,
       name: "Finish Survey",
       onClick: () => handleClickOpen("Finish Survey"),
-      show: purpose && purpose?.phase === "Actual" && page === 0,
+      show: purpose && page === 0,
     },
   ];
 
@@ -315,24 +358,25 @@ const RoadSurveyRowsForm = () => {
           type: "error",
           message:
             'If you are trying to add a Change Point (CP), please click "Continue" first, then finish the survey. Otherwise, clear the input fields before proceeding.',
-        })
+        }),
       );
 
       setOpen(false);
     } else {
       let updatedAlertData = null;
 
-      if (action === "Finish Survey" && purpose?.phase === "Actual") {
+      if (action === "Finish Survey") {
         updatedAlertData = {
           ...finishSurveyAlertData,
           onSubmit: handleEndSurveyPurpose,
-          content: (
+          content: purpose?.phase === "Actual" && (
             <Box mt={2}>
               <Stack direction={"row"} alignItems={"center"}>
                 <Typography fontSize={"16px"} fontWeight={600} color="black">
                   Auto calculate
                 </Typography>
                 <BasicCheckbox
+                  id="autoCalculate"
                   onChange={(e) => handleCalculateFinalForesight(e)}
                 />
               </Stack>
@@ -409,7 +453,7 @@ const RoadSurveyRowsForm = () => {
           showAlert({
             type: "success",
             message: `${prevReading.type} deleted successfully`,
-          })
+          }),
         );
       } else {
         throw new Error("Something went wrong.");
@@ -475,7 +519,7 @@ const RoadSurveyRowsForm = () => {
     }
 
     const updatedRows = [...formValues.intermediateOffsets].filter(
-      (o) => o.intermediateSight.length
+      (o) => o.intermediateSight.length,
     );
 
     intermediateOffsets
@@ -516,7 +560,7 @@ const RoadSurveyRowsForm = () => {
             }
 
             return p;
-          })
+          }),
         );
       }
     }
@@ -588,7 +632,7 @@ const RoadSurveyRowsForm = () => {
       setFormValues((prev) => ({
         ...prev,
         intermediateOffsets: formValues.intermediateOffsets.filter(
-          (_, idx) => idx !== index
+          (_, idx) => idx !== index,
         ),
       }));
     }
@@ -601,7 +645,7 @@ const RoadSurveyRowsForm = () => {
       if (isProposal) {
         let currentReading = null;
         const initialSurvey = purpose?.surveyId?.purposes?.find(
-          (p) => p.type === "Initial Level"
+          (p) => p.type === "Initial Level",
         );
         if (purpose?.rows?.length) {
           const prevChainage = purpose?.rows?.at(-1)?.chainage;
@@ -610,7 +654,7 @@ const RoadSurveyRowsForm = () => {
             initialSurvey?.rows?.filter((r) => r.type === "Chainage") ?? [];
 
           const currentIndex = filteredInitialSurvey.findIndex(
-            (r) => r.chainage === prevChainage
+            (r) => r.chainage === prevChainage,
           );
 
           if (currentIndex === -1) {
@@ -630,7 +674,7 @@ const RoadSurveyRowsForm = () => {
           currentReading = nextReading;
         } else {
           currentReading = initialSurvey?.rows?.find(
-            (r) => r.type === "Chainage"
+            (r) => r.type === "Chainage",
           );
         }
 
@@ -648,7 +692,7 @@ const RoadSurveyRowsForm = () => {
         }
       } else {
         const isFirstChainage = purpose?.rows?.find(
-          (r) => r.type === "Chainage"
+          (r) => r.type === "Chainage",
         );
 
         if (!isFirstChainage) {
@@ -663,7 +707,7 @@ const RoadSurveyRowsForm = () => {
 
           const chainageMultiple = purpose?.surveyId?.chainageMultiple;
           const lastDigit = Number(
-            lastChainage.chainage.split(purpose?.surveyId?.separator || "/")[1]
+            lastChainage.chainage.split(purpose?.surveyId?.separator || "/")[1],
           );
 
           const remainder = lastDigit % chainageMultiple;
@@ -673,7 +717,7 @@ const RoadSurveyRowsForm = () => {
               : lastDigit + (chainageMultiple - remainder);
 
           const nextChainage = `0${purpose?.surveyId?.separator || "/"}${String(
-            nextNumber
+            nextNumber,
           ).padStart(3, "0")}`;
 
           setFormValues((prev) => ({
@@ -751,7 +795,7 @@ const RoadSurveyRowsForm = () => {
 
       if (rowType === "Chainage") {
         const sortedOffsets = [...(formValues.intermediateOffsets || [])].sort(
-          (a, b) => a.offset - b.offset
+          (a, b) => a.offset - b.offset,
         );
 
         payload = {
@@ -818,19 +862,20 @@ const RoadSurveyRowsForm = () => {
       let finalForesight = null;
       let pls = null;
 
-      if (purpose.type === "Initial Level") {
-        const inpFinalForesight = document.getElementById("finalForesight");
-        const inpPLS = document.getElementById("pls");
+      const inpFinalForesight = document.getElementById("finalForesight");
+      const inpPLS = document.getElementById("pls");
+      const inpAutoCalculate = document.getElementById("autoCalculate");
 
+      if (purpose.type === "Initial Level") {
         if (!inpFinalForesight?.value?.trim()) {
           inpFinalForesight.parentElement.parentElement.classList.add(
-            "inp-err"
+            "inp-err",
           );
 
           return;
         } else {
           inpFinalForesight.parentElement.parentElement.classList.remove(
-            "inp-err"
+            "inp-err",
           );
 
           finalForesight = inpFinalForesight.value;
@@ -850,12 +895,36 @@ const RoadSurveyRowsForm = () => {
       const { data } = await endSurveyPurpose(id, finalForesight, pls);
 
       if (data.success) {
+        handleClose();
+
+        inpFinalForesight.value = "";
+        inpPLS.value = "";
+        inpAutoCalculate.checked = false;
+
         dispatch(
           showAlert({
             type: "success",
             message: `${purpose.type} Finished`,
-          })
+          }),
         );
+
+        const surveyDoc = purpose?.surveyId;
+
+        const isBranch = surveyDoc?.branchDetails?.isBranch;
+        if (isBranch) {
+          const parentBranch = data.parentBranch;
+
+          const activePurpose = parentBranch?.purposes?.find(
+            (p) => !p.isPurposeFinish,
+          );
+
+          if (activePurpose) {
+            navigate(`/survey/road-survey/${activePurpose?._id}/rows`);
+            return;
+          } else {
+            throw Error("Something went wrong");
+          }
+        }
 
         const link =
           purpose.type === "Initial Level"
@@ -896,7 +965,7 @@ const RoadSurveyRowsForm = () => {
       const { data } = await pauseSurveyPurpose(
         id,
         inputsToMap.inpPauseForeSight,
-        inputsToMap.inpPauseRemark
+        inputsToMap.inpPauseRemark,
       );
 
       if (data.success) {
@@ -904,7 +973,7 @@ const RoadSurveyRowsForm = () => {
           showAlert({
             type: "success",
             message: `${purpose.type} Paused`,
-          })
+          }),
         );
 
         navigate("/survey");
@@ -929,7 +998,7 @@ const RoadSurveyRowsForm = () => {
       const calculatedData = getLastRlAndHi(
         purpose.surveyId,
         newReading,
-        purpose._id
+        purpose._id,
       );
 
       reducedLevels = calculatedData.rl;
@@ -954,7 +1023,7 @@ const RoadSurveyRowsForm = () => {
     });
 
     const filteredReducedLevels = reducedLevels.filter(
-      (lv) => lv !== null && lv !== undefined
+      (lv) => lv !== null && lv !== undefined,
     );
 
     let minY = Math.min(...filteredReducedLevels);
@@ -1002,11 +1071,11 @@ const RoadSurveyRowsForm = () => {
 
   const handleChangeCompare = (value) => {
     const findPurpose = purpose.surveyId?.purposes?.find(
-      (p) => p.type === value
+      (p) => p.type === value,
     );
 
     const newRow = findPurpose?.rows?.find(
-      (r) => r.chainage === formValues.chainage
+      (r) => r.chainage === formValues.chainage,
     );
 
     const safeProposal = newRow?.reducedLevels || [];
@@ -1074,7 +1143,36 @@ const RoadSurveyRowsForm = () => {
 
         const { data } = await getSurveyPurpose(id);
 
+        const surveyDoc = data.purpose?.surveyId;
+
+        const isBranchActive =
+          surveyDoc?.branchDetails?.hasBranching &&
+          !surveyDoc?.branchDetails?.isBranchEnd;
+
+        // If the main survey have branching
+        if (isBranchActive) {
+          const branchDoc = surveyDoc?.branchDetails?.currentBranch;
+          const activePurpose = branchDoc?.purposes?.find(
+            (p) => !p.isPurposeFinish,
+          );
+
+          if (activePurpose) {
+            navigate(`/survey/road-survey/${activePurpose?._id}/rows`);
+            return;
+          } else {
+            throw Error("Something went wrong");
+          }
+        }
+
         const purposeDoc = data.purpose;
+
+        if (surveyDoc?.parentBranch?.length) {
+          setUpcomingBranches(
+            surveyDoc?.parentBranch?.filter(
+              (p) => !p?.finishedLevels?.includes(purposeDoc?.type),
+            ),
+          );
+        }
 
         // for live graph
         setSelectedCs({
@@ -1129,6 +1227,21 @@ const RoadSurveyRowsForm = () => {
 
       <Box p={2} className="overlapping-header">
         <AlertDialogSlide {...alertData} open={open} onCancel={handleClose} />
+
+        <AddBranch
+          open={openAddBranch}
+          handleClose={handleCloseAddBranch}
+          surveyId={purpose?.surveyId?._id}
+          purposeId={purpose?._id}
+        />
+        <EnterBranch
+          phase={purpose?.phase}
+          open={openEnterBranch}
+          handleClose={handleCloseEnterBranch}
+          surveyId={purpose?.surveyId?._id}
+          purposeId={purpose?._id}
+          branches={upcomingBranches}
+        />
 
         {page === 1 && (
           <Box
@@ -1189,17 +1302,157 @@ const RoadSurveyRowsForm = () => {
           )}
 
         <Stack alignItems={"center"} spacing={2}>
-          <Typography
-            variant="h6"
-            fontSize={18}
-            fontWeight={700}
-            align="center"
-          >
-            {page === 1
-              ? `Please Enter Intermediate Sight`
-              : `Please Enter ${rowType} and Values`}
-            :
-          </Typography>
+          <Stack width={"100%"}>
+            <Typography
+              variant="h6"
+              fontSize={18}
+              fontWeight={700}
+              align="center"
+            >
+              {page === 1
+                ? `Please Enter Intermediate Sight`
+                : `Please Enter ${rowType} and Values`}
+              :
+            </Typography>
+
+            {upcomingBranches?.length > 0 && (
+              <Stack
+                width="100%"
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Tooltip
+                  title={
+                    <Typography fontSize={12}>
+                      🚧 Upcoming Branch -{" "}
+                      {purpose?.surveyId?.parentBranch[0].name} @{" "}
+                      {purpose?.surveyId?.parentBranch[0].branchStartedFrom}
+                    </Typography>
+                  }
+                  arrow
+                  placement="top"
+                  enterTouchDelay={0}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      cursor: "help",
+                      transition: "all 0.3s ease",
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 10,
+                      border: "1px solid transparent",
+                      "&:hover": {
+                        bgcolor: "amber.50",
+                        borderColor: "amber.200",
+                        "& .location-text": { color: "warning.dark" },
+                        "& .location-chip": { display: "inline-block" },
+                      },
+                    }}
+                  >
+                    <IoGitBranchOutline />
+                    <Typography
+                      variant="h6"
+                      fontSize={13}
+                      className="location-text"
+                      sx={{ color: "text.secondary", transition: "color 0.3s" }}
+                    >
+                      Upcoming Branch@{" "}
+                      {purpose?.surveyId?.parentBranch[0].branchStartedFrom}
+                    </Typography>
+                    <Box
+                      component="span"
+                      className="location-chip"
+                      sx={{
+                        display: "none",
+                        ml: 1,
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        color: "warning.contrastText",
+                        bgcolor: "warning.light",
+                        px: 1,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {purpose?.surveyId?.parentBranch[0].name} @{" "}
+                      {purpose?.surveyId?.parentBranch[0].branchStartedFrom}
+                    </Box>
+                  </Box>
+                </Tooltip>
+              </Stack>
+            )}
+
+            {page === 0 && purpose?.surveyId?.branchDetails?.isBranch && (
+              <Stack
+                width="100%"
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Tooltip
+                  title={
+                    <Typography fontSize={12}>
+                      🚧 Current Survey Location - {purpose?.surveyId?.project}
+                    </Typography>
+                  }
+                  arrow
+                  placement="top"
+                  enterTouchDelay={0}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      cursor: "help",
+                      transition: "all 0.3s ease",
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 10,
+                      border: "1px solid transparent",
+                      "&:hover": {
+                        bgcolor: "amber.50",
+                        borderColor: "amber.200",
+                        "& .location-text": { color: "warning.dark" },
+                        "& .location-chip": { display: "inline-block" },
+                      },
+                    }}
+                  >
+                    <IoGitBranchOutline />
+                    <Typography
+                      variant="h6"
+                      fontSize={13}
+                      className="location-text"
+                      sx={{ color: "text.secondary", transition: "color 0.3s" }}
+                    >
+                      Branch Details
+                    </Typography>
+                    <Box
+                      component="span"
+                      className="location-chip"
+                      sx={{
+                        display: "none",
+                        ml: 1,
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        color: "warning.contrastText",
+                        bgcolor: "warning.light",
+                        px: 1,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {purpose?.surveyId?.project}
+                    </Box>
+                  </Box>
+                </Tooltip>
+              </Stack>
+            )}
+          </Stack>
 
           {page === 0 && (
             <Stack direction={"row"} justifyContent={"end"} width={"100%"}>
@@ -1505,7 +1758,13 @@ const RoadSurveyRowsForm = () => {
           </Stack>
         </Stack>
 
-        <Activity mode={page === 0 && purpose ? "visible" : "hidden"}>
+        <Activity
+          mode={
+            page === 0 && purpose && purpose?.rows?.length
+              ? "visible"
+              : "hidden"
+          }
+        >
           <BasicDivider borderBottomWidth={0.5} color="#d9d9d9" />
 
           <Stack spacing={2} mt={2}>

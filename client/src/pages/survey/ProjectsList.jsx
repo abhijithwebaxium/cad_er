@@ -89,7 +89,7 @@ const getLink = (survey, target, type) => {
   }
 
   const level = survey?.purposes?.find(
-    (p) => p.type === (type || "Initial Level")
+    (p) => p.type === (type || "Initial Level"),
   );
 
   if (target === "Field Book") {
@@ -129,7 +129,7 @@ export default function ProjectsList() {
   const handleChange = (e, newValue) => setTab(newValue);
 
   const filteredSurveys = surveys.filter((s) =>
-    s.project.toLowerCase().includes(search.toLowerCase())
+    s.project.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleContinueSurvey = async (id) => {
@@ -151,7 +151,7 @@ export default function ProjectsList() {
         showAlert({
           type: "error",
           message: "Something went wrong",
-        })
+        }),
       );
     }
   };
@@ -167,7 +167,7 @@ export default function ProjectsList() {
     if (!survey) return;
 
     const fieldBooks = survey.purposes.filter(
-      (p) => p.phase === "Actual" && p.isPurposeFinish
+      (p) => p.phase === "Actual" && p.isPurposeFinish,
     );
 
     if (!fieldBooks.length) {
@@ -175,7 +175,7 @@ export default function ProjectsList() {
         showAlert({
           type: "warning",
           message: "Please complete the Initial Level",
-        })
+        }),
       );
     }
 
@@ -232,7 +232,7 @@ export default function ProjectsList() {
         showAlert({
           type: "warning",
           message: "Please select a level to view the field book.",
-        })
+        }),
       );
     }
 
@@ -332,7 +332,7 @@ export default function ProjectsList() {
                               fontSize="14px"
                             >
                               {new Date(survey.createdAt)?.toLocaleDateString(
-                                "en-IN"
+                                "en-IN",
                               )}
                             </Typography>
                           </Box>
@@ -364,8 +364,8 @@ export default function ProjectsList() {
                                           survey[key]?.includes("Initial")
                                             ? "Initial"
                                             : survey[key]?.includes("Final")
-                                            ? "Final"
-                                            : ""
+                                              ? "Final"
+                                              : ""
                                         ]
                                       : ""
                                   }
@@ -374,15 +374,35 @@ export default function ProjectsList() {
                                 >
                                   {type === "Date"
                                     ? new Date(survey[key])?.toLocaleDateString(
-                                        "en-IN"
+                                        "en-IN",
                                       )
                                     : type === "constant"
-                                    ? key
-                                    : survey[key]}
+                                      ? key
+                                      : survey[key]}
                                 </Typography>
                               )}
                             </Item>
                           ))}
+
+                          {survey?.branchDetails?.hasBranching && (
+                            <Item>
+                              Branch Reports
+                              <Typography fontSize={14} fontWeight={700}>
+                                <TiEye
+                                  fontSize={20}
+                                  color="rgba(0, 111, 253, 1)"
+                                  onClick={() =>
+                                    navigate(`/survey/report`, {
+                                      state: {
+                                        getBranchReport: true,
+                                        surveyId: survey._id,
+                                      },
+                                    })
+                                  }
+                                />
+                              </Typography>
+                            </Item>
+                          )}
                         </Stack>
                       }
                       expandIcon={

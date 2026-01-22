@@ -28,6 +28,7 @@ import { handleFormError } from "../../utils/handleFormError";
 import { showAlert } from "../../redux/alertSlice";
 import LandingAppBar from "../../components/LandingAppBar";
 import LandingFooter from "../../components/LandingFooter";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 const MotionButton = motion.create(Button);
 const MotionStack = motion.create(Stack);
@@ -108,6 +109,23 @@ const slowFadeUp = {
     opacity: 1,
     y: 0,
     transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const cardVariants = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+    scale: 0.98,
+  },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
   },
 };
 
@@ -1014,7 +1032,7 @@ const Landing = () => {
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: true, amount: 0.8 }}
                       transition={{ duration: 0.6 }}
                     >
                       <Stack spacing={4}>
@@ -1151,41 +1169,64 @@ const Landing = () => {
                           zIndex: 0,
                         }}
                       />
-
-                      <Grid
-                        container
-                        spacing={2.5}
-                        sx={{ position: "relative", zIndex: 1 }}
+                      <motion.div
+                        variants={{
+                          hidden: { opacity: 0 },
+                          show: {
+                            opacity: 1,
+                            transition: {
+                              staggerChildren: 0.15,
+                              delayChildren: 0.2,
+                            },
+                          },
+                        }}
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true, amount: 0.8 }}
                       >
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <Stack spacing={2.5}>
-                            <TrainingCard
-                              icon={<ClockIcon />}
-                              title="Duration"
-                              description="10-day intensive package designed for deep skill acquisition."
-                            />
-                            <TrainingCard
-                              icon={<AwardIcon />}
-                              title="Software Access"
-                              description="6 months free pro access (Retails for ₹45,000 + GST/year)."
-                            />
-                          </Stack>
+                        <Grid
+                          container
+                          spacing={2.5}
+                          sx={{ position: "relative", zIndex: 1 }}
+                        >
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <Stack spacing={2.5}>
+                              <motion.div variants={cardVariants}>
+                                <TrainingCard
+                                  icon={<ClockIcon />}
+                                  title="Duration"
+                                  description="10-day intensive package designed for deep skill acquisition."
+                                />
+                              </motion.div>
+                              <motion.div variants={cardVariants}>
+                                <TrainingCard
+                                  icon={<AwardIcon />}
+                                  title="Software Access"
+                                  description="6 months free pro access (Retails for ₹45,000 + GST/year)."
+                                />
+                              </motion.div>
+                            </Stack>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 6 }} sx={{ mt: { sm: 4 } }}>
+                            <Stack spacing={2.5}>
+                              <motion.div variants={cardVariants}>
+                                <TrainingCard
+                                  icon={<WalletIcon />}
+                                  title="Pricing"
+                                  description="Special institution-only affordable pricing per student."
+                                />
+                              </motion.div>
+                              <motion.div variants={cardVariants}>
+                                <TrainingCard
+                                  icon={<TrendingIcon />}
+                                  title="Career Impact"
+                                  description="Proficiency increases professional pay scales by up to 20%."
+                                />
+                              </motion.div>
+                            </Stack>
+                          </Grid>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }} sx={{ mt: { sm: 4 } }}>
-                          <Stack spacing={2.5}>
-                            <TrainingCard
-                              icon={<WalletIcon />}
-                              title="Pricing"
-                              description="Special institution-only affordable pricing per student."
-                            />
-                            <TrainingCard
-                              icon={<TrendingIcon />}
-                              title="Career Impact"
-                              description="Proficiency increases professional pay scales by up to 20%."
-                            />
-                          </Stack>
-                        </Grid>
-                      </Grid>
+                      </motion.div>
                     </Box>
                   </Grid>
                 </Grid>
@@ -1463,6 +1504,7 @@ const Landing = () => {
         </motion.div>
       )}
 
+      <ScrollToTopButton />
       <LandingFooter />
     </Box>
   );

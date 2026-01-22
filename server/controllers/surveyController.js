@@ -2,6 +2,7 @@ import Survey from "../models/survey.js";
 import SurveyPurpose from "../models/surveyPurpose.js";
 import SurveyRow from "../models/surveyRows.js";
 import History from "../models/history.js";
+import Branch from "../models/branch.js";
 import { isValidObjectId, calculateReducedLevel } from "../helper/index.js";
 import createHttpError from "http-errors";
 import mongoose from "mongoose";
@@ -22,9 +23,9 @@ const checkSurveyExists = async (req, res, next) => {
 
 const getAllSurvey = async (req, res, next) => {
   try {
-    const { status, project, purpose, type } = req.query;
+    const { status, project, purpose, type, rootBranch } = req.query;
 
-    const filter = { deleted: false };
+    const filter = { deleted: false, "branchDetails.isBranch": false };
 
     // 🔹 Flexible filters
     if (status === "active") filter.isSurveyFinish = false;
@@ -32,6 +33,10 @@ const getAllSurvey = async (req, res, next) => {
 
     if (project) filter.project = project;
     if (type) filter.type = type;
+    if (rootBranch) {
+      filter["branchDetails.isBranch"] = true;
+      filter["branchDetails.rootBranch"] = rootBranch;
+    }
 
     const surveys = await Survey.find(filter)
       .sort({ createdAt: -1 })
@@ -519,22 +524,35 @@ const getSurveyPurpose = async (req, res, next) => {
       .populate({
         path: "surveyId",
         match: { deleted: false },
-        populate: {
-          path: "purposes",
-          match: { deleted: false },
-          populate: {
-            path: "rows",
+        populate: [
+          {
+            path: "purposes",
             match: { deleted: false },
-            options: { sort: { createdAt: 1 } },
+            populate: {
+              path: "rows",
+              match: { deleted: false },
+              options: { sort: { createdAt: 1 } },
+            },
           },
-        },
+          {
+            path: "branchDetails.currentBranch",
+            match: { deleted: false },
+            populate: {
+              path: "purposes",
+              match: { deleted: false },
+            },
+          },
+          {
+            path: "parentBranch",
+            match: { deleted: false },
+          },
+        ],
       })
       .populate({
         path: "rows",
         match: { deleted: false },
         options: { sort: { createdAt: 1 } },
-      })
-      .lean();
+      });
 
     if (!purpose) {
       return res.status(404).json({
@@ -806,6 +824,8 @@ const endSurveyPurpose = async (req, res, next) => {
         "Cannot finish purpose — survey already finished",
       );
 
+    let parentBranch = null;
+
     if (purpose.phase === "Actual") {
       if (!finalForesight || !pls)
         throw createHttpError(400, "Missing required field");
@@ -818,6 +838,54 @@ const endSurveyPurpose = async (req, res, next) => {
     purpose.status = "Finished";
     purpose.isPurposeFinish = true;
     purpose.purposeFinishDate = new Date();
+
+    if (survey.branchDetails?.isBranch) {
+      parentBranch = await Survey.findOne({
+        _id: survey.branchDetails.parentBranch,
+      })
+        .populate("purposes")
+        .session(session);
+
+      if (!parentBranch || parentBranch.deleted)
+        throw createHttpError(404, "Parent branch not found");
+
+      if (
+        String(survey.branchDetails.rootBranch) ===
+        String(survey.branchDetails.parentBranch)
+      ) {
+        parentBranch.branchDetails.isBranchEnd = true;
+        parentBranch.branchDetails.isBranchStart = false;
+        parentBranch.branchDetails.branchStartedFrom = null;
+        parentBranch.branchDetails.currentBranch = null;
+      } else {
+        await Survey.updateOne(
+          {
+            _id: survey.branchDetails.rootBranch,
+          },
+          {
+            $set: {
+              "branchDetails.currentBranch": survey.branchDetails.parentBranch,
+            },
+          },
+          { session },
+        );
+      }
+
+      const update = {
+        $push: { finishedLevels: purpose.type },
+      };
+
+      if (purpose.type === "Initial Level") {
+        update.$set = {
+          isBranchEnd: true,
+          endDate: new Date(),
+        };
+      }
+
+      await Branch.updateOne({ surveyId: survey._id }, update, { session });
+
+      await parentBranch.save({ session });
+    }
 
     if (purpose.type === "Final Level") {
       survey.isSurveyFinish = true;
@@ -835,6 +903,7 @@ const endSurveyPurpose = async (req, res, next) => {
       success: true,
       message: "Purpose ended successfully",
       purpose,
+      parentBranch,
     });
   } catch (err) {
     await session.abortTransaction();
@@ -1547,6 +1616,334 @@ const updateReducedLevels = async (req, res, next) => {
   }
 };
 
+const createBranch = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const {
+      user: { userId },
+      params: { surveyId },
+      body: { name, reducedLevel, backSight, purposeId },
+    } = req;
+
+    if (!surveyId || !name?.trim() || !reducedLevel || !backSight) {
+      throw createHttpError(400, "Missing required fields");
+    }
+
+    const parentSurvey = await Survey.findOne({
+      _id: surveyId,
+      deleted: false,
+      status: "Active",
+    });
+    if (!parentSurvey) {
+      throw createHttpError(404, "Parent survey not found");
+    }
+
+    const lastChainageReading = await SurveyRow.findOne({
+      purposeId,
+      type: "Chainage",
+      deleted: false,
+    }).sort({ createdAt: -1, _id: -1 });
+
+    const rootBranch = parentSurvey.branchDetails?.rootBranch;
+    const chainage =
+      lastChainageReading?.chainage || `0${parentSurvey.separator || "/"}000`;
+
+    // 🔹 Create Survey
+    const survey = await Survey.create(
+      [
+        {
+          project: name,
+          createdBy: userId,
+          instrumentNo: parentSurvey.instrumentNo,
+          chainageMultiple: parentSurvey.chainageMultiple,
+          separator: parentSurvey.separator,
+          reducedLevel: Number(reducedLevel).toFixed(3),
+          agreementNo: parentSurvey.agreementNo,
+          contractor: parentSurvey.contractor,
+          department: parentSurvey.department,
+          division: parentSurvey.division,
+          subDivision: parentSurvey.subDivision,
+          section: parentSurvey.section,
+          consultant: parentSurvey.consultant,
+          client: parentSurvey.client,
+          branchDetails: {
+            isBranch: true,
+            rootBranch: rootBranch || parentSurvey._id,
+            parentBranch: parentSurvey._id,
+          },
+        },
+      ],
+      { session },
+    );
+
+    const surveyDoc = survey[0];
+
+    if (rootBranch) {
+      await Survey.updateOne(
+        { _id: rootBranch },
+        { $set: { "branchDetails.currentBranch": surveyDoc._id } },
+        { session },
+      );
+    } else {
+      parentSurvey.branchDetails.currentBranch = surveyDoc._id;
+    }
+
+    parentSurvey.branchDetails.hasBranching = true;
+    parentSurvey.branchDetails.branchStartedFrom = chainage;
+    parentSurvey.branchDetails.isBranchStart = true;
+    await parentSurvey.save({ session });
+
+    await Branch.create(
+      [
+        {
+          name,
+          surveyId: surveyDoc._id,
+          createdBy: userId,
+          branchStartedFrom: chainage,
+          rootBranch: rootBranch || parentSurvey._id,
+          parentBranch: parentSurvey._id,
+          isBranchStart: true,
+        },
+      ],
+      { session },
+    );
+
+    await Branch.updateOne(
+      {
+        _id: parentSurvey._id,
+      },
+      {
+        $set: {
+          hasBranching: true,
+        },
+      },
+      { session },
+    );
+
+    // 🔹 Create Purpose
+    const purposeDoc = await SurveyPurpose.create(
+      [
+        {
+          surveyId: surveyDoc._id,
+          createdBy: userId,
+          type: "Initial Level",
+          isSurveyFinish: false,
+        },
+      ],
+      { session },
+    );
+
+    const purposeObj = purposeDoc[0];
+
+    // 🔹 Create First Row (TBM)
+    await SurveyRow.create(
+      [
+        {
+          surveyId: surveyDoc._id,
+          purposeId: purposeObj._id,
+          createdBy: userId,
+          type: "Instrument setup",
+          backSight: Number(backSight).toFixed(3),
+          remarks: ["TBM"],
+          reducedLevels: [Number(reducedLevel).toFixed(3)],
+          heightOfInstrument: Number(
+            Number(reducedLevel) + Number(backSight),
+          ).toFixed(3),
+        },
+      ],
+      { session },
+    );
+
+    // 🔹 Optionally create a History log
+    await History.create(
+      [
+        {
+          entityType: "Branch",
+          entityId: surveyDoc._id,
+          action: "Create",
+          notes: "Branch created with purpose Initial Level",
+          performedBy: userId,
+        },
+      ],
+      { session },
+    );
+
+    // ✅ Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      success: true,
+      message: "Branch created successfully",
+      purposeId: purposeObj._id,
+    });
+  } catch (err) {
+    // ❌ Rollback if anything fails
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
+
+const enterBranch = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const {
+      user: { userId },
+      params: { surveyId },
+      body: {
+        branchId,
+        purposeId,
+        phase,
+        proposedLevel,
+        reducedLevel,
+        backSight,
+        crossSectionType,
+        crossSectionCamper,
+        crossSectionSlop,
+      },
+    } = req;
+
+    const isProposal = phase === "Proposal";
+
+    if (!branchId) {
+      throw Error("Branch id is required");
+    }
+
+    if (!purposeId) {
+      throw Error("Purpose id is required");
+    }
+
+    if (isProposal) {
+      if (proposedLevel === "" || proposedLevel === undefined) {
+        throw Error("Proposed level is required");
+      } else if (isNaN(Number(proposedLevel))) {
+        throw Error("Proposed level must be a number");
+      }
+
+      if (!["Camper", "Slop"].includes(crossSectionType)) {
+        throw Error("Invalid cross section type");
+      }
+
+      if (crossSectionType === "Camper" && !crossSectionCamper) {
+        throw Error("Camper value is required");
+      }
+
+      if (crossSectionType === "Slop" && !crossSectionSlop) {
+        throw Error("Slop value is required");
+      }
+    } else {
+      /* ---------------- non-proposal phase ---------------- */
+      if (reducedLevel === "" || reducedLevel === undefined) {
+        throw Error("Reduced level is required");
+      } else if (isNaN(Number(reducedLevel))) {
+        throw Error("Reduced level must be a number");
+      }
+
+      if (backSight === "" || backSight === undefined) {
+        throw Error("Back sight is required");
+      } else if (isNaN(Number(backSight))) {
+        throw Error("Back sight must be a number");
+      }
+    }
+
+    const parentSurvey = await Survey.findOne({
+      _id: surveyId,
+      deleted: false,
+      status: "Active",
+    });
+    if (!parentSurvey) throw Error("Parent survey not found");
+
+    const survey = await Survey.findOne({
+      _id: branchId,
+      deleted: false,
+      status: "Active",
+    });
+    if (!survey) throw Error("Survey not found");
+
+    const purpose = await SurveyPurpose.findOne({
+      _id: purposeId,
+      deleted: false,
+      status: "Active",
+    });
+    if (!purpose) throw Error("Purpose not found");
+
+    const rootBranch = parentSurvey.branchDetails?.rootBranch;
+
+    const [purposeDoc] = await SurveyPurpose.create(
+      [
+        {
+          surveyId: branchId,
+          type: purpose.type,
+          createdBy: userId,
+          phase: isProposal ? "Proposal" : "Actual",
+          ...(isProposal && {
+            proposedLevel,
+            csCamper: crossSectionCamper,
+            csSlop: crossSectionSlop,
+          }),
+        },
+      ],
+      { session },
+    );
+
+    if (!isProposal) {
+      // 🔹 Create First Reading (TBM)
+      await SurveyRow.create(
+        [
+          {
+            surveyId: branchId,
+            purposeId: purposeDoc._id,
+            createdBy: userId,
+            type: "Instrument setup",
+            backSight: Number(backSight).toFixed(3),
+            remarks: ["TBM"],
+            reducedLevels: [Number(reducedLevel).toFixed(3)],
+            heightOfInstrument: Number(
+              Number(reducedLevel) + Number(backSight),
+            ).toFixed(3),
+          },
+        ],
+        { session },
+      );
+    }
+
+    if (rootBranch) {
+      await Survey.updateOne(
+        { _id: rootBranch },
+        { $set: { "branchDetails.currentBranch": survey._id } },
+        { session },
+      );
+    } else {
+      parentSurvey.branchDetails.currentBranch = survey._id;
+    }
+
+    parentSurvey.branchDetails.hasBranching = true;
+    parentSurvey.branchDetails.isBranchStart = true;
+
+    await parentSurvey.save({ session });
+
+    // ✅ Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      success: true,
+      message: "Branch created successfully",
+      purposeId: purposeDoc._id,
+    });
+  } catch (err) {
+    // ❌ Rollback if anything fails
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
+
 export {
   checkSurveyExists,
   getAllSurvey,
@@ -1566,4 +1963,6 @@ export {
   generateSurveyPurpose,
   editSurveyPurpose,
   updateReducedLevels,
+  createBranch,
+  enterBranch,
 };

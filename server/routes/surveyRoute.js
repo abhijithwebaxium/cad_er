@@ -21,6 +21,8 @@ import {
   generateSurveyPurpose,
   editSurveyPurpose,
   updateReducedLevels,
+  createBranch,
+  enterBranch,
 } from "../controllers/surveyController.js";
 import { isAuthenticated, requireAuth } from "../middleware/auth.js";
 
@@ -51,5 +53,9 @@ router.put("/:id/purposes/:purposeId/edit", editSurveyPurpose);
 router.post("/:id/rows", createSurveyRow);
 router.patch("/:id/rows/:rowId", updateSurveyRow);
 router.delete("/:id/rows/:rowId", deleteSurveyRow);
+
+// 🔹 Branch routes (nested under a survey)
+router.post("/:surveyId/branches", createBranch);
+router.post("/:surveyId/branches/enter-branch", enterBranch);
 
 export default router;

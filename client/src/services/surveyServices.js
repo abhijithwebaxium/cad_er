@@ -4,8 +4,8 @@ export const checkSurveyExists = () => {
   return axiosInstance.get("surveys/exists");
 };
 
-export const getAllSurvey = () => {
-  return axiosInstance.get("surveys");
+export const getAllSurvey = (params) => {
+  return axiosInstance.get("surveys", { params });
 };
 
 export const createSurvey = (formData) => {
@@ -58,13 +58,13 @@ export const getSurveyPurpose = (id) => {
 
 export const endSurveyPurpose = (id, finalForesight, pls) => {
   return axiosInstance.patch(
-    `surveys/${id}/purposes/end?finalForesight=${finalForesight}&pls=${pls}`
+    `surveys/${id}/purposes/end?finalForesight=${finalForesight}&pls=${pls}`,
   );
 };
 
 export const pauseSurveyPurpose = (id, foreSight, remark) => {
   return axiosInstance.patch(
-    `surveys/${id}/purposes/pause?foreSight=${foreSight}&remark=${remark}`
+    `surveys/${id}/purposes/pause?foreSight=${foreSight}&remark=${remark}`,
   );
 };
 
@@ -73,7 +73,7 @@ export const editSurveyPurpose = (payload) => {
     `surveys/${payload.surveyId}/purposes/${payload.purposeId}/edit`,
     {
       updatedRows: payload.updatedRows,
-    }
+    },
   );
 };
 
@@ -81,4 +81,15 @@ export const updateReducedLevels = (id, payload) => {
   return axiosInstance.patch(`surveys/${id}/reduced-levels/edit`, {
     payload,
   });
+};
+
+export const createBranch = (surveyId, formData) => {
+  return axiosInstance.post(`surveys/${surveyId}/branches`, formData);
+};
+
+export const enterBranch = (surveyId, formData) => {
+  return axiosInstance.post(
+    `surveys/${surveyId}/branches/enter-branch`,
+    formData,
+  );
 };

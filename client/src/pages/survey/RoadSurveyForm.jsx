@@ -538,7 +538,7 @@ const RoadSurveyForm = () => {
       const surveyDoc = data.survey;
 
       const initialLevel = surveyDoc.purposes?.find(
-        (p) => p.type === "Initial Level"
+        (p) => p.type === "Initial Level",
       );
 
       const updatedFormValues = {
@@ -648,7 +648,7 @@ const RoadSurveyForm = () => {
 
           return e;
         }
-      })
+      }),
     );
   };
 
@@ -770,8 +770,8 @@ const RoadSurveyForm = () => {
                           {input.name === "purpose"
                             ? "Proposal Between"
                             : input.name === "lSection"
-                            ? "Longitudinal section slop"
-                            : "Cross section slop"}
+                              ? "Longitudinal section slop"
+                              : "Cross section slop"}
                           :
                         </Typography>
                       )}
@@ -813,15 +813,15 @@ const RoadSurveyForm = () => {
                                   (input.name === "crossSectionType"
                                     ? crossSection
                                     : input.name === "category"
-                                    ? category
-                                    : entryType) === option.name
+                                      ? category
+                                      : entryType) === option.name
                                 }
                                 onChange={() =>
                                   input.name === "crossSectionType"
                                     ? setCrossSection(option.name)
                                     : input.name === "category"
-                                    ? setCategory(option.name)
-                                    : setEntryType(option.name)
+                                      ? setCategory(option.name)
+                                      : setEntryType(option.name)
                                 }
                               />
                             </Box>
@@ -837,7 +837,7 @@ const RoadSurveyForm = () => {
                         />
                       )}
                     </Grid>
-                  )
+                  ),
               )}
             </Grid>
           </Stack>

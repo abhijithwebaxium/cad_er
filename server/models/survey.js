@@ -20,7 +20,9 @@ const SurveySchema = new Schema(
       default: "Active",
     },
     branchDetails: {
-      isBranch: { type: Boolean, default: false },
+      hasBranching: { type: Boolean, default: false },
+      isBranch: { type: Boolean, default: false, index: true },
+      branchStartedFrom: { type: String, trim: true },
       rootBranch: { type: Types.ObjectId, ref: "Survey" },
       parentBranch: { type: Types.ObjectId, ref: "Survey" },
       isBranchStart: { type: Boolean, default: false },
@@ -45,6 +47,24 @@ SurveySchema.virtual("purposes", {
   ref: "SurveyPurpose",
   localField: "_id",
   foreignField: "surveyId",
+});
+
+SurveySchema.virtual("branches", {
+  ref: "Branch",
+  localField: "_id",
+  foreignField: "surveyId",
+});
+
+SurveySchema.virtual("parentBranch", {
+  ref: "Branch",
+  localField: "_id",
+  foreignField: "parentBranch",
+});
+
+SurveySchema.virtual("rootBranch", {
+  ref: "Branch",
+  localField: "_id",
+  foreignField: "rootBranch",
 });
 
 SurveySchema.set("toObject", { virtuals: true });

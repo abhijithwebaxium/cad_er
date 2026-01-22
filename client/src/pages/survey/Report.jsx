@@ -1,6 +1,6 @@
 import { Activity, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { startLoading, stopLoading } from "../../redux/loadingSlice";
 import { handleFormError } from "../../utils/handleFormError";
 import { getAllSurvey, getSurvey } from "../../services/surveyServices";
@@ -59,6 +59,8 @@ const Report = () => {
 
   const dispatch = useDispatch();
 
+  const { state } = useLocation();
+
   const { global } = useSelector((state) => state.loading);
 
   const [survey, setSurvey] = useState(null);
@@ -83,7 +85,11 @@ const Report = () => {
   const fetchData = async () => {
     try {
       if (!global) dispatch(startLoading());
-      const { data } = id ? await getSurvey(id) : await getAllSurvey();
+      const { data } = id
+        ? await getSurvey(id)
+        : await getAllSurvey(
+            state?.getBranchReport ? { rootBranch: state?.surveyId } : {},
+          );
 
       id ? setSurvey(data.survey) : setSurveys(data.surveys);
     } catch (error) {
@@ -101,7 +107,7 @@ const Report = () => {
     setSelectedPurposes((prev) =>
       prev.find((p) => p._id === purpose._id)
         ? prev.filter((p) => p._id !== purpose._id)
-        : [...prev, purpose]
+        : [...prev, purpose],
     );
   };
 
@@ -147,7 +153,7 @@ const Report = () => {
         selectedPurposes.length > 2
       ) {
         throw Error(
-          `Only two surveys can be selected for the ${reportType} report.`
+          `Only two surveys can be selected for the ${reportType} report.`,
         );
       }
 
@@ -216,7 +222,9 @@ const Report = () => {
           {!id ? (
             <Box mb={2}>
               <BasicAutocomplete
-                label={"Select Survey"}
+                label={
+                  state?.getBranchReport ? "Select Branch" : "Select Survey"
+                }
                 options={
                   surveys?.length
                     ? surveys?.map((s) => ({ label: s.project, value: s._id }))
@@ -381,7 +389,7 @@ const Report = () => {
                     label={p.type}
                     onDelete={() =>
                       setSelectedPurposes((prev) =>
-                        prev.filter((x) => x._id !== p._id)
+                        prev.filter((x) => x._id !== p._id),
                       )
                     }
                     deleteIcon={<MdDelete />}
