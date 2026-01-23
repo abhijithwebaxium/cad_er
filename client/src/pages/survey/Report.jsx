@@ -31,6 +31,7 @@ import BasicButton from "../../components/BasicButton";
 import SmallHeader from "../../components/SmallHeader";
 import DeductionContent from "./components/DeductionContent";
 import AlertDialogSlide from "../../components/AlertDialogSlide";
+import StyledTextLink from "../../components/StyledTextLink";
 
 const toggleButtonSx = {
   flex: 1,
@@ -175,6 +176,42 @@ const Report = () => {
     generateReport(rows);
   };
 
+  const getFLBLink = (survey, type) => {
+    const level = survey?.purposes?.find(
+      (p) => p.type === (type || "Initial Level"),
+    );
+
+    if (level?.isPurposeFinish) {
+      return `/survey/road-survey/${level._id}/field-book`;
+    } else {
+      return "#";
+    }
+  };
+
+  const handleClickFiledBook = (surveyId) => {
+    const survey = surveys.find((s) => String(s._id) === surveyId);
+    if (!survey) return;
+
+    const fieldBooks = survey.purposes.filter(
+      (p) => p.phase === "Actual" && p.isPurposeFinish,
+    );
+
+    if (!fieldBooks.length) {
+      return dispatch(
+        showAlert({
+          type: "warning",
+          message: "Please complete the Initial Level",
+        }),
+      );
+    }
+
+    if (fieldBooks.length) {
+      const link = getFLBLink(survey);
+
+      return navigate(link);
+    }
+  };
+
   const handleOpen = () => {
     setOpen(true);
   };
@@ -244,6 +281,15 @@ const Report = () => {
               Project Name:{" "}
               <span style={{ fontWeight: "500" }}>{survey?.project}</span>
             </Typography>
+          )}
+
+          {state?.getBranchReport && survey && (
+            <Box display={"flex"} justifyContent={"start"} mb={1}>
+              <StyledTextLink
+                onClick={() => handleClickFiledBook(survey._id)}
+                children={"Generate FLB"}
+              />
+            </Box>
           )}
 
           <Typography
