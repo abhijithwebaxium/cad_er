@@ -51,16 +51,16 @@ export const requireAuth = async (req, res, next) => {
 
 export const isAuthenticated = (req, res, next) => {
   try {
-    if (!req.user) {
+    if (!req.user || !req.user?.isAuthenticated) {
       throw createHttpError(401, "Authentication required");
     }
 
     // User is logged in but hasn't completed onboarding
-    if (!req.user.type) {
+    if (!req.user?.type) {
       throw createHttpError(403, "ONBOARDING_REQUIRED");
     }
 
-    if (req.user.isAuthenticated) {
+    if (req.user?.isAuthenticated) {
       return next();
     }
 
