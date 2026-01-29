@@ -1,8 +1,8 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-import connectDB from "./config/db.js";
-import "./config/env.js";
-
+import helmet from "helmet";
+import compression from "compression";
+import { globalLimiter } from "./middleware/rateLimiter.js";
 import configureCors from "./utils/cors.js";
 import errorHandler from "./middleware/errorHandler.js";
 
@@ -15,31 +15,25 @@ import openingRouter from "./routes/openingRoute.js";
 
 const app = express();
 
-const startServer = async () => {
-  await connectDB(); // Ensure DB is connected before starting the server
+// 1. Security & Optimization
+app.use(helmet());
+app.use(compression());
+app.use(configureCors());
 
-  const PORT = process.env.PORT;
-
-  app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
-  });
-};
-
-// Start the server
-startServer();
-
-// 🟢 Dev-only logging
+// 2. Logging
 if (process.env.NODE_ENV === "development") {
   const { default: morgan } = await import("morgan");
   app.use(morgan("dev"));
 }
 
-// 🟢 Middlewares
-app.use(configureCors());
+// 3. Parsers
 app.use(express.json());
 app.use(cookieParser());
 
-// 🟢 Routes
+// 4. Rate Limiting
+app.use(globalLimiter);
+
+// 5. Routes
 app.use("/api/organizations", organizationRouter);
 app.use("/api/users", userRouter);
 app.use("/api/surveys", surveyRouter);
@@ -47,5 +41,7 @@ app.use("/api/tickets", ticketRouter);
 app.use("/api/openings", openingRouter);
 app.use("/api", indexRouter);
 
-// 🟢 Error Handler Middleware (Keep at the End)
+// 6. Error Handling
 app.use(errorHandler);
+
+export default app;

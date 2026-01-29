@@ -3,6 +3,7 @@ import express from "express";
 const router = express.Router();
 
 import { isAuthenticated, requireAuth } from "../middleware/auth.js";
+import { loginLimiter } from "../middleware/rateLimiter.js";
 
 import {
   loginUser,
@@ -14,11 +15,11 @@ import {
   contactForm,
 } from "../controllers/indexController.js";
 
-router.post("/login", loginUser);
+router.post("/login", loginLimiter, loginUser);
 
-router.post("/google", googleLogin);
+router.post("/google", loginLimiter, googleLogin);
 
-router.post("/register", registerUser);
+router.post("/register", loginLimiter, registerUser);
 
 router.post("/register-account-type", requireAuth, registerAccountType);
 

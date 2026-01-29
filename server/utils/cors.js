@@ -7,8 +7,8 @@ const configureCors = () =>
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
-      const allowed = allowedOrigins.map((o) => o.replace(/\/$/, ""));
-      const clean = origin.replace(/\/$/, "");
+      const allowed = allowedOrigins?.map((o) => o?.replace(/\/$/, ""));
+      const clean = origin?.replace(/\/$/, "");
 
       if (allowed.includes(clean)) return callback(null, true);
 
