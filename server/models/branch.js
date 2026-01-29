@@ -18,4 +18,13 @@ const BranchSchema = new Schema({
   deleted: { type: Boolean, default: false, index: true },
 });
 
+BranchSchema.virtual("purposes", {
+  ref: "SurveyPurpose",
+  localField: "surveyId",
+  foreignField: "surveyId",
+});
+
+BranchSchema.set("toObject", { virtuals: true });
+BranchSchema.set("toJSON", { virtuals: true });
+
 export default model("Branch", BranchSchema);

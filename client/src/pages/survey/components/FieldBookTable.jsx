@@ -28,6 +28,7 @@ export function calculateTableData(purpose) {
   const survey = purpose.surveyId || {};
   let hi = 0;
   let rl = 0;
+  let idx = 0;
   const rows = [];
 
   for (let rIndex = 0; rIndex < (purpose.rows || []).length; rIndex++) {
@@ -39,7 +40,7 @@ export function calculateTableData(purpose) {
         rl = survey.reducedLevel;
         hi = Number(rl) + Number(row.backSight || 0);
         rows.push({
-          rowIndex: rIndex,
+          rowIndex: idx,
           rowType: row.type,
           CH: "-",
           BS: row.backSight ?? "",
@@ -59,10 +60,10 @@ export function calculateTableData(purpose) {
           const isVal = inter[i];
           const rlValue = (hi - Number(isVal || 0)).toFixed(3);
           rows.push({
-            rowIndex: rIndex,
+            rowIndex: idx,
             rowType: row.type,
             index: i,
-            CH: i === 0 ? row.chainage ?? "" : "",
+            CH: i === 0 ? (row.chainage ?? "") : "",
             BS: "-",
             IS: isVal ?? "",
             FS: "-",
@@ -81,7 +82,7 @@ export function calculateTableData(purpose) {
           const isVal = inter[i];
           const rlValue = (hi - Number(isVal || 0)).toFixed(3);
           rows.push({
-            rowIndex: rIndex,
+            rowIndex: idx,
             rowType: row.type,
             index: i,
             CH: "-",
@@ -101,7 +102,7 @@ export function calculateTableData(purpose) {
         rl = Number(hi) - Number(row.foreSight || 0);
         hi = rl + Number(row.backSight || 0);
         rows.push({
-          rowIndex: rIndex,
+          rowIndex: idx,
           rowType: row.type,
           CH: "-",
           BS: row.backSight ?? "",
@@ -117,6 +118,120 @@ export function calculateTableData(purpose) {
 
       default:
         break;
+    }
+
+    if (row?.upcomingBranches?.length > 0) {
+      let branchHi = 0;
+      let branchRl = 0;
+      const nextBranch = purpose?.surveyId?.rootBranch?.find(
+        (r) => r._id === row?.upcomingBranches[0],
+      );
+
+      const nextPurpose = nextBranch?.purposes?.find(
+        (p) => p?.type === purpose?.type,
+      );
+
+      rows.push({
+        rowIndex: idx,
+        rowType: "-",
+        CH: "-",
+        BS: "-",
+        IS: "-",
+        FS: "-",
+        HI: "-",
+        RL: "-",
+        Offset: "-",
+        remarks: "BRANCH",
+      });
+
+      for (let i = 0; i < nextPurpose.rows.length; i++) {
+        const nextRow = nextPurpose.rows[i];
+
+        switch (nextRow.type) {
+          case "Instrument setup": {
+            branchRl = nextBranch?.surveyId?.reducedLevel;
+            branchHi = Number(branchRl) + Number(nextRow.backSight || 0);
+            rows.push({
+              rowIndex: idx,
+              rowType: nextRow.type,
+              CH: "-",
+              BS: nextRow.backSight ?? "",
+              IS: "-",
+              FS: "-",
+              HI: branchHi.toFixed(3),
+              RL: branchRl,
+              Offset: "-",
+              remarks: (nextRow.remarks && nextRow.remarks[0]) ?? "",
+            });
+            break;
+          }
+
+          case "Chainage": {
+            const inter = nextRow.intermediateSight || [];
+            for (let i = 0; i < inter.length; i++) {
+              const isVal = inter[i];
+              const rlValue = (branchHi - Number(isVal || 0)).toFixed(3);
+              rows.push({
+                rowIndex: idx,
+                rowType: nextRow.type,
+                index: i,
+                CH: i === 0 ? (nextRow.chainage ?? "") : "",
+                BS: "-",
+                IS: isVal ?? "",
+                FS: "-",
+                HI: branchHi.toFixed(3),
+                RL: rlValue,
+                Offset: (nextRow.offsets && nextRow.offsets[i]) ?? "",
+                remarks: (nextRow.remarks && nextRow.remarks[i]) ?? "",
+              });
+            }
+            break;
+          }
+
+          case "TBM": {
+            const inter = nextRow.intermediateSight || [];
+            for (let i = 0; i < inter.length; i++) {
+              const isVal = inter[i];
+              const rlValue = (branchHi - Number(isVal || 0)).toFixed(3);
+              rows.push({
+                rowIndex: idx,
+                rowType: nextRow.type,
+                index: i,
+                CH: "-",
+                BS: "-",
+                IS: isVal ?? "",
+                FS: "-",
+                HI: branchHi.toFixed(3),
+                RL: rlValue,
+                Offset: "-",
+                remarks: (nextRow.remarks && nextRow.remarks[i]) ?? "",
+              });
+            }
+            break;
+          }
+
+          case "CP": {
+            branchRl = Number(branchHi) - Number(nextRow.foreSight || 0);
+            branchHi = branchRl + Number(nextRow.backSight || 0);
+            rows.push({
+              rowIndex: idx,
+              rowType: nextRow.type,
+              CH: "-",
+              BS: nextRow.backSight ?? "",
+              IS: "-",
+              FS: nextRow.foreSight ?? "",
+              HI: branchHi.toFixed(3),
+              RL: branchRl.toFixed(3),
+              Offset: "-",
+              remarks: (nextRow.remarks && nextRow.remarks[0]) ?? "",
+            });
+            break;
+          }
+
+          default:
+            break;
+        }
+      }
     }
   }
 
@@ -142,6 +257,8 @@ export function calculateTableData(purpose) {
       diff === 0 ? "±0.000" : diff < 0 ? diff.toFixed(3) : `+${diff.toFixed(3)}`
     }`,
   });
+
+  idx++;
 
   return rows;
 }

@@ -546,6 +546,25 @@ const getSurveyPurpose = async (req, res, next) => {
             path: "parentBranch",
             match: { deleted: false },
           },
+          {
+            path: "rootBranch",
+            match: { deleted: false },
+            populate: [
+              {
+                path: "surveyId",
+                match: { deleted: false },
+              },
+              {
+                path: "purposes",
+                match: { deleted: false },
+                populate: {
+                  path: "rows",
+                  match: { deleted: false },
+                  options: { sort: { createdAt: 1 } },
+                },
+              },
+            ],
+          },
         ],
       })
       .populate({
@@ -1646,6 +1665,11 @@ const createBranch = async (req, res, next) => {
       deleted: false,
     }).sort({ createdAt: -1, _id: -1 });
 
+    const lastReading = await SurveyRow.findOne({
+      purposeId,
+      deleted: false,
+    }).sort({ createdAt: -1, _id: -1 });
+
     const rootBranch = parentSurvey.branchDetails?.rootBranch;
     const chainage =
       lastChainageReading?.chainage || `0${parentSurvey.separator || "/"}000`;
@@ -1695,7 +1719,7 @@ const createBranch = async (req, res, next) => {
     parentSurvey.branchDetails.isBranchStart = true;
     await parentSurvey.save({ session });
 
-    await Branch.create(
+    const newBranch = await Branch.create(
       [
         {
           name,
@@ -1709,6 +1733,11 @@ const createBranch = async (req, res, next) => {
       ],
       { session },
     );
+
+    const newBranchDoc = newBranch[0];
+
+    lastReading.upcomingBranches.push(newBranchDoc._id);
+    await lastReading.save({ session });
 
     await Branch.updateOne(
       {

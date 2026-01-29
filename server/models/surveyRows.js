@@ -1,20 +1,25 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 const { Schema, model, Types } = mongoose;
 
 const SurveyRowSchema = new Schema(
   {
     purposeId: {
       type: Types.ObjectId,
-      ref: 'SurveyPurpose',
+      ref: "SurveyPurpose",
       required: true,
       index: true,
     },
     type: {
       type: String,
-      enum: ['Instrument setup', 'Chainage', 'TBM', 'CP'],
+      enum: ["Instrument setup", "Chainage", "TBM", "CP"],
       required: true,
     },
-    createdBy: { type: Types.ObjectId, ref: 'User', required: true },
+    upcomingBranches: {
+      type: [Types.ObjectId],
+      ref: "Branch",
+      default: [],
+    },
+    createdBy: { type: Types.ObjectId, ref: "User", required: true },
     backSight: { type: String, trim: true },
     reducedLevels: [{ type: String, trim: true }],
     heightOfInstrument: { type: String, trim: true },
@@ -27,7 +32,7 @@ const SurveyRowSchema = new Schema(
     remarks: [{ type: String, trim: true }],
     deleted: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // 🚫 Prevent duplicate chainage inside the same purpose
@@ -36,8 +41,8 @@ SurveyRowSchema.index(
   {
     unique: true,
     partialFilterExpression: { chainage: { $ne: null }, deleted: false },
-  }
+  },
 );
 
-export default model('SurveyRow', SurveyRowSchema);
+export default model("SurveyRow", SurveyRowSchema);
 //Survey Reading
