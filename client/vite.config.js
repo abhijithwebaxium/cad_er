@@ -1,12 +1,70 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+
+      workbox: {
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // fix large bundle error
+      },
+
+      manifest: {
+        name: "Cader",
+        short_name: "Cader",
+        description: "Cader | Geospatial Survey & Engineering Platform",
+
+        theme_color: "#ffffff",
+        background_color: "#ffffff",
+
+        display: "standalone",
+        start_url: "/",
+        scope: "/",
+
+        icons: [
+          {
+            src: "/android-chrome-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "/android-chrome-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "/android-chrome-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable", // improves Android adaptive icons
+          },
+        ],
+      },
+    }),
+  ],
+
+  build: {
+    chunkSizeWarningLimit: 1500,
+
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom"],
+          mui: ["@mui/material"],
+          icons: ["react-icons"],
+        },
+      },
+    },
+  },
+
   preview: {
     port: 8080,
     host: true,
-    allowedHosts: ['cader-8kvsl.ondigitalocean.app', 'getcader.com'],
+    allowedHosts: ["cader-8kvsl.ondigitalocean.app", "getcader.com"],
   },
 });
