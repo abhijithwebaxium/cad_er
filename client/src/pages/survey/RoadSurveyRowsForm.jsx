@@ -426,6 +426,15 @@ const RoadSurveyRowsForm = () => {
 
   const handleDeletePrevReading = async () => {
     try {
+      if (purpose?.rows?.length === 1) {
+        return dispatch(
+          showAlert({
+            type: "error",
+            message: "You can't delete the first reading",
+          }),
+        );
+      }
+
       const prevReading = purpose?.rows?.at(-1);
 
       const rowId = prevReading?._id;
@@ -469,7 +478,7 @@ const RoadSurveyRowsForm = () => {
         if (rowType === "CP" && d.name === "backSight") {
           return {
             ...d,
-            disabled: true,
+            disabled: purpose?.status !== "Paused",
           };
         }
 
@@ -1760,7 +1769,11 @@ const RoadSurveyRowsForm = () => {
 
         <Activity
           mode={
-            page === 0 && purpose && purpose?.rows?.length
+            page === 0 &&
+            purpose &&
+            purpose?.rows?.length &&
+            purpose?.rows[0]?.type === "CP" &&
+            purpose?.status !== "Paused"
               ? "visible"
               : "hidden"
           }

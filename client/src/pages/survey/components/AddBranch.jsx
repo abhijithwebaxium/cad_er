@@ -10,14 +10,15 @@ import { createBranch } from "../../../services/surveyServices";
 
 const schema = Yup.object().shape({
   name: Yup.string().required("Branch name is required"),
-  reducedLevel: Yup.number().required("Reduced level is required"),
-  backSight: Yup.number().required("Back sight is required"),
+  foreSight: Yup.number()
+    .typeError("Foresight must be a number")
+    .nullable()
+    .transform((value, originalValue) => (originalValue === "" ? null : value)),
 });
 
 const initialFormValues = {
   name: "",
-  reducedLevel: "",
-  backSight: "",
+  foreSight: "",
 };
 
 const AddBranch = ({ open, handleClose, surveyId, purposeId }) => {
@@ -72,7 +73,7 @@ const AddBranch = ({ open, handleClose, surveyId, purposeId }) => {
     content: (
       <Stack spacing={2}>
         <BasicInput
-          label="Branch name"
+          label="Branch name*"
           name="name"
           value={formValues.name}
           onChange={handleInputChange}
@@ -80,21 +81,12 @@ const AddBranch = ({ open, handleClose, surveyId, purposeId }) => {
         />
 
         <BasicInput
-          label="Reduced level"
-          name="reducedLevel"
+          label="Foresight"
+          name="foreSight"
           type="number"
-          value={formValues.reducedLevel}
+          value={formValues.foreSight}
           onChange={handleInputChange}
-          error={formErrors.reducedLevel}
-        />
-
-        <BasicInput
-          label="Back sight"
-          name="backSight"
-          type="number"
-          value={formValues.backSight}
-          onChange={handleInputChange}
-          error={formErrors.backSight}
+          error={formErrors.foreSight}
         />
       </Stack>
     ),

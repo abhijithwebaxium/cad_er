@@ -498,7 +498,7 @@ const Landing = () => {
 
   return (
     <Box sx={{ bgcolor: "#fff", minHeight: "100vh" }}>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {loading && (
           <Preloader
             onLoadingComplete={() => {
@@ -509,1000 +509,995 @@ const Landing = () => {
         )}
       </AnimatePresence>
 
-      {!loading && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
-        >
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
+      <Box
+        component={motion.div}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: loading ? 0 : 1 }}
+        transition={{ duration: 1 }}
+        style={{
+          display: loading ? "none" : "block", // or keep it block and use opacity
+        }}
+      >
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
 
-            <AlertDialogSlide
-              {...checkCertAlertData}
-              open={openValidateCert}
-              onCancel={() => setOpenValidateCert(false)}
-            />
+          <AlertDialogSlide
+            {...checkCertAlertData}
+            open={openValidateCert}
+            onCancel={() => setOpenValidateCert(false)}
+          />
 
-            <LandingAppBar />
+          <LandingAppBar />
 
-            {/* Hero Section */}
-            <Box
-              sx={{
-                position: "relative",
-                pt: { xs: 6, md: 12 },
-                pb: { xs: 8, md: 12 },
-                overflow: "hidden",
-                backgroundImage: `url("${GRID_PATTERN}")`,
-              }}
-            >
-              <Container maxWidth="lg">
-                <Grid container spacing={6} alignItems="center">
-                  <Grid size={{ xs: 12, md: 7 }}>
-                    <motion.div
-                      initial="hidden"
-                      animate="visible"
-                      variants={{
-                        visible: { transition: { staggerChildren: 0.15 } },
-                      }}
-                    >
-                      <motion.div variants={fUp}>
-                        <Box
-                          sx={{
-                            display: "inline-flex",
-                            px: 2,
-                            py: 0.5,
-                            mb: 3,
-                            borderRadius: 10,
-                            bgcolor: "rgba(99, 102, 241, 0.1)",
-                            border: "1px solid rgba(99, 102, 241, 0.2)",
-                          }}
-                        >
-                          <Box display="flex" alignItems="center">
-                            <PulseDot />
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                color: "primary.main",
-                                fontWeight: 700,
-                                letterSpacing: 1,
-                              }}
-                            >
-                              v2.4 is live
-                            </Typography>
-                          </Box>
+          {/* Hero Section */}
+          <Box
+            sx={{
+              position: "relative",
+              pt: { xs: 6, md: 12 },
+              pb: { xs: 8, md: 12 },
+              overflow: "hidden",
+              backgroundImage: `url("${GRID_PATTERN}")`,
+            }}
+          >
+            <Container maxWidth="lg">
+              <Grid container spacing={6} alignItems="center">
+                <Grid size={{ xs: 12, md: 7 }}>
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      visible: { transition: { staggerChildren: 0.15 } },
+                    }}
+                  >
+                    <motion.div variants={fUp}>
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          px: 2,
+                          py: 0.5,
+                          mb: 3,
+                          borderRadius: 10,
+                          bgcolor: "rgba(99, 102, 241, 0.1)",
+                          border: "1px solid rgba(99, 102, 241, 0.2)",
+                        }}
+                      >
+                        <Box display="flex" alignItems="center">
+                          <PulseDot />
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "primary.main",
+                              fontWeight: 700,
+                              letterSpacing: 1,
+                            }}
+                          >
+                            v0.1.0 is live
+                          </Typography>
                         </Box>
-                      </motion.div>
+                      </Box>
+                    </motion.div>
 
-                      <motion.div variants={fUp}>
-                        <Typography
-                          variant="h1"
-                          gutterBottom
+                    <motion.div variants={fUp}>
+                      <Typography
+                        variant="h1"
+                        gutterBottom
+                        sx={{
+                          fontSize: {
+                            xs: "2.5rem",
+                            sm: "3.5rem",
+                            md: "4rem",
+                          },
+                        }}
+                      >
+                        Construction Survey <br />
+                        <Box component="span" sx={{ color: "primary.main" }}>
+                          Made Easy .
+                        </Box>
+                      </Typography>
+                    </motion.div>
+
+                    <motion.div variants={fUp}>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "text.secondary",
+                          fontSize: "1.1rem",
+                          mb: 4,
+                          maxWidth: 540,
+                        }}
+                      >
+                        Automate road cross-sections, waterway contours, and
+                        volume calculations with CAD-integrated tools that
+                        eliminate human error.
+                      </Typography>
+                    </motion.div>
+
+                    <motion.div variants={fUp}>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={2}
+                      >
+                        <MotionButton
+                          variant="contained"
+                          size="large"
+                          initial="rest"
+                          whileHover="hover"
+                          animate="rest"
+                          variants={{
+                            rest: { paddingRight: 32 },
+                            hover: { paddingRight: 56 },
+                          }}
+                          transition={{ type: "spring", stiffness: 300 }}
                           sx={{
-                            fontSize: {
-                              xs: "2.5rem",
-                              sm: "3.5rem",
-                              md: "4rem",
+                            py: 1.5,
+                            px: 4,
+                            overflow: "hidden",
+                            position: "relative",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                          onClick={() => navigate("/login")}
+                        >
+                          <span>Get Started</span>
+
+                          <motion.span
+                            variants={{
+                              rest: { x: -10, opacity: 0 },
+                              hover: { x: 0, opacity: 1 },
+                            }}
+                            transition={{ duration: 0.25 }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              color: "white",
+                              position: "relative",
+                            }}
+                          >
+                            <FaArrowRight
+                              size={16}
+                              style={{ position: "absolute" }}
+                            />
+                          </motion.span>
+                        </MotionButton>
+
+                        <Button
+                          variant="outlined"
+                          size="large"
+                          sx={{
+                            borderColor: "rgba(0,0,0,0.1)",
+                            color: "#111",
+                            borderRadius: 2,
+                            py: 2,
+                            px: 4,
+                            fontWeight: 700,
+                            textTransform: "none",
+                            bgcolor: "#fff",
+                            "&:hover": {
+                              borderColor: "#6366f1",
+                              color: "#6366f1",
+                              bgcolor: "rgba(99, 102, 241, 0.04)",
                             },
                           }}
                         >
-                          Construction Survey <br />
-                          <Box component="span" sx={{ color: "primary.main" }}>
-                            Made Easy .
+                          Watch Demo
+                        </Button>
+                      </Stack>
+                    </motion.div>
+                  </motion.div>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 5 }}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8 }}
+                    style={{
+                      position: "relative",
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        background:
+                          "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+                        zIndex: -1,
+                        filter: "blur(40px)",
+                      }}
+                    />
+
+                    <Box
+                      sx={{
+                        position: "relative",
+                        p: 1,
+                        borderRadius: 4,
+                        background: "rgba(255, 255, 255, 0.05)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        boxShadow: "0 15px 40px rgba(0,0,0,0.3)",
+                        width: "100%",
+                        maxWidth: {
+                          xs: "100%",
+                          sm: "250px",
+                          md: "300px",
+                        },
+                        margin: "0 auto",
+                      }}
+                    >
+                      <video
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="none"
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          borderRadius: "12px",
+                          display: "block",
+                        }}
+                      >
+                        <source
+                          src="https://res.cloudinary.com/dukl0w92v/video/upload/f_auto,q_auto,vc_auto,c_limit,w_1280/cader_intro_nhzzon.mp4"
+                          type="video/mp4"
+                        />
+                      </video>
+                    </Box>
+                  </motion.div>
+                </Grid>
+              </Grid>
+            </Container>
+          </Box>
+
+          <Grid container spacing={6} alignItems="center" p={{ xs: 8, md: 12 }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 2, md: 1 } }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8 }}
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    background:
+                      "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+                    zIndex: -1,
+                    filter: "blur(40px)",
+                  }}
+                />
+
+                <Box
+                  sx={{
+                    position: "relative",
+                    p: 1,
+                    borderRadius: 4,
+                    background: "rgba(255, 255, 255, 0.05)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    boxShadow: "0 15px 40px rgba(0,0,0,0.3)",
+                    width: "100%",
+                    maxWidth: {
+                      xs: "100%",
+                      lg: "600px",
+                    },
+                    margin: "0 auto",
+                  }}
+                >
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="none"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "12px",
+                      display: "block",
+                    }}
+                  >
+                    <source
+                      src="https://res.cloudinary.com/dukl0w92v/video/upload/v1768635428/A_modern_road_202601171306_lhs6i_jerdkr.mp4"
+                      type="video/mp4"
+                    />
+                  </video>
+                </Box>
+              </motion.div>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 2 } }}>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <Stack spacing={4}>
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: "#6366f1",
+                        fontWeight: 700,
+                        letterSpacing: 2,
+                        fontSize: "0.85rem",
+                        mb: 1,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Efficiency Reimagined
+                    </Typography>
+                    <Typography
+                      variant="h2"
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: { xs: "2.2rem", md: "3rem" },
+                        lineHeight: 1.2,
+                        mb: 3,
+                      }}
+                    >
+                      Complete projects faster, <br />
+                      <Box component="span" sx={{ color: "#ef4444" }}>
+                        without errors.
+                      </Box>
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: "1.1rem",
+                        color: "text.secondary",
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      This innovative tool is set to transform how site
+                      supervisors, project managers, and engineers conduct
+                      autolevel surveys for roads and waterways.
+                    </Typography>
+                  </Box>
+
+                  <Stack spacing={2.5}>
+                    {[
+                      "Real-time volume calculations",
+                      "Automated cross-section plotting",
+                      "Zero manual entry errors",
+                      "Export directly to CAD formats",
+                    ].map((feature, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <CheckCircle />
+                        <Typography
+                          sx={{ fontWeight: 600, fontSize: "1.05rem" }}
+                        >
+                          {feature}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Stack>
+              </motion.div>
+            </Grid>
+          </Grid>
+
+          {/* Feature Highlights */}
+          <Box
+            sx={{
+              py: { xs: 8, md: 12 },
+              bgcolor: "#000",
+              overflow: "hidden",
+            }}
+            component={motion.div}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={containerStagger}
+          >
+            <Container maxWidth="lg">
+              <Stack spacing={2} textAlign="center" mb={{ xs: 8, md: 10 }}>
+                <Typography
+                  component={motion.h2}
+                  variants={slowFadeUp}
+                  sx={{
+                    fontSize: { xs: "1.8rem", sm: "2.2rem", md: "2.8rem" },
+                    fontWeight: 700,
+                    color: "white",
+                  }}
+                >
+                  There’s{" "}
+                  <Box component="span" sx={{ color: "error.main" }}>
+                    nothing like this
+                  </Box>{" "}
+                  on
+                  <br />
+                  the market!
+                </Typography>
+
+                <Typography
+                  component={motion.p}
+                  variants={slowFadeUp}
+                  sx={{
+                    fontSize: { xs: "0.95rem", md: "1.05rem" },
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Choosing CADer for your projects has many advantages.
+                  <br /> Let’s expand!
+                </Typography>
+              </Stack>
+            </Container>
+
+            {/* Marquee Container */}
+            <Box sx={{ position: "relative", width: "100%", mt: 2 }}>
+              {/* Side Gradients for Seamless Entrance/Exit */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "20%",
+                  height: "100%",
+                  zIndex: 2,
+                  background: "linear-gradient(to right, #000, transparent)",
+                  pointerEvents: "none",
+                }}
+              />
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  width: "20%",
+                  height: "100%",
+                  zIndex: 2,
+                  background: "linear-gradient(to left, #000, transparent)",
+                  pointerEvents: "none",
+                }}
+              />
+
+              <motion.div
+                animate={{
+                  x: [0, -totalWidthOfOneSet],
+                }}
+                transition={{
+                  x: {
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    duration: 30, // Adjust speed here
+                    ease: "linear",
+                  },
+                }}
+                style={{
+                  display: "flex",
+                  gap: `${gap}px`,
+                  width: "max-content",
+                  paddingLeft: `${gap}px`,
+                }}
+              >
+                {tripleFeatures.map((item, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      width: { xs: 260, md: cardWidth },
+                      flexShrink: 0,
+                      p: 4,
+                      bgcolor: "rgba(255,255,255,0.03)",
+                      borderLeft: "2px solid #6366f1",
+                      borderRadius: "4px",
+                      transition: "background-color 0.3s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      gap: 2,
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,0.08)",
+                      },
+                    }}
+                  >
+                    <Box sx={{ color: "white", opacity: 0.9 }}>{item.icon}</Box>
+                    <Typography
+                      sx={{
+                        color: "white",
+                        fontSize: "1rem",
+                        fontWeight: 500,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {item.text}
+                    </Typography>
+                  </Box>
+                ))}
+              </motion.div>
+            </Box>
+          </Box>
+
+          <Box sx={{ bgcolor: "#f9fafb", py: { xs: 8, md: 12 } }}>
+            <Container maxWidth="lg">
+              <Grid container spacing={{ xs: 6, lg: 10 }} alignItems="center">
+                {/* LEFT CONTENT: Typography & Narrative */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.5 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Stack spacing={4}>
+                      <Box>
+                        <Typography
+                          sx={{
+                            color: "#6366f1",
+                            fontWeight: 700,
+                            letterSpacing: 2,
+                            fontSize: "0.85rem",
+                            mb: 1.5,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Education Partnership
+                        </Typography>
+                        <Typography
+                          variant="h2"
+                          sx={{
+                            fontSize: { xs: "2.2rem", md: "3rem" },
+                            fontWeight: 800,
+                            lineHeight: 1.2,
+                            mb: 3,
+                            color: "#000",
+                          }}
+                        >
+                          CADer{" "}
+                          <Box component="span" sx={{ color: "#6366f1" }}>
+                            Training Program
                           </Box>
                         </Typography>
-                      </motion.div>
-
-                      <motion.div variants={fUp}>
                         <Typography
-                          variant="body1"
                           sx={{
-                            color: "text.secondary",
                             fontSize: "1.1rem",
-                            mb: 4,
-                            maxWidth: 540,
+                            lineHeight: 1.7,
+                            color: "text.secondary",
+                            maxWidth: 500,
                           }}
                         >
-                          Automate road cross-sections, waterway contours, and
-                          volume calculations with CAD-integrated tools that
-                          eliminate human error.
+                          Equip your students with cutting-edge surveying
+                          skills. We offer a specialized intensive program
+                          designed for the next generation of civil engineers at
+                          your esteemed institution.
                         </Typography>
-                      </motion.div>
+                      </Box>
 
-                      <motion.div variants={fUp}>
-                        <Stack
-                          direction={{ xs: "column", sm: "row" }}
-                          spacing={2}
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={2}
+                      >
+                        <MotionButton
+                          variant="contained"
+                          size="large"
+                          initial="rest"
+                          whileHover="hover"
+                          animate="rest"
+                          variants={{
+                            rest: { paddingRight: 32 },
+                            hover: { paddingRight: 56 },
+                          }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                          sx={{
+                            py: 1.5,
+                            px: 4,
+                            overflow: "hidden",
+                            position: "relative",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                          onClick={() => navigate("/register")}
                         >
-                          <MotionButton
-                            variant="contained"
-                            size="large"
-                            initial="rest"
-                            whileHover="hover"
-                            animate="rest"
+                          <span>Enroll Now</span>
+
+                          <motion.span
                             variants={{
-                              rest: { paddingRight: 32 },
-                              hover: { paddingRight: 56 },
+                              rest: { x: -10, opacity: 0 },
+                              hover: { x: 0, opacity: 1 },
                             }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                            sx={{
-                              py: 1.5,
-                              px: 4,
-                              overflow: "hidden",
-                              position: "relative",
+                            transition={{ duration: 0.25 }}
+                            style={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 1,
-                            }}
-                            onClick={() => navigate("/login")}
-                          >
-                            <span>Get Started</span>
-
-                            <motion.span
-                              variants={{
-                                rest: { x: -10, opacity: 0 },
-                                hover: { x: 0, opacity: 1 },
-                              }}
-                              transition={{ duration: 0.25 }}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                color: "white",
-                                position: "relative",
-                              }}
-                            >
-                              <FaArrowRight
-                                size={16}
-                                style={{ position: "absolute" }}
-                              />
-                            </motion.span>
-                          </MotionButton>
-
-                          <Button
-                            variant="outlined"
-                            size="large"
-                            sx={{
-                              borderColor: "rgba(0,0,0,0.1)",
-                              color: "#111",
-                              borderRadius: 2,
-                              py: 2,
-                              px: 4,
-                              fontWeight: 700,
-                              textTransform: "none",
-                              bgcolor: "#fff",
-                              "&:hover": {
-                                borderColor: "#6366f1",
-                                color: "#6366f1",
-                                bgcolor: "rgba(99, 102, 241, 0.04)",
-                              },
+                              color: "white",
+                              position: "relative",
                             }}
                           >
-                            Watch Demo
-                          </Button>
-                        </Stack>
-                      </motion.div>
-                    </motion.div>
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 5 }}>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.8 }}
-                      style={{
-                        position: "relative",
-                        display: "flex",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          width: "100%",
-                          height: "100%",
-                          background:
-                            "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
-                          zIndex: -1,
-                          filter: "blur(40px)",
-                        }}
-                      />
-
-                      <Box
-                        sx={{
-                          position: "relative",
-                          p: 1,
-                          borderRadius: 4,
-                          background: "rgba(255, 255, 255, 0.05)",
-                          backdropFilter: "blur(10px)",
-                          border: "1px solid rgba(255, 255, 255, 0.1)",
-                          boxShadow: "0 15px 40px rgba(0,0,0,0.3)",
-                          width: "100%",
-                          maxWidth: {
-                            xs: "100%",
-                            sm: "250px",
-                            md: "300px",
-                          },
-                          margin: "0 auto",
-                        }}
-                      >
-                        <video
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          preload="none"
-                          style={{
-                            width: "100%",
-                            height: "auto",
-                            borderRadius: "12px",
-                            display: "block",
+                            <FaArrowRight
+                              size={16}
+                              style={{ position: "absolute" }}
+                            />
+                          </motion.span>
+                        </MotionButton>
+                        <Button
+                          variant="outlined"
+                          size="large"
+                          sx={{
+                            borderColor: "rgba(0,0,0,0.1)",
+                            color: "#111",
+                            borderRadius: 2,
+                            py: 2,
+                            px: 4,
+                            fontWeight: 700,
+                            textTransform: "none",
+                            bgcolor: "#fff",
+                            "&:hover": {
+                              borderColor: "#6366f1",
+                              color: "#6366f1",
+                              bgcolor: "rgba(99, 102, 241, 0.04)",
+                            },
                           }}
+                          onClick={() => setOpenValidateCert(true)}
                         >
-                          <source
-                            src="https://res.cloudinary.com/dukl0w92v/video/upload/f_auto,q_auto,vc_auto,c_limit,w_1280/cader_intro_nhzzon.mp4"
-                            type="video/mp4"
-                          />
-                        </video>
-                      </Box>
-                    </motion.div>
-                  </Grid>
-                </Grid>
-              </Container>
-            </Box>
-
-            <Grid
-              container
-              spacing={6}
-              alignItems="center"
-              p={{ xs: 8, md: 12 }}
-            >
-              <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 2, md: 1 } }}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8 }}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      width: "100%",
-                      height: "100%",
-                      background:
-                        "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
-                      zIndex: -1,
-                      filter: "blur(40px)",
-                    }}
-                  />
-
-                  <Box
-                    sx={{
-                      position: "relative",
-                      p: 1,
-                      borderRadius: 4,
-                      background: "rgba(255, 255, 255, 0.05)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      boxShadow: "0 15px 40px rgba(0,0,0,0.3)",
-                      width: "100%",
-                      maxWidth: {
-                        xs: "100%",
-                        lg: "600px",
-                      },
-                      margin: "0 auto",
-                    }}
-                  >
-                    <video
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      preload="none"
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        borderRadius: "12px",
-                        display: "block",
-                      }}
-                    >
-                      <source
-                        src="https://res.cloudinary.com/dukl0w92v/video/upload/v1768635428/A_modern_road_202601171306_lhs6i_jerdkr.mp4"
-                        type="video/mp4"
-                      />
-                    </video>
-                  </Box>
-                </motion.div>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 2 } }}>
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <Stack spacing={4}>
-                    <Box>
-                      <Typography
-                        sx={{
-                          color: "#6366f1",
-                          fontWeight: 700,
-                          letterSpacing: 2,
-                          fontSize: "0.85rem",
-                          mb: 1,
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Efficiency Reimagined
-                      </Typography>
-                      <Typography
-                        variant="h2"
-                        sx={{
-                          fontWeight: 800,
-                          fontSize: { xs: "2.2rem", md: "3rem" },
-                          lineHeight: 1.2,
-                          mb: 3,
-                        }}
-                      >
-                        Complete projects faster, <br />
-                        <Box component="span" sx={{ color: "#ef4444" }}>
-                          without errors.
-                        </Box>
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "1.1rem",
-                          color: "text.secondary",
-                          lineHeight: 1.7,
-                        }}
-                      >
-                        This innovative tool is set to transform how site
-                        supervisors, project managers, and engineers conduct
-                        autolevel surveys for roads and waterways.
-                      </Typography>
-                    </Box>
-
-                    <Stack spacing={2.5}>
-                      {[
-                        "Real-time volume calculations",
-                        "Automated cross-section plotting",
-                        "Zero manual entry errors",
-                        "Export directly to CAD formats",
-                      ].map((feature, idx) => (
-                        <Box
-                          key={idx}
-                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                        >
-                          <CheckCircle />
-                          <Typography
-                            sx={{ fontWeight: 600, fontSize: "1.05rem" }}
-                          >
-                            {feature}
-                          </Typography>
-                        </Box>
-                      ))}
+                          Validate Certificate
+                        </Button>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </motion.div>
-              </Grid>
-            </Grid>
+                  </motion.div>
+                </Grid>
 
-            {/* Feature Highlights */}
-            <Box
-              sx={{
-                py: { xs: 8, md: 12 },
-                bgcolor: "#000",
-                overflow: "hidden",
-              }}
-              component={motion.div}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
-              variants={containerStagger}
-            >
-              <Container maxWidth="lg">
-                <Stack spacing={2} textAlign="center" mb={{ xs: 8, md: 10 }}>
-                  <Typography
-                    component={motion.h2}
-                    variants={slowFadeUp}
-                    sx={{
-                      fontSize: { xs: "1.8rem", sm: "2.2rem", md: "2.8rem" },
-                      fontWeight: 700,
-                      color: "white",
-                    }}
-                  >
-                    There’s{" "}
-                    <Box component="span" sx={{ color: "error.main" }}>
-                      nothing like this
-                    </Box>{" "}
-                    on
-                    <br />
-                    the market!
-                  </Typography>
-
-                  <Typography
-                    component={motion.p}
-                    variants={slowFadeUp}
-                    sx={{
-                      fontSize: { xs: "0.95rem", md: "1.05rem" },
-                      color: "rgba(255,255,255,0.6)",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    Choosing CADer for your projects has many advantages.
-                    <br /> Let’s expand!
-                  </Typography>
-                </Stack>
-              </Container>
-
-              {/* Marquee Container */}
-              <Box sx={{ position: "relative", width: "100%", mt: 2 }}>
-                {/* Side Gradients for Seamless Entrance/Exit */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "20%",
-                    height: "100%",
-                    zIndex: 2,
-                    background: "linear-gradient(to right, #000, transparent)",
-                    pointerEvents: "none",
-                  }}
-                />
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    width: "20%",
-                    height: "100%",
-                    zIndex: 2,
-                    background: "linear-gradient(to left, #000, transparent)",
-                    pointerEvents: "none",
-                  }}
-                />
-
-                <motion.div
-                  animate={{
-                    x: [0, -totalWidthOfOneSet],
-                  }}
-                  transition={{
-                    x: {
-                      repeat: Infinity,
-                      repeatType: "loop",
-                      duration: 30, // Adjust speed here
-                      ease: "linear",
-                    },
-                  }}
-                  style={{
-                    display: "flex",
-                    gap: `${gap}px`,
-                    width: "max-content",
-                    paddingLeft: `${gap}px`,
-                  }}
-                >
-                  {tripleFeatures.map((item, index) => (
+                {/* RIGHT CONTENT: Feature Grid */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Box sx={{ position: "relative" }}>
+                    {/* Decorative background element */}
                     <Box
-                      key={index}
                       sx={{
-                        width: { xs: 260, md: cardWidth },
-                        flexShrink: 0,
-                        p: 4,
-                        bgcolor: "rgba(255,255,255,0.03)",
-                        borderLeft: "2px solid #6366f1",
-                        borderRadius: "4px",
-                        transition: "background-color 0.3s ease",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-start",
-                        gap: 2,
-                        "&:hover": {
-                          bgcolor: "rgba(255,255,255,0.08)",
+                        position: "absolute",
+                        top: "10%",
+                        left: "10%",
+                        width: "80%",
+                        height: "80%",
+                        bgcolor: "rgba(99, 102, 241, 0.05)",
+                        filter: "blur(60px)",
+                        zIndex: 0,
+                      }}
+                    />
+                    <motion.div
+                      variants={{
+                        hidden: { opacity: 0 },
+                        show: {
+                          opacity: 1,
+                          transition: {
+                            staggerChildren: 0.15,
+                            delayChildren: 0.2,
+                          },
                         },
                       }}
-                    >
-                      <Box sx={{ color: "white", opacity: 0.9 }}>
-                        {item.icon}
-                      </Box>
-                      <Typography
-                        sx={{
-                          color: "white",
-                          fontSize: "1rem",
-                          fontWeight: 500,
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {item.text}
-                      </Typography>
-                    </Box>
-                  ))}
-                </motion.div>
-              </Box>
-            </Box>
-
-            <Box sx={{ bgcolor: "#f9fafb", py: { xs: 8, md: 12 } }}>
-              <Container maxWidth="lg">
-                <Grid container spacing={{ xs: 6, lg: 10 }} alignItems="center">
-                  {/* LEFT CONTENT: Typography & Narrative */}
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
+                      initial="hidden"
+                      whileInView="show"
                       viewport={{ once: true, amount: 0.5 }}
-                      transition={{ duration: 0.6 }}
                     >
-                      <Stack spacing={4}>
-                        <Box>
-                          <Typography
-                            sx={{
-                              color: "#6366f1",
-                              fontWeight: 700,
-                              letterSpacing: 2,
-                              fontSize: "0.85rem",
-                              mb: 1.5,
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            Education Partnership
-                          </Typography>
-                          <Typography
-                            variant="h2"
-                            sx={{
-                              fontSize: { xs: "2.2rem", md: "3rem" },
-                              fontWeight: 800,
-                              lineHeight: 1.2,
-                              mb: 3,
-                              color: "#000",
-                            }}
-                          >
-                            CADer{" "}
-                            <Box component="span" sx={{ color: "#6366f1" }}>
-                              Training Program
-                            </Box>
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontSize: "1.1rem",
-                              lineHeight: 1.7,
-                              color: "text.secondary",
-                              maxWidth: 500,
-                            }}
-                          >
-                            Equip your students with cutting-edge surveying
-                            skills. We offer a specialized intensive program
-                            designed for the next generation of civil engineers
-                            at your esteemed institution.
-                          </Typography>
-                        </Box>
+                      <Grid
+                        container
+                        spacing={2.5}
+                        sx={{ position: "relative", zIndex: 1 }}
+                      >
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Stack spacing={2.5}>
+                            <motion.div variants={cardVariants}>
+                              <TrainingCard
+                                icon={<ClockIcon />}
+                                title="Duration"
+                                description="10-day intensive package designed for deep skill acquisition."
+                              />
+                            </motion.div>
+                            <motion.div variants={cardVariants}>
+                              <TrainingCard
+                                icon={<AwardIcon />}
+                                title="Software Access"
+                                description="6 months free pro access (Retails for ₹45,000 + GST/year)."
+                              />
+                            </motion.div>
+                          </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }} sx={{ mt: { sm: 4 } }}>
+                          <Stack spacing={2.5}>
+                            <motion.div variants={cardVariants}>
+                              <TrainingCard
+                                icon={<WalletIcon />}
+                                title="Pricing"
+                                description="Special institution-only affordable pricing per student."
+                              />
+                            </motion.div>
+                            <motion.div variants={cardVariants}>
+                              <TrainingCard
+                                icon={<TrendingIcon />}
+                                title="Career Impact"
+                                description="Proficiency increases professional pay scales by up to 20%."
+                              />
+                            </motion.div>
+                          </Stack>
+                        </Grid>
+                      </Grid>
+                    </motion.div>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Container>
+          </Box>
 
-                        <Stack
-                          direction={{ xs: "column", sm: "row" }}
-                          spacing={2}
+          {/*  CONNECT WITH US */}
+          <Box sx={{ py: { xs: 8, md: 15 }, bgcolor: "#fff" }}>
+            <Container maxWidth="lg">
+              <Paper
+                elevation={0}
+                sx={{
+                  bgcolor: "#6366f1",
+                  borderRadius: { xs: 4, md: 8 },
+                  overflow: "hidden",
+                  position: "relative",
+                  boxShadow: "0 40px 80px rgba(99, 102, 241, 0.25)",
+                }}
+              >
+                {/* Background Decorative Circles */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: -100,
+                    right: -100,
+                    width: 400,
+                    height: 400,
+                    borderRadius: "50%",
+                    bgcolor: "rgba(255,255,255,0.05)",
+                    zIndex: 0,
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: -50,
+                    left: -50,
+                    width: 200,
+                    height: 200,
+                    borderRadius: "50%",
+                    bgcolor: "rgba(0,0,0,0.1)",
+                    zIndex: 0,
+                  }}
+                />
+
+                <Grid container sx={{ position: "relative", zIndex: 1 }}>
+                  {/* Left Side: Content */}
+                  <Grid
+                    size={{ xs: 12, lg: 5 }}
+                    sx={{ p: { xs: 4, md: 8, lg: 10 }, color: "white" }}
+                  >
+                    <Stack spacing={4}>
+                      <Box>
+                        <Typography
+                          sx={{
+                            fontWeight: 800,
+                            fontSize: { xs: "2.2rem", md: "3.5rem" },
+                            lineHeight: 1.1,
+                            mb: 3,
+                          }}
                         >
-                          <MotionButton
-                            variant="contained"
-                            size="large"
-                            initial="rest"
-                            whileHover="hover"
-                            animate="rest"
-                            variants={{
-                              rest: { paddingRight: 32 },
-                              hover: { paddingRight: 56 },
-                            }}
-                            transition={{ type: "spring", stiffness: 300 }}
+                          Connect <br /> with us
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "1.1rem",
+                            lineHeight: 1.7,
+                            opacity: 0.9,
+                            maxWidth: 380,
+                          }}
+                        >
+                          Let us know how we can help! Fill out the form and our
+                          team will get back to you within 24 hours.
+                        </Typography>
+                      </Box>
+
+                      <Stack spacing={3}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                          }}
+                        >
+                          <Box
                             sx={{
-                              py: 1.5,
-                              px: 4,
-                              overflow: "hidden",
-                              position: "relative",
+                              width: 48,
+                              height: 48,
+                              borderRadius: "50%",
+                              bgcolor: "rgba(255,255,255,0.1)",
                               display: "flex",
                               alignItems: "center",
-                              gap: 1,
+                              justifyContent: "center",
                             }}
-                            onClick={() => navigate("/register")}
                           >
-                            <span>Enroll Now</span>
-
-                            <motion.span
-                              variants={{
-                                rest: { x: -10, opacity: 0 },
-                                hover: { x: 0, opacity: 1 },
-                              }}
-                              transition={{ duration: 0.25 }}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                color: "white",
-                                position: "relative",
-                              }}
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
                             >
-                              <FaArrowRight
-                                size={16}
-                                style={{ position: "absolute" }}
-                              />
-                            </motion.span>
-                          </MotionButton>
-                          <Button
-                            variant="outlined"
-                            size="large"
+                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                            </svg>
+                          </Box>
+                          <Typography fontWeight={500}>
+                            +91 79944 19955
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                          }}
+                        >
+                          <Box
                             sx={{
-                              borderColor: "rgba(0,0,0,0.1)",
-                              color: "#111",
-                              borderRadius: 2,
-                              py: 2,
-                              px: 4,
-                              fontWeight: 700,
-                              textTransform: "none",
-                              bgcolor: "#fff",
-                              "&:hover": {
-                                borderColor: "#6366f1",
-                                color: "#6366f1",
-                                bgcolor: "rgba(99, 102, 241, 0.04)",
-                              },
+                              width: 48,
+                              height: 48,
+                              borderRadius: "50%",
+                              bgcolor: "rgba(255,255,255,0.1)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
-                            onClick={() => setOpenValidateCert(true)}
                           >
-                            Validate Certificate
-                          </Button>
-                        </Stack>
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                              <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                          </Box>
+                          <Typography fontWeight={500}>
+                            admin@getcader.com
+                          </Typography>
+                        </Box>
                       </Stack>
-                    </motion.div>
+                    </Stack>
                   </Grid>
 
-                  {/* RIGHT CONTENT: Feature Grid */}
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Box sx={{ position: "relative" }}>
-                      {/* Decorative background element */}
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: "10%",
-                          left: "10%",
-                          width: "80%",
-                          height: "80%",
-                          bgcolor: "rgba(99, 102, 241, 0.05)",
-                          filter: "blur(60px)",
-                          zIndex: 0,
-                        }}
-                      />
-                      <motion.div
-                        variants={{
-                          hidden: { opacity: 0 },
-                          show: {
-                            opacity: 1,
-                            transition: {
-                              staggerChildren: 0.15,
-                              delayChildren: 0.2,
-                            },
-                          },
-                        }}
-                        initial="hidden"
-                        whileInView="show"
-                        viewport={{ once: true, amount: 0.5 }}
-                      >
-                        <Grid
-                          container
-                          spacing={2.5}
-                          sx={{ position: "relative", zIndex: 1 }}
-                        >
-                          <Grid size={{ xs: 12, sm: 6 }}>
-                            <Stack spacing={2.5}>
-                              <motion.div variants={cardVariants}>
-                                <TrainingCard
-                                  icon={<ClockIcon />}
-                                  title="Duration"
-                                  description="10-day intensive package designed for deep skill acquisition."
-                                />
-                              </motion.div>
-                              <motion.div variants={cardVariants}>
-                                <TrainingCard
-                                  icon={<AwardIcon />}
-                                  title="Software Access"
-                                  description="6 months free pro access (Retails for ₹45,000 + GST/year)."
-                                />
-                              </motion.div>
-                            </Stack>
-                          </Grid>
-                          <Grid size={{ xs: 12, sm: 6 }} sx={{ mt: { sm: 4 } }}>
-                            <Stack spacing={2.5}>
-                              <motion.div variants={cardVariants}>
-                                <TrainingCard
-                                  icon={<WalletIcon />}
-                                  title="Pricing"
-                                  description="Special institution-only affordable pricing per student."
-                                />
-                              </motion.div>
-                              <motion.div variants={cardVariants}>
-                                <TrainingCard
-                                  icon={<TrendingIcon />}
-                                  title="Career Impact"
-                                  description="Proficiency increases professional pay scales by up to 20%."
-                                />
-                              </motion.div>
-                            </Stack>
-                          </Grid>
+                  {/* Right Side: Form */}
+                  <Grid
+                    size={{ xs: 12, lg: 7 }}
+                    sx={{
+                      p: { xs: 4, md: 8, lg: 10 },
+                      bgcolor: "rgba(0,0,0,0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box sx={{ width: "100%" }}>
+                      <Grid container spacing={3}>
+                        <Grid size={{ xs: 12, lg: 6 }}>
+                          <CustomInput
+                            label="Full Name"
+                            placeholder="Jane Smith"
+                            name="name"
+                            onChange={handleInputChange}
+                            error={!!formErrors?.name}
+                            helperText={formErrors?.name}
+                            value={formValues?.name}
+                          />
                         </Grid>
-                      </motion.div>
+                        <Grid size={{ xs: 12, lg: 6 }}>
+                          <CustomInput
+                            label="Work Email"
+                            placeholder="jane@university.edu"
+                            name="email"
+                            onChange={handleInputChange}
+                            error={!!formErrors?.email}
+                            helperText={formErrors?.email}
+                            value={formValues?.email}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <CustomInput
+                            label="Phone Number"
+                            placeholder="+91 9999999999"
+                            name="phone"
+                            onChange={handleInputChange}
+                            error={!!formErrors?.phone}
+                            helperText={formErrors?.phone}
+                            value={formValues?.phone}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <Box>
+                            <Typography
+                              sx={{
+                                color: "white",
+                                mb: 1,
+                                fontSize: "0.85rem",
+                                fontWeight: 600,
+                                opacity: 0.9,
+                              }}
+                            >
+                              How can we help?
+                            </Typography>
+                            <TextField
+                              fullWidth
+                              multiline
+                              rows={4}
+                              placeholder="Tell us about your requirements..."
+                              variant="outlined"
+                              name="message"
+                              onChange={handleInputChange}
+                              error={!!formErrors?.message}
+                              helperText={formErrors?.message}
+                              value={formValues?.message}
+                              sx={{
+                                bgcolor: "rgba(255,255,255,0.08)",
+                                borderRadius: 2,
+                                "& .MuiOutlinedInput-root": {
+                                  color: "white",
+                                  "& fieldset": {
+                                    borderColor: "rgba(255,255,255,0.2)",
+                                    borderRadius: "12px",
+                                  },
+                                  "&:hover fieldset": {
+                                    borderColor: "rgba(255,255,255,0.4)",
+                                  },
+                                  "&.Mui-focused fieldset": {
+                                    borderColor: "white",
+                                  },
+                                },
+                              }}
+                            />
+                          </Box>
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <Button
+                            variant="contained"
+                            fullWidth
+                            sx={{
+                              bgcolor: "#000",
+                              color: "#fff",
+                              height: "64px",
+                              borderRadius: "12px",
+                              fontSize: "1.1rem",
+                              fontWeight: 700,
+                              textTransform: "none",
+                              boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
+                              "&:hover": {
+                                bgcolor: "#111",
+                                transform: "scale(1.01)",
+                              },
+                              transition: "all 0.2s ease",
+                            }}
+                            onClick={handleSubmit}
+                            loading={isLoading}
+                          >
+                            Send Message
+                          </Button>
+                        </Grid>
+                      </Grid>
                     </Box>
                   </Grid>
                 </Grid>
-              </Container>
-            </Box>
-
-            {/*  CONNECT WITH US */}
-            <Box sx={{ py: { xs: 8, md: 15 }, bgcolor: "#fff" }}>
-              <Container maxWidth="lg">
-                <Paper
-                  elevation={0}
-                  sx={{
-                    bgcolor: "#6366f1",
-                    borderRadius: { xs: 4, md: 8 },
-                    overflow: "hidden",
-                    position: "relative",
-                    boxShadow: "0 40px 80px rgba(99, 102, 241, 0.25)",
-                  }}
-                >
-                  {/* Background Decorative Circles */}
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: -100,
-                      right: -100,
-                      width: 400,
-                      height: 400,
-                      borderRadius: "50%",
-                      bgcolor: "rgba(255,255,255,0.05)",
-                      zIndex: 0,
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      bottom: -50,
-                      left: -50,
-                      width: 200,
-                      height: 200,
-                      borderRadius: "50%",
-                      bgcolor: "rgba(0,0,0,0.1)",
-                      zIndex: 0,
-                    }}
-                  />
-
-                  <Grid container sx={{ position: "relative", zIndex: 1 }}>
-                    {/* Left Side: Content */}
-                    <Grid
-                      size={{ xs: 12, lg: 5 }}
-                      sx={{ p: { xs: 4, md: 8, lg: 10 }, color: "white" }}
-                    >
-                      <Stack spacing={4}>
-                        <Box>
-                          <Typography
-                            sx={{
-                              fontWeight: 800,
-                              fontSize: { xs: "2.2rem", md: "3.5rem" },
-                              lineHeight: 1.1,
-                              mb: 3,
-                            }}
-                          >
-                            Connect <br /> with us
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontSize: "1.1rem",
-                              lineHeight: 1.7,
-                              opacity: 0.9,
-                              maxWidth: 380,
-                            }}
-                          >
-                            Let us know how we can help! Fill out the form and
-                            our team will get back to you within 24 hours.
-                          </Typography>
-                        </Box>
-
-                        <Stack spacing={3}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: "50%",
-                                bgcolor: "rgba(255,255,255,0.1)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                              </svg>
-                            </Box>
-                            <Typography fontWeight={500}>
-                              +91 79944 19955
-                            </Typography>
-                          </Box>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: "50%",
-                                bgcolor: "rgba(255,255,255,0.1)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                                <polyline points="22,6 12,13 2,6" />
-                              </svg>
-                            </Box>
-                            <Typography fontWeight={500}>
-                              admin@getcader.com
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </Stack>
-                    </Grid>
-
-                    {/* Right Side: Form */}
-                    <Grid
-                      size={{ xs: 12, lg: 7 }}
-                      sx={{
-                        p: { xs: 4, md: 8, lg: 10 },
-                        bgcolor: "rgba(0,0,0,0.1)",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Box sx={{ width: "100%" }}>
-                        <Grid container spacing={3}>
-                          <Grid size={{ xs: 12, lg: 6 }}>
-                            <CustomInput
-                              label="Full Name"
-                              placeholder="Jane Smith"
-                              name="name"
-                              onChange={handleInputChange}
-                              error={!!formErrors?.name}
-                              helperText={formErrors?.name}
-                              value={formValues?.name}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12, lg: 6 }}>
-                            <CustomInput
-                              label="Work Email"
-                              placeholder="jane@university.edu"
-                              name="email"
-                              onChange={handleInputChange}
-                              error={!!formErrors?.email}
-                              helperText={formErrors?.email}
-                              value={formValues?.email}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12 }}>
-                            <CustomInput
-                              label="Phone Number"
-                              placeholder="+91 9999999999"
-                              name="phone"
-                              onChange={handleInputChange}
-                              error={!!formErrors?.phone}
-                              helperText={formErrors?.phone}
-                              value={formValues?.phone}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12 }}>
-                            <Box>
-                              <Typography
-                                sx={{
-                                  color: "white",
-                                  mb: 1,
-                                  fontSize: "0.85rem",
-                                  fontWeight: 600,
-                                  opacity: 0.9,
-                                }}
-                              >
-                                How can we help?
-                              </Typography>
-                              <TextField
-                                fullWidth
-                                multiline
-                                rows={4}
-                                placeholder="Tell us about your requirements..."
-                                variant="outlined"
-                                name="message"
-                                onChange={handleInputChange}
-                                error={!!formErrors?.message}
-                                helperText={formErrors?.message}
-                                value={formValues?.message}
-                                sx={{
-                                  bgcolor: "rgba(255,255,255,0.08)",
-                                  borderRadius: 2,
-                                  "& .MuiOutlinedInput-root": {
-                                    color: "white",
-                                    "& fieldset": {
-                                      borderColor: "rgba(255,255,255,0.2)",
-                                      borderRadius: "12px",
-                                    },
-                                    "&:hover fieldset": {
-                                      borderColor: "rgba(255,255,255,0.4)",
-                                    },
-                                    "&.Mui-focused fieldset": {
-                                      borderColor: "white",
-                                    },
-                                  },
-                                }}
-                              />
-                            </Box>
-                          </Grid>
-                          <Grid size={{ xs: 12 }}>
-                            <Button
-                              variant="contained"
-                              fullWidth
-                              sx={{
-                                bgcolor: "#000",
-                                color: "#fff",
-                                height: "64px",
-                                borderRadius: "12px",
-                                fontSize: "1.1rem",
-                                fontWeight: 700,
-                                textTransform: "none",
-                                boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
-                                "&:hover": {
-                                  bgcolor: "#111",
-                                  transform: "scale(1.01)",
-                                },
-                                transition: "all 0.2s ease",
-                              }}
-                              onClick={handleSubmit}
-                              loading={isLoading}
-                            >
-                              Send Message
-                            </Button>
-                          </Grid>
-                        </Grid>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Container>
-            </Box>
-          </ThemeProvider>
-        </motion.div>
-      )}
+              </Paper>
+            </Container>
+          </Box>
+        </ThemeProvider>
+      </Box>
 
       <ScrollToTopButton />
       <LandingFooter />

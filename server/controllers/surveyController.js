@@ -1643,11 +1643,15 @@ const createBranch = async (req, res, next) => {
     const {
       user: { userId },
       params: { surveyId },
-      body: { name, reducedLevel, backSight, purposeId },
+      body: { name, foreSight, purposeId },
     } = req;
 
-    if (!surveyId || !name?.trim() || !reducedLevel || !backSight) {
+    if (!surveyId || !name?.trim()) {
       throw createHttpError(400, "Missing required fields");
+    }
+
+    if (foreSight && Number.isNaN(foreSight)) {
+      throw createHttpError(400, "Foresight must be a valid number");
     }
 
     const parentSurvey = await Survey.findOne({
@@ -1669,6 +1673,20 @@ const createBranch = async (req, res, next) => {
       purposeId,
       deleted: false,
     }).sort({ createdAt: -1, _id: -1 });
+
+    const lastCpReading = await SurveyRow.findOne({
+      purposeId,
+      type: "CP",
+      deleted: false,
+    }).sort({ createdAt: -1, _id: -1 });
+
+    let reducedLevel = 0;
+
+    if (lastCpReading) {
+      reducedLevel = lastCpReading?.reducedLevels[0];
+    } else {
+      reducedLevel = parentSurvey.reducedLevel;
+    }
 
     const rootBranch = parentSurvey.branchDetails?.rootBranch;
     const chainage =
@@ -1759,6 +1777,7 @@ const createBranch = async (req, res, next) => {
           createdBy: userId,
           type: "Initial Level",
           isSurveyFinish: false,
+          status: foreSight ? "Paused" : "Active",
         },
       ],
       { session },
@@ -1767,23 +1786,39 @@ const createBranch = async (req, res, next) => {
     const purposeObj = purposeDoc[0];
 
     // 🔹 Create First Row (TBM)
-    await SurveyRow.create(
-      [
-        {
-          surveyId: surveyDoc._id,
-          purposeId: purposeObj._id,
-          createdBy: userId,
-          type: "Instrument setup",
-          backSight: Number(backSight).toFixed(3),
-          remarks: ["TBM"],
-          reducedLevels: [Number(reducedLevel).toFixed(3)],
-          heightOfInstrument: Number(
-            Number(reducedLevel) + Number(backSight),
-          ).toFixed(3),
-        },
-      ],
-      { session },
-    );
+    // await SurveyRow.create(
+    //   [
+    //     {
+    //       surveyId: surveyDoc._id,
+    //       purposeId: purposeObj._id,
+    //       createdBy: userId,
+    //       type: "Instrument setup",
+    //       backSight: Number(backSight).toFixed(3),
+    //       remarks: ["TBM"],
+    //       reducedLevels: [Number(reducedLevel).toFixed(3)],
+    //       heightOfInstrument: Number(
+    //         Number(reducedLevel) + Number(backSight),
+    //       ).toFixed(3),
+    //     },
+    //   ],
+    //   { session },
+    // );
+
+    if (foreSight) {
+      // 🔹 Create First Row (CP)
+      await SurveyRow.create(
+        [
+          {
+            type: "CP",
+            foreSight,
+            remarks: [],
+            createdBy: userId,
+            purposeId: purposeObj._id,
+          },
+        ],
+        { session },
+      );
+    }
 
     // 🔹 Optionally create a History log
     await History.create(

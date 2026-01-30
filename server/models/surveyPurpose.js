@@ -67,7 +67,7 @@ const SurveyPurposeSchema = new Schema(
     purposeFinishDate: Date,
     deleted: { type: Boolean, default: false, index: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Each purpose can have multiple rows

@@ -1,27 +1,27 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 export const isValidObjectId = (id) => {
   if (!id) return false;
-  if (typeof id === 'object' && id instanceof mongoose.Types.ObjectId)
+  if (typeof id === "object" && id instanceof mongoose.Types.ObjectId)
     return true;
   return mongoose.Types.ObjectId.isValid(id);
 };
 
 export const calculateReducedLevel = (survey, newReading, purposeId) => {
   const purpose = survey.purposes?.find(
-    (p) => String(p._id) === String(purposeId)
+    (p) => String(p._id) === String(purposeId),
   );
 
   if (!purpose) return { hi: null, rl: [] };
 
-  if (purpose.status === 'Paused') {
+  if (purpose.status === "Paused") {
     purpose.rows?.pop();
   }
 
   // STEP 1: Find last CP
   const lastCPIndex =
     [...purpose.rows]
-      .map((r, i) => (r.type === 'CP' ? i : -1))
+      .map((r, i) => (r.type === "CP" ? i : -1))
       .filter((i) => i >= 0)
       .pop() ?? -1;
 
@@ -33,35 +33,38 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
   let rl = null;
   let finalRLArray = [];
 
+  const first = purpose.rows[0];
   // If no CP and slice starts from 0, ensure instrument setup starts RL
-  if (startIndex === 0 && purpose.rows.length > 0) {
-    const first = purpose.rows[0];
-    if (first.type === 'Instrument setup') {
+  if (!first || first?.type === "CP") {
+    rl = Number(survey.reducedLevel || 0);
+    hi = 0;
+  } else if (startIndex === 0 && purpose.rows.length > 0) {
+    if (first.type === "Instrument setup") {
       rl = Number(survey.reducedLevel || 0);
       hi = rl + Number(first.backSight || 0);
     }
   } else {
-    rl = purpose.rows[startIndex].reducedLevels[0];
-    hi = purpose.rows[startIndex].heightOfInstrument;
+    rl = Number(purpose?.rows[startIndex]?.reducedLevels[0] || 0);
+    hi = Number(purpose?.rows[startIndex]?.heightOfInstrument || 0);
   }
 
   // STEP 3: Loop only CP→end or whole thing if no CP
   for (const row of rowsToProcess) {
     switch (row.type) {
-      case 'Instrument setup': // Does not need these
+      case "Instrument setup": // Does not need these
         rl = Number(survey.reducedLevel || 0);
         hi = rl + Number(row.backSight || 0);
         finalRLArray = [rl.toFixed(3)];
         break;
 
-      case 'Chainage':
-      case 'TBM':
+      case "Chainage":
+      case "TBM":
         if (
           Array.isArray(row.intermediateSight) &&
           row.intermediateSight.length
         ) {
           const rls = row.intermediateSight.map((isVal) =>
-            (Number(hi) - Number(isVal || 0)).toFixed(3)
+            (Number(hi) - Number(isVal || 0)).toFixed(3),
           );
 
           rl = Number(rls[rls.length - 1]);
@@ -69,7 +72,7 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
         }
         break;
 
-      case 'CP': // Does not need these
+      case "CP": // Does not need these
         rl = Number(hi) - Number(row.foreSight || 0);
         hi = rl + Number(row.backSight || 0);
         finalRLArray = [rl.toFixed(3)];

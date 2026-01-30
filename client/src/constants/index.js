@@ -229,7 +229,7 @@ export const getAllRlAndHi = (purpose) => {
 
 export const getLastRlAndHi = (survey, newReading, purposeId) => {
   const purpose = survey.purposes?.find(
-    (p) => String(p._id) === String(purposeId)
+    (p) => String(p._id) === String(purposeId),
   );
 
   if (!purpose) return { hi: null, rl: [] };
@@ -253,16 +253,19 @@ export const getLastRlAndHi = (survey, newReading, purposeId) => {
   let rl = null;
   let finalRLArray = [];
 
+  const first = purpose.rows[0];
   // If no CP and slice starts from 0, ensure instrument setup starts RL
-  if (startIndex === 0 && purpose.rows.length > 0) {
-    const first = purpose.rows[0];
+  if (!first || first?.type === "CP") {
+    rl = Number(survey.reducedLevel || 0);
+    hi = 0;
+  } else if (startIndex === 0 && purpose.rows.length > 0) {
     if (first.type === "Instrument setup") {
       rl = Number(survey.reducedLevel || 0);
       hi = rl + Number(first.backSight || 0);
     }
   } else {
-    rl = purpose.rows[startIndex].reducedLevels[0];
-    hi = purpose.rows[startIndex].heightOfInstrument;
+    rl = Number(purpose?.rows[startIndex]?.reducedLevels[0] || 0);
+    hi = Number(purpose?.rows[startIndex]?.heightOfInstrument || 0);
   }
 
   // STEP 3: Loop only CP→end or whole thing if no CP
@@ -281,7 +284,7 @@ export const getLastRlAndHi = (survey, newReading, purposeId) => {
           row.intermediateSight.length
         ) {
           const rls = row.intermediateSight.map((isVal) =>
-            (Number(hi) - Number(isVal || 0)).toFixed(3)
+            (Number(hi) - Number(isVal || 0)).toFixed(3),
           );
 
           rl = Number(rls[rls.length - 1]);
