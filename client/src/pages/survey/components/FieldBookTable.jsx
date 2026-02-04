@@ -121,8 +121,8 @@ export function calculateTableData(purpose) {
     }
 
     if (row?.upcomingBranches?.length > 0) {
-      let branchHi = 0;
-      let branchRl = 0;
+      let branchHi = hi;
+      let branchRl = rl;
       const nextBranch = purpose?.surveyId?.rootBranch?.find(
         (r) => r._id === row?.upcomingBranches[0],
       );
