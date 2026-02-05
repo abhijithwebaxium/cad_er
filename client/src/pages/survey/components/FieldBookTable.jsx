@@ -123,6 +123,7 @@ export function calculateTableData(purpose) {
     if (row?.upcomingBranches?.length > 0) {
       let branchHi = hi;
       let branchRl = rl;
+      console.log("im in", hi, branchHi, rl, branchRl);
       const nextBranch = purpose?.surveyId?.rootBranch?.find(
         (r) => r._id === row?.upcomingBranches[0],
       );
