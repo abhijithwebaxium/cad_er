@@ -177,7 +177,7 @@ const Pricing = () => {
 
   const plans = [
     {
-      tier: "Individual",
+      tier: "Professionals",
       price: billingCycle === "monthly" ? "29" : "240",
       duration: billingCycle === "monthly" ? "mo" : "yr",
       features: [
@@ -189,7 +189,7 @@ const Pricing = () => {
       ],
     },
     {
-      tier: "Professional",
+      tier: "Institutions",
       price: billingCycle === "monthly" ? "79" : "720",
       duration: billingCycle === "monthly" ? "mo" : "yr",
       highlighted: true,
@@ -203,7 +203,7 @@ const Pricing = () => {
       ],
     },
     {
-      tier: "Enterprise",
+      tier: "Students",
       price: "Custom",
       duration: "org",
       buttonText: "Contact Sales",

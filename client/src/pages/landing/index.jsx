@@ -606,9 +606,11 @@ const Landing = () => {
                           maxWidth: 540,
                         }}
                       >
-                        Automate road cross-sections, waterway contours, and
-                        volume calculations with CAD-integrated tools that
-                        eliminate human error.
+                        Yeah, you heard it right. Automate construction surveys
+                        with CADer, stop letting outdated methods and slow
+                        processes hold your team back. Transform your workflow
+                        with a true panacea for road, canal, sewer & water
+                        network survey projects across any terrain.
                       </Typography>
                     </motion.div>
 
@@ -680,7 +682,7 @@ const Landing = () => {
                             },
                           }}
                         >
-                          Watch Demo
+                          Schedule Demo
                         </Button>
                       </Stack>
                     </motion.div>
@@ -845,10 +847,7 @@ const Landing = () => {
                         mb: 3,
                       }}
                     >
-                      Complete projects faster, <br />
-                      <Box component="span" sx={{ color: "#ef4444" }}>
-                        without errors.
-                      </Box>
+                      Eliminate post-processing entirely
                     </Typography>
                     <Typography
                       sx={{
@@ -857,18 +856,23 @@ const Landing = () => {
                         lineHeight: 1.7,
                       }}
                     >
-                      This innovative tool is set to transform how site
-                      supervisors, project managers, and engineers conduct
-                      autolevel surveys for roads and waterways.
+                      With CADer, Our advanced AI system generates proposed
+                      level alongside your field data instantly generate
+                      comprehensive Area and Volume reports, calculating
+                      vertical differences in seconds. By using our system, your
+                      business can leverage on the following benefits from day
+                      one!
                     </Typography>
                   </Box>
 
                   <Stack spacing={2.5}>
                     {[
-                      "Real-time volume calculations",
-                      "Automated cross-section plotting",
-                      "Zero manual entry errors",
-                      "Export directly to CAD formats",
+                      "Industry-standard field book",
+                      "Real-Time Cross-Sections (CS)",
+                      "Instant Longitudinal-Sections (LS)",
+                      "Precision Quantity Analytics",
+                      "Unified Project Intelligence",
+                      "Direct PDF Export",
                     ].map((feature, idx) => (
                       <Box
                         key={idx}

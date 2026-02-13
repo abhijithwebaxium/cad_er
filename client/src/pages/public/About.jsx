@@ -179,8 +179,10 @@ const About = () => {
                         letterSpacing: -1.5,
                       }}
                     >
-                      Transforming <br />
-                      <span style={{ color: "#6366f1" }}>Site Engineering</span>
+                      Why spend <br />
+                      <span style={{ color: "#6366f1" }}>
+                        evenings in office?
+                      </span>
                     </Typography>
                   </motion.div>
 
@@ -195,9 +197,14 @@ const About = () => {
                         fontSize: { xs: "1.1rem", md: "1.25rem" },
                       }}
                     >
-                      CADer is an innovative tool designed specifically for site
-                      supervisors, project managers, and engineers to
-                      revolutionize autolevel surveys for roads and waterways.
+                      Eliminate post-processing entirely — your field data isn’t
+                      just a list of numbers anymore. With precise numerical
+                      input, your terrain is instantly visualized. Gradients and
+                      profiles are processed in real time on any device,
+                      ensuring maximum accuracy and reliability. From initial
+                      levels to final volume reports, we’ve automated the entire
+                      engineering workflow for exact cutting/ filling quantities
+                      before you even leave the site.
                     </Typography>
                   </motion.div>
 
@@ -293,18 +300,33 @@ const About = () => {
                 {[
                   {
                     icon: <CustomIcons.Thunderbolt />,
-                    title: "Maximum Efficiency",
-                    desc: "Significantly streamline the surveying process and reduce physical effort on-site.",
+                    title: "Industry-standard field book",
+                    desc: "Human errors reduced by 40% — just clean, professional documentation at the click of a button.",
                   },
                   {
                     icon: <CustomIcons.Safety />,
-                    title: "Zero Error Math",
-                    desc: "Automated calculations ensure absolute precision in road and waterway surveys.",
+                    title: "Real-Time Cross-Sections (CS)",
+                    desc: "High-precision cross-sections update in real time with every intermediate sight, eliminating manual drafting and ensuring station-wide accuracy — saving hours of office work.",
                   },
                   {
                     icon: <CustomIcons.Solution />,
-                    title: "Field Precision",
-                    desc: "Built for supervisors and project managers who demand digital accuracy in the field.",
+                    title: "Instant Longitudinal-Sections (LS)",
+                    desc: "The moment you enter the last foresight, Longitudinal profile is ready — No manual plotting, no spreadsheet-to-CAD headaches.",
+                  },
+                  {
+                    icon: <CustomIcons.Thunderbolt />,
+                    title: "Precision Quantity Analytics",
+                    desc: "Synchronizing proposed levels alongside your field data, instantly generate comprehensive Area and Volume reports, calculating vertical differences in seconds.",
+                  },
+                  {
+                    icon: <CustomIcons.Safety />,
+                    title: "Unified Project Intelligence",
+                    desc: "Empower on-site precision and off-site collaboration. transforming field effort into synchronized success through real-time, anywhere-access.",
+                  },
+                  {
+                    icon: <CustomIcons.Solution />,
+                    title: "Direct PDF Export",
+                    desc: "Generate professional, boardroom-ready reports for instant executive circulation.",
                   },
                 ].map((item, i) => (
                   <Grid size={{ xs: 12, md: 4 }} key={i}>
