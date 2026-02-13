@@ -104,7 +104,7 @@ const PricingCard = ({
 
       <Box sx={{ display: "flex", alignItems: "baseline", mb: 3 }}>
         <Typography variant="h3" sx={{ fontWeight: 800, color: "#000" }}>
-          ${price}
+          ₹{price}
         </Typography>
         <Typography variant="body1" sx={{ color: "text.secondary", ml: 1 }}>
           /{duration}
@@ -178,14 +178,14 @@ const Pricing = () => {
   const plans = [
     {
       tier: "Professionals",
-      price: billingCycle === "monthly" ? "29" : "240",
+      price: billingCycle === "monthly" ? "7500" : "4500",
       duration: billingCycle === "monthly" ? "mo" : "yr",
       features: [
         "Single User Access",
-        "Standard CAD Support",
-        "5GB Cloud Storage",
+        "Online training ",
+        "Priority email support ",
         "Community Access",
-        "Standard Exports (PDF/DWG)",
+        "Export to .pdf, .csv, .dwg, .xlsx formats",
       ],
     },
     {
