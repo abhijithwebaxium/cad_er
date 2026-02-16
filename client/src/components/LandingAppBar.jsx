@@ -22,6 +22,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import logo from "../assets/logo/Cader_New_logo.png";
 // --- Theme Configuration ---
 const theme = createTheme({
   palette: {
@@ -141,7 +142,8 @@ const LandingAppBar = () => {
                   }}
                   onClick={() => navigate("/")}
                 >
-                  CAD<span style={{ color: "#6366f1" }}>er.</span>
+                  {/* CAD<span style={{ color: "#6366f1" }}>er.</span> */}
+                  <img src={logo} alt="CADer" style={{ width: "150px", paddingTop:"10px" }}/>
                 </Typography>
               </Stack>
 

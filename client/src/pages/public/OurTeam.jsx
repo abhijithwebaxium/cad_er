@@ -67,43 +67,43 @@ const teamMembers = [
   {
     name: "Anees Majeed",
     role: "Founder & Chief Executive Officer",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+    // image:
+    //   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
     bio: "With over a decade of expertise in mapping, mining, and boring, Anees is the visionary force behind CADer. He combines technical mastery with strategic foresight, ensuring the platform delivers measurable impact for institutions and professionals. His leadership drives innovation and long‑term growth.",
   },
   {
     name: "Muhjir Ibrahim Shajahan",
     role: "Product Architect",
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+    // image:
+    //   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
     bio: "Muhjir specializes in designing intuitive human–computer interfaces that simplify complex workflows. His passion for usability ensures CADer remains accessible and efficient for engineers, supervisors, and project managers. He is committed to bridging technology with human experience.",
   },
   {
     name: "Jaseem CM",
     role: "Research & Development, Civil Engineer",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+    // image:
+    //   "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
     bio: "Jaseem leads applied research and technical innovation, advancing CADer’s engineering capabilities. With a strong civil engineering background, he focuses on precision, reliability, and practical solutions that meet industry standards. His work ensures CADer evolves with cutting‑edge methodologies.",
   },
   {
     name: "Asif Majeed",
     role: "Head of Accounts",
-    image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+    // image:
+    //   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
     bio: "Asif oversees financial operations with a focus on accuracy, transparency, and sustainability. His expertise in fiscal management ensures CADer’s growth is supported by sound financial practices. He plays a key role in maintaining operational efficiency.",
   },
   {
     name: "Muhammed Noor",
     role: "Human Resources Lead",
-    image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+    // image:
+    //   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
     bio: "Noor is dedicated to building strong teams and fostering organizational culture. He manages talent acquisition, employee development, and workplace engagement, ensuring CADer attracts and retains top professionals. His leadership strengthens collaboration across the company.",
   },
   {
     name: "Kishore K. Ajayan",
     role: "Head of Marketing",
-    image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+    // image:
+    //   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
     bio: "Kishore drives brand strategy, institutional outreach, and market positioning. With a focus on educational impact and industry adoption, he ensures CADer’s message resonates with both technical institutions and professionals. His campaigns expand CADer’s reach and credibility.",
   },
 ];
