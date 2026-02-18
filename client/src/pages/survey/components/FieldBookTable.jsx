@@ -233,6 +233,8 @@ export function calculateTableData(purpose) {
             break;
         }
       }
+
+      hi = branchHi;
     }
   }
 

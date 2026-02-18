@@ -170,7 +170,7 @@ const exportAreaReportPdf = ({ tableData, reportDetails }) => {
         `Area Report Between ${reportDetails.initialEntry} and ${reportDetails.secondaryEntry}`,
         105,
         15,
-        { align: "center" }
+        { align: "center" },
       );
     },
   });
@@ -233,15 +233,15 @@ const AreaReport = () => {
 
     if (state && state?.selectedPurposeIds?.length) {
       initialEntry = survey?.purposes?.find(
-        (p) => String(p._id) === String(state.selectedPurposeIds[0])
+        (p) => String(p._id) === String(state.selectedPurposeIds[0]),
       );
       secondaryEntry = survey?.purposes?.find(
-        (p) => String(p._id) === String(state.selectedPurposeIds[1])
+        (p) => String(p._id) === String(state.selectedPurposeIds[1]),
       );
     } else {
       initialEntry = survey?.purposes?.find((p) => p.type === "Initial Level");
       secondaryEntry = survey?.purposes?.find(
-        (p) => p.type === "Proposed Level"
+        (p) => p.type === "Proposed Level",
       );
     }
 
@@ -261,7 +261,7 @@ const AreaReport = () => {
       .filter((row) => row.type === "Chainage")
       .forEach((row) => {
         const proposedRow = proposedRows?.find(
-          (p) => p.chainage === row.chainage
+          (p) => p.chainage === row.chainage,
         );
         const chainage =
           row.chainage?.split(survey?.separator || "/")?.[1] ?? "";
@@ -287,7 +287,7 @@ const AreaReport = () => {
           const cuttingMtr = isCutting ? (initRL - propRL).toFixed(3) : "0.000";
 
           const cuttingAvgMtr =
-            isCutting || idx === 0
+            !isCutting || idx === 0
               ? "0.000"
               : (
                   (Number(cuttingMtr) +
@@ -330,11 +330,11 @@ const AreaReport = () => {
 
         const totalCuttingAreaSqMtr = data.reduce(
           (acc, curr) => acc + Number(curr.cuttingAreaSqMtr || 0),
-          0
+          0,
         );
         const totalFillingAreaSqMtr = data.reduce(
           (acc, curr) => acc + Number(curr.fillingAreaSqMtr || 0),
-          0
+          0,
         );
 
         rows.push({

@@ -164,7 +164,7 @@ const exportVolumeReportPdf = ({ tableData, reportDetails }) => {
         `Volume Report ${reportDetails.initialEntry} and ${reportDetails.secondaryEntry}`,
         105,
         15,
-        { align: "center" }
+        { align: "center" },
       );
     },
   });
@@ -232,15 +232,15 @@ const VolumeReport = () => {
 
     if (state && state?.selectedPurposeIds?.length) {
       initialEntry = survey?.purposes?.find(
-        (p) => String(p._id) === String(state.selectedPurposeIds[0])
+        (p) => String(p._id) === String(state.selectedPurposeIds[0]),
       );
       secondaryEntry = survey?.purposes?.find(
-        (p) => String(p._id) === String(state.selectedPurposeIds[1])
+        (p) => String(p._id) === String(state.selectedPurposeIds[1]),
       );
     } else {
       initialEntry = survey?.purposes?.find((p) => p.type === "Initial Level");
       secondaryEntry = survey?.purposes?.find(
-        (p) => p.type === "Proposed Level"
+        (p) => p.type === "Proposed Level",
       );
     }
 
@@ -269,12 +269,12 @@ const VolumeReport = () => {
 
     // Process only "Chainage" rows
     const filteredInitialRows = initialRows.filter(
-      (row) => row.type === "Chainage"
+      (row) => row.type === "Chainage",
     );
 
     filteredInitialRows.forEach((row) => {
       const secondaryRow = secondaryRows?.find(
-        (p) => p.chainage === row.chainage
+        (p) => p.chainage === row.chainage,
       );
       const chainage = row.chainage?.split(survey?.separator || "/")?.[1] ?? "";
 
@@ -299,7 +299,7 @@ const VolumeReport = () => {
         const cuttingMtr = isCutting ? (initRL - propRL).toFixed(3) : "0.000";
 
         const cuttingAvgMtr =
-          isCutting || idx === 0
+          !isCutting || idx === 0
             ? "0.000"
             : (
                 (Number(cuttingMtr) +
@@ -326,13 +326,13 @@ const VolumeReport = () => {
           cuttingAvgMtr,
           cuttingWMtr: widthMtr,
           cuttingAreaSqMtr: (Number(cuttingAvgMtr) * Number(widthMtr)).toFixed(
-            3
+            3,
           ),
           fillingMtr,
           fillingAvgMtr,
           fillingWMtr: widthMtr,
           fillingAreaSqMtr: (Number(fillingAvgMtr) * Number(widthMtr)).toFixed(
-            3
+            3,
           ),
         };
 
@@ -343,11 +343,11 @@ const VolumeReport = () => {
       // --- Total area for this section ---
       const cuttingAreaSqMtr = data.reduce(
         (acc, curr) => acc + Number(curr.cuttingAreaSqMtr || 0),
-        0
+        0,
       );
       const fillingAreaSqMtr = data.reduce(
         (acc, curr) => acc + Number(curr.fillingAreaSqMtr || 0),
-        0
+        0,
       );
 
       // --- Compute chainage difference ---
