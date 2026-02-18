@@ -9,7 +9,10 @@ import mongoose from "mongoose";
 
 const checkSurveyExists = async (req, res, next) => {
   try {
-    const survey = await Survey.findOne({ isSurveyFinish: false });
+    const survey = await Survey.findOne({
+      isSurveyFinish: false,
+      createdBy: req?.user?.userId,
+    });
 
     res.status(200).json({
       success: true,
@@ -23,9 +26,16 @@ const checkSurveyExists = async (req, res, next) => {
 
 const getAllSurvey = async (req, res, next) => {
   try {
-    const { status, project, purpose, type, rootBranch } = req.query;
+    const {
+      user: { userId },
+      query: { status, project, purpose, type, rootBranch },
+    } = req;
 
-    const filter = { deleted: false, "branchDetails.isBranch": false };
+    const filter = {
+      createdBy: userId,
+      deleted: false,
+      "branchDetails.isBranch": false,
+    };
 
     // 🔹 Flexible filters
     if (status === "active") filter.isSurveyFinish = false;
@@ -238,7 +248,10 @@ const createSurvey = async (req, res, next) => {
 
 const getSurvey = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const {
+      user: { userId },
+      params: { id },
+    } = req;
 
     if (!isValidObjectId(id)) {
       return res.status(400).json({
@@ -248,7 +261,11 @@ const getSurvey = async (req, res, next) => {
     }
 
     // Find active (non-deleted) survey
-    const survey = await Survey.findOne({ _id: id, deleted: false })
+    const survey = await Survey.findOne({
+      _id: id,
+      deleted: false,
+      createdBy: userId,
+    })
       .populate({
         path: "purposes",
         match: { deleted: false },
