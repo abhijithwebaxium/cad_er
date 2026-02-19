@@ -28,6 +28,8 @@ import BasicInput from "../../components/BasicInput";
 import BasicButton from "../../components/BasicButton";
 import { MdDownload } from "react-icons/md";
 import { showAlert } from "../../redux/alertSlice";
+import Drawing from "dxf-writer";
+import { saveAs } from "file-saver";
 
 const LEVEL_ORDER = [
   "Initial Level",
@@ -69,6 +71,15 @@ const menuItems = [
       </Stack>
     ),
     value: "downloadAllChainage",
+  },
+  {
+    label: (
+      <Stack direction={"row"} alignItems={"center"} gap={0.5}>
+        Export to DWG
+        <MdDownload />
+      </Stack>
+    ),
+    value: "exportToDWG",
   },
 ];
 
@@ -200,6 +211,83 @@ const CrossSectionReport = () => {
     pdf.save("cross-section.pdf");
   };
 
+  const exportToDWG = () => {
+    const d = new Drawing();
+
+    // Define some basic styles (layers)
+    d.addLayer("Text", Drawing.ACI.WHITE, "CONTINUOUS");
+    d.addLayer("Lines", Drawing.ACI.CYAN, "CONTINUOUS");
+
+    let currentY = 0;
+    const rowHeight = 10;
+    const colWidths = [15, 40, 40, 30, 30]; // Adjust based on your needs
+    const startX = 0;
+
+    // --- Draw Title ---
+    d.drawText(startX, currentY, 8, 0, "VOLUME REPORT", { layer: "Text" });
+    currentY -= 20;
+
+    // --- Draw Table Header ---
+    const headers = [
+      "Sl.No.",
+      "Section",
+      "Prev Section",
+      "Cutting Vol",
+      "Filling Vol",
+    ];
+    let currentX = startX;
+
+    headers.forEach((header, i) => {
+      d.drawText(currentX + 2, currentY - 7, 4, 0, header, { layer: "Text" });
+      currentX += colWidths[i];
+    });
+
+    // Draw header bottom line
+    d.drawLine(startX, currentY - rowHeight, currentX, currentY - rowHeight, {
+      layer: "Lines",
+    });
+    currentY -= rowHeight;
+
+    // --- Draw Data Rows ---
+    tableData?.rows?.forEach((entry, idx) => {
+      currentX = startX;
+
+      // Draw Row Text
+      d.drawText(currentX + 2, currentY - 7, 3, 0, (idx + 1).toString());
+      d.drawText(
+        currentX + colWidths[0] + 2,
+        currentY - 7,
+        3,
+        0,
+        entry.section.toString(),
+      );
+      d.drawText(
+        currentX + colWidths[0] + colWidths[1] + 2,
+        currentY - 7,
+        3,
+        0,
+        entry.prevSection.toString(),
+      );
+      // ... add more columns as needed
+
+      // Draw horizontal line for this row
+      d.drawLine(
+        startX,
+        currentY - rowHeight,
+        currentX + 155,
+        currentY - rowHeight,
+        { layer: "Lines" },
+      );
+
+      currentY -= rowHeight;
+    });
+
+    // --- Finalize and Download ---
+    const dxfString = d.toDxfString();
+    const blob = new Blob([dxfString], { type: "application/dxf" });
+    saveAs(blob, "Volume_Report.dxf");
+  };
+
   const buildCsData = (row) => {
     if (!row) return null;
 
@@ -308,6 +396,8 @@ const CrossSectionReport = () => {
   const handleMenuSelect = (item) => {
     if (item.value === "download") return downloadPDF();
 
+    if (item.value === "exportToDWG") return exportToDWG();
+
     if (item.value === "downloadAllChainage")
       return handleDownloadAllChainage();
 
@@ -377,7 +467,7 @@ const CrossSectionReport = () => {
     if (state && state?.selectedPurposeIds?.length) {
       state.selectedPurposeIds.forEach((entry) => {
         const purpose = survey?.purposes?.find(
-          (p) => String(p._id) === String(entry)
+          (p) => String(p._id) === String(entry),
         );
 
         if (purpose) data.push(purpose);
@@ -388,7 +478,7 @@ const CrossSectionReport = () => {
     }
 
     data.sort(
-      (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type)
+      (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type),
     );
 
     setTableData(data);
@@ -416,7 +506,7 @@ const CrossSectionReport = () => {
 
     // UNIQUE OFFSETS ONLY FOR XAXIS
     const uniqueOffsets = [...new Set(rawOffsets.map((n) => n))].sort(
-      (a, b) => a - b
+      (a, b) => a - b,
     );
 
     const data = {
@@ -641,11 +731,11 @@ const CrossSectionReport = () => {
           return {
             ...r,
             reducedLevels: r.reducedLevels.map((rl, idx) =>
-              idx === rlIndex ? value : rl
+              idx === rlIndex ? value : rl,
             ),
           };
         }),
-      }))
+      })),
     );
   };
 
@@ -684,7 +774,7 @@ const CrossSectionReport = () => {
           showAlert({
             type: "success",
             message: "Reduced levels updated successfully",
-          })
+          }),
         );
       } else {
         throw Error("Failed to fetch survey");
@@ -939,7 +1029,7 @@ const CrossSectionReport = () => {
                                     {/* Series Columns */}
                                     {selectedCs?.series?.map((s) => {
                                       const idx = s.data?.findIndex(
-                                        (d) => d?.x === offset
+                                        (d) => d?.x === offset,
                                       );
                                       const cellData =
                                         idx > -1 ? s.data[idx] : null;
@@ -968,7 +1058,7 @@ const CrossSectionReport = () => {
                                                   s.name,
                                                   s._id,
                                                   idx,
-                                                  e.target.value
+                                                  e.target.value,
                                                 )
                                               }
                                             />
@@ -1018,7 +1108,7 @@ const CrossSectionReport = () => {
                         </TableCell>
                       </TableRow>
                     </Fragment>
-                  )
+                  ),
               )}
             </TableBody>
           </Table>

@@ -22,118 +22,23 @@ const editableFields = {
  * - rowIndex: index in purpose.rows (so edits map back to original)
  * - index: nested index (for intermediateSight / offsets) if applicable
  */
-export function calculateTableData(purpose) {
-  if (!purpose) return [];
+export function calculateTableData(survey) {
+  if (!survey) return [];
 
-  const survey = purpose.surveyId || {};
-  let hi = 0;
-  let rl = 0;
-  let idx = 0;
   const rows = [];
+  const context = {
+    hi: 0,
+    rl: survey.reducedLevel || 0,
+    idx: 0,
+  };
 
-  for (let rIndex = 0; rIndex < (purpose.rows || []).length; rIndex++) {
-    const row = purpose.rows[rIndex];
-    if (!row) continue;
+  // Helper function to process a set of rows (main or branch)
+  const processRows = (purposeRows, surveyContext, isBranch = false) => {
+    if (!purposeRows) return;
 
-    switch (row.type) {
-      case "Instrument setup": {
-        rl = survey.reducedLevel;
-        hi = Number(rl) + Number(row.backSight || 0);
-        rows.push({
-          rowIndex: idx,
-          rowType: row.type,
-          CH: "-",
-          BS: row.backSight ?? "",
-          IS: "-",
-          FS: "-",
-          HI: hi.toFixed(3),
-          RL: rl,
-          Offset: "-",
-          remarks: (row.remarks && row.remarks[0]) ?? "",
-        });
-        break;
-      }
-
-      case "Chainage": {
-        const inter = row.intermediateSight || [];
-        for (let i = 0; i < inter.length; i++) {
-          const isVal = inter[i];
-          const rlValue = (hi - Number(isVal || 0)).toFixed(3);
-          rows.push({
-            rowIndex: idx,
-            rowType: row.type,
-            index: i,
-            CH: i === 0 ? (row.chainage ?? "") : "",
-            BS: "-",
-            IS: isVal ?? "",
-            FS: "-",
-            HI: hi.toFixed(3),
-            RL: rlValue,
-            Offset: (row.offsets && row.offsets[i]) ?? "",
-            remarks: (row.remarks && row.remarks[i]) ?? "",
-          });
-        }
-        break;
-      }
-
-      case "TBM": {
-        const inter = row.intermediateSight || [];
-        for (let i = 0; i < inter.length; i++) {
-          const isVal = inter[i];
-          const rlValue = (hi - Number(isVal || 0)).toFixed(3);
-          rows.push({
-            rowIndex: idx,
-            rowType: row.type,
-            index: i,
-            CH: "-",
-            BS: "-",
-            IS: isVal ?? "",
-            FS: "-",
-            HI: hi.toFixed(3),
-            RL: rlValue,
-            Offset: "-",
-            remarks: (row.remarks && row.remarks[i]) ?? "",
-          });
-        }
-        break;
-      }
-
-      case "CP": {
-        rl = Number(hi) - Number(row.foreSight || 0);
-        hi = rl + Number(row.backSight || 0);
-        rows.push({
-          rowIndex: idx,
-          rowType: row.type,
-          CH: "-",
-          BS: row.backSight ?? "",
-          IS: "-",
-          FS: row.foreSight ?? "",
-          HI: hi.toFixed(3),
-          RL: rl.toFixed(3),
-          Offset: "-",
-          remarks: (row.remarks && row.remarks[0]) ?? "",
-        });
-        break;
-      }
-
-      default:
-        break;
-    }
-
-    if (row?.upcomingBranches?.length > 0) {
-      let branchHi = hi;
-      let branchRl = rl;
-
-      const nextBranch = purpose?.surveyId?.rootBranch?.find(
-        (r) => r._id === row?.upcomingBranches[0],
-      );
-
-      const nextPurpose = nextBranch?.purposes?.find(
-        (p) => p?.type === purpose?.type,
-      );
-
+    if (isBranch) {
       rows.push({
-        rowIndex: idx,
+        rowIndex: context.idx,
         rowType: "-",
         CH: "-",
         BS: "-",
@@ -144,124 +49,99 @@ export function calculateTableData(purpose) {
         Offset: "-",
         remarks: "BRANCH",
       });
+    }
 
-      for (let i = 0; i < nextPurpose.rows.length; i++) {
-        const nextRow = nextPurpose.rows[i];
+    purposeRows.forEach((row) => {
+      if (!row) return;
 
-        switch (nextRow.type) {
-          case "Instrument setup": {
-            branchRl = nextBranch?.surveyId?.reducedLevel;
-            branchHi = Number(branchRl) + Number(nextRow.backSight || 0);
+      switch (row.type) {
+        case "Instrument setup": {
+          // If it's a branch, we might use a specific RL, otherwise continue from current
+          context.rl = isBranch
+            ? surveyContext?.reducedLevel || context.rl
+            : context.rl;
+          context.hi = Number(context.rl) + Number(row.backSight || 0);
+          rows.push(createRowObject(row, context, "BS"));
+          break;
+        }
+
+        case "Chainage":
+        case "TBM": {
+          const inter = row.intermediateSight || [];
+          inter.forEach((isVal, i) => {
+            const rlValue = (context.hi - Number(isVal || 0)).toFixed(3);
             rows.push({
-              rowIndex: idx,
-              rowType: nextRow.type,
-              CH: "-",
-              BS: nextRow.backSight ?? "",
-              IS: "-",
+              rowIndex: context.idx,
+              rowType: row.type,
+              index: i,
+              CH:
+                row.type === "Chainage" && i === 0 ? (row.chainage ?? "") : "-",
+              BS: "-",
+              IS: isVal ?? "",
               FS: "-",
-              HI: branchHi.toFixed(3),
-              RL: branchRl,
-              Offset: "-",
-              remarks: (nextRow.remarks && nextRow.remarks[0]) ?? "",
+              HI: context.hi.toFixed(3),
+              RL: rlValue,
+              Offset: (row.offsets && row.offsets[i]) ?? "-",
+              remarks: (row.remarks && row.remarks[i]) ?? "",
             });
-            break;
-          }
+          });
+          break;
+        }
 
-          case "Chainage": {
-            const inter = nextRow.intermediateSight || [];
-            for (let i = 0; i < inter.length; i++) {
-              const isVal = inter[i];
-              const rlValue = (branchHi - Number(isVal || 0)).toFixed(3);
-              rows.push({
-                rowIndex: idx,
-                rowType: nextRow.type,
-                index: i,
-                CH: i === 0 ? (nextRow.chainage ?? "") : "",
-                BS: "-",
-                IS: isVal ?? "",
-                FS: "-",
-                HI: branchHi.toFixed(3),
-                RL: rlValue,
-                Offset: (nextRow.offsets && nextRow.offsets[i]) ?? "",
-                remarks: (nextRow.remarks && nextRow.remarks[i]) ?? "",
-              });
-            }
-            break;
-          }
-
-          case "TBM": {
-            const inter = nextRow.intermediateSight || [];
-            for (let i = 0; i < inter.length; i++) {
-              const isVal = inter[i];
-              const rlValue = (branchHi - Number(isVal || 0)).toFixed(3);
-              rows.push({
-                rowIndex: idx,
-                rowType: nextRow.type,
-                index: i,
-                CH: "-",
-                BS: "-",
-                IS: isVal ?? "",
-                FS: "-",
-                HI: branchHi.toFixed(3),
-                RL: rlValue,
-                Offset: "-",
-                remarks: (nextRow.remarks && nextRow.remarks[i]) ?? "",
-              });
-            }
-            break;
-          }
-
-          case "CP": {
-            branchRl = Number(branchHi) - Number(nextRow.foreSight || 0);
-            branchHi = branchRl + Number(nextRow.backSight || 0);
-            rows.push({
-              rowIndex: idx,
-              rowType: nextRow.type,
-              CH: "-",
-              BS: nextRow.backSight ?? "",
-              IS: "-",
-              FS: nextRow.foreSight ?? "",
-              HI: branchHi.toFixed(3),
-              RL: branchRl.toFixed(3),
-              Offset: "-",
-              remarks: (nextRow.remarks && nextRow.remarks[0]) ?? "",
-            });
-            break;
-          }
-
-          default:
-            break;
+        case "CP": {
+          context.rl = Number(context.hi) - Number(row.foreSight || 0);
+          context.hi = context.rl + Number(row.backSight || 0);
+          rows.push(createRowObject(row, context, "CP"));
+          break;
         }
       }
 
-      hi = branchHi;
-    }
-  }
+      // RECURSION: Check for nested branches in THIS row
+      if (row.upcomingBranches?.length > 0) {
+        row.upcomingBranches.forEach((branchId) => {
+          const branch = survey.branches?.find((b) => b._id === branchId);
 
-  // final closure row
-  const finalForeSight = Number(purpose.finalForesight || 0);
-  const lastHI = rows.length ? Number(rows[rows.length - 1].HI || 0) : 0;
-  const finalRl = lastHI - finalForeSight;
-  const diff =
-    finalRl - Number((purpose.surveyId && purpose.surveyId.reducedLevel) || 0);
+          if (branch && branch.purposes?.[0]) {
+            processRows(branch.purposes[0].rows, branch.surveyId, true);
+          }
+        });
+      }
+    });
+  };
 
-  rows.push({
-    rowIndex: purpose.rows ? purpose.rows.length - 1 : 0,
-    rowType: null,
-    CH: "",
-    BS: "",
-    IS: "",
-    FS: finalForeSight ? finalForeSight.toFixed(3) : "",
-    HI: "",
-    RL: Number(finalRl).toFixed(3),
-    Offset: "",
-    diff,
-    remarks: `Closed on Starting TBM at ${
-      diff === 0 ? "±0.000" : diff < 0 ? diff.toFixed(3) : `+${diff.toFixed(3)}`
-    }`,
+  // Helper to keep the switch cleaner
+  const createRowObject = (row, ctx, type) => ({
+    rowIndex: ctx.idx,
+    rowType: row.type,
+    CH: "-",
+    BS: row.backSight ?? "",
+    IS: "-",
+    FS: type === "CP" ? (row.foreSight ?? "") : "-",
+    HI: ctx.hi.toFixed(3),
+    RL: Number(ctx.rl).toFixed(3),
+    Offset: "-",
+    remarks: (row.remarks && row.remarks[0]) ?? "",
   });
 
-  idx++;
+  // Start the process with the main survey
+  const mainPurpose = survey.purposes?.[0];
+  processRows(mainPurpose?.rows, survey);
+
+  // Final closure row (Logic remains similar)
+  if (mainPurpose) {
+    const finalFS = Number(mainPurpose.finalForesight || 0);
+    const finalRl = context.hi - finalFS;
+    const diff = finalRl - Number(survey.reducedLevel || 0);
+
+    rows.push({
+      rowIndex: context.idx,
+      rowType: "Closure",
+      FS: finalFS.toFixed(3),
+      RL: finalRl.toFixed(3),
+      diff,
+      remarks: `Closed: ${diff.toFixed(3)}`,
+    });
+  }
 
   return rows;
 }

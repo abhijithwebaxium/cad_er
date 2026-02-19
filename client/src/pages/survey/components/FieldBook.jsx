@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { startLoading, stopLoading } from "../../../redux/loadingSlice";
 import {
   editSurveyPurpose,
-  getSurveyPurpose,
+  getFieldBook,
 } from "../../../services/surveyServices";
 import { handleFormError } from "../../../utils/handleFormError";
 import ExcelJS from "exceljs";
@@ -138,10 +138,10 @@ export default function FieldBook() {
     const fetchData = async () => {
       try {
         if (!global) dispatch(startLoading());
-        const { data } = await getSurveyPurpose(id);
+        const { data } = await getFieldBook(id);
 
         if (data?.success) {
-          setPurpose(data.purpose);
+          setPurpose(data.survey);
         } else {
           throw new Error("Failed to load purpose");
         }
@@ -241,7 +241,7 @@ export default function FieldBook() {
         [rowIndex]: true, // mark row index as changed
       }));
     },
-    []
+    [],
   );
 
   // --- Save handler (placeholder) ---
@@ -262,7 +262,7 @@ export default function FieldBook() {
           showAlert({
             type: "error",
             message: "No changes made to save.",
-          })
+          }),
         );
         return;
       }
@@ -291,7 +291,7 @@ export default function FieldBook() {
     if (!purpose) return;
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet(
-      `${purposeCode[purpose.type] || "Survey"} AE`
+      `${purposeCode[purpose.type] || "Survey"} AE`,
     );
 
     // Title
@@ -318,7 +318,7 @@ export default function FieldBook() {
 
     // widths
     [12, 12, 12, 12, 12, 12, 12, 36].forEach(
-      (w, i) => (sheet.getColumn(i + 1).width = w)
+      (w, i) => (sheet.getColumn(i + 1).width = w),
     );
 
     const buffer = await workbook.xlsx.writeBuffer();

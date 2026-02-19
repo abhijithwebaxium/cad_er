@@ -23,6 +23,7 @@ import {
   updateReducedLevels,
   createBranch,
   enterBranch,
+  getFieldBook,
 } from "../controllers/surveyController.js";
 import { isAuthenticated, requireAuth } from "../middleware/auth.js";
 
@@ -43,6 +44,7 @@ router.patch("/:id/reduced-levels/edit", updateReducedLevels);
 
 // 🔹 Purpose routes (nested under a survey)
 router.get("/:id/purposes", getSurveyPurpose);
+router.get("/:id/purposes/field-book", getFieldBook);
 router.post("/:surveyId/purposes", createSurveyPurpose);
 router.patch("/:id/purposes/end", endSurveyPurpose);
 router.patch("/:id/purposes/pause", pauseSurveyPurpose);

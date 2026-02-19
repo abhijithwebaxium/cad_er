@@ -1168,9 +1168,10 @@ const RoadSurveyRowsForm = () => {
           if (activePurpose) {
             navigate(`/survey/road-survey/${activePurpose?._id}/rows`);
             return;
-          } else {
-            throw Error("Something went wrong");
           }
+          //  else {
+          //   throw Error("Something went wrong");
+          // }
         }
 
         const purposeDoc = data.purpose;
@@ -1336,8 +1337,8 @@ const RoadSurveyRowsForm = () => {
                   title={
                     <Typography fontSize={12}>
                       🚧 Upcoming Branch -{" "}
-                      {purpose?.surveyId?.parentBranch[0].name} @{" "}
-                      {purpose?.surveyId?.parentBranch[0].branchStartedFrom}
+                      {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
+                      {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
                     </Typography>
                   }
                   arrow
@@ -1371,7 +1372,7 @@ const RoadSurveyRowsForm = () => {
                       sx={{ color: "text.secondary", transition: "color 0.3s" }}
                     >
                       Upcoming Branch@{" "}
-                      {purpose?.surveyId?.parentBranch[0].branchStartedFrom}
+                      {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
                     </Typography>
                     <Box
                       component="span"
@@ -1387,8 +1388,8 @@ const RoadSurveyRowsForm = () => {
                         borderRadius: 1,
                       }}
                     >
-                      {purpose?.surveyId?.parentBranch[0].name} @{" "}
-                      {purpose?.surveyId?.parentBranch[0].branchStartedFrom}
+                      {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
+                      {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
                     </Box>
                   </Box>
                 </Tooltip>

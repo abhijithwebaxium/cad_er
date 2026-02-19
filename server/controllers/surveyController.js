@@ -607,6 +607,74 @@ const getSurveyPurpose = async (req, res, next) => {
   }
 };
 
+const getFieldBook = async (req, res, next) => {
+  try {
+    const {
+      params: { id },
+      user: { userId },
+    } = req;
+
+    // 🔹 Validate ID format
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid purpose ID",
+      });
+    }
+
+    const purpose = await SurveyPurpose.findOne({ _id: id, deleted: false });
+
+    if (!purpose) {
+      return res.status(404).json({
+        success: false,
+        message: "Survey purpose not found or has been deleted",
+      });
+    }
+
+    const survey = await Survey.findOne({
+      _id: purpose.surveyId,
+      createdBy: userId,
+      deleted: false,
+    })
+      .populate({
+        path: "purposes",
+        match: { deleted: false, type: purpose.type },
+        populate: {
+          path: "rows",
+          match: { deleted: false },
+          options: { sort: { createdAt: 1 } },
+        },
+      })
+      .lean();
+
+    const branches = await Branch.find({
+      deleted: false,
+      rootBranch: purpose.surveyId,
+    })
+      .populate({
+        path: "purposes",
+        match: { deleted: false, type: purpose.type },
+        populate: {
+          path: "rows",
+          match: { deleted: false },
+          options: { sort: { createdAt: 1 } },
+        },
+      })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      message: "Survey purpose retrieved successfully",
+      survey: {
+        ...survey,
+        branches,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const createSurveyPurpose = async (req, res, next) => {
   const session = await mongoose.startSession();
 
@@ -2030,6 +2098,7 @@ export {
   getAllSurvey,
   createSurvey,
   getSurveyPurpose,
+  getFieldBook,
   createSurveyPurpose,
   getAllSurveyPurpose,
   endSurveyPurpose,

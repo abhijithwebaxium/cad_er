@@ -56,6 +56,10 @@ export const getSurveyPurpose = (id) => {
   return axiosInstance.get(`surveys/${id}/purposes`);
 };
 
+export const getFieldBook = (id) => {
+  return axiosInstance.get(`surveys/${id}/purposes/field-book`);
+};
+
 export const endSurveyPurpose = (id, finalForesight, pls) => {
   return axiosInstance.patch(
     `surveys/${id}/purposes/end?finalForesight=${finalForesight}&pls=${pls}`,
