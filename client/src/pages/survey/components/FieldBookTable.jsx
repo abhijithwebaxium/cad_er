@@ -139,7 +139,13 @@ export function calculateTableData(survey) {
       FS: finalFS.toFixed(3),
       RL: finalRl.toFixed(3),
       diff,
-      remarks: `Closed: ${diff.toFixed(3)}`,
+      remarks: `Closed on Starting TBM at ${
+        diff === 0
+          ? "±0.000"
+          : diff < 0
+            ? diff.toFixed(3)
+            : `+${diff.toFixed(3)}`
+      }`,
     });
   }
 

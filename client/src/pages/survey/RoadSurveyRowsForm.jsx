@@ -1325,76 +1325,80 @@ const RoadSurveyRowsForm = () => {
               :
             </Typography>
 
-            {upcomingBranches?.length > 0 && (
-              <Stack
-                width="100%"
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Tooltip
-                  title={
-                    <Typography fontSize={12}>
-                      🚧 Upcoming Branch -{" "}
-                      {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
-                      {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
-                    </Typography>
-                  }
-                  arrow
-                  placement="top"
-                  enterTouchDelay={0}
+            {upcomingBranches?.length > 0 &&
+              purpose?.surveyId?.parentBranch?.length > 0 && (
+                <Stack
+                  width="100%"
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      cursor: "help",
-                      transition: "all 0.3s ease",
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 10,
-                      border: "1px solid transparent",
-                      "&:hover": {
-                        bgcolor: "amber.50",
-                        borderColor: "amber.200",
-                        "& .location-text": { color: "warning.dark" },
-                        "& .location-chip": { display: "inline-block" },
-                      },
-                    }}
+                  <Tooltip
+                    title={
+                      <Typography fontSize={12}>
+                        🚧 Upcoming Branch -{" "}
+                        {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
+                        {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
+                      </Typography>
+                    }
+                    arrow
+                    placement="top"
+                    enterTouchDelay={0}
                   >
-                    <IoGitBranchOutline />
-                    <Typography
-                      variant="h6"
-                      fontSize={13}
-                      className="location-text"
-                      sx={{ color: "text.secondary", transition: "color 0.3s" }}
-                    >
-                      Upcoming Branch@{" "}
-                      {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
-                    </Typography>
                     <Box
-                      component="span"
-                      className="location-chip"
                       sx={{
-                        display: "none",
-                        ml: 1,
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        color: "warning.contrastText",
-                        bgcolor: "warning.light",
-                        px: 1,
-                        borderRadius: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        cursor: "help",
+                        transition: "all 0.3s ease",
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 10,
+                        border: "1px solid transparent",
+                        "&:hover": {
+                          bgcolor: "amber.50",
+                          borderColor: "amber.200",
+                          "& .location-text": { color: "warning.dark" },
+                          "& .location-chip": { display: "inline-block" },
+                        },
                       }}
                     >
-                      {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
-                      {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
+                      <IoGitBranchOutline />
+                      <Typography
+                        variant="h6"
+                        fontSize={13}
+                        className="location-text"
+                        sx={{
+                          color: "text.secondary",
+                          transition: "color 0.3s",
+                        }}
+                      >
+                        Upcoming Branch@{" "}
+                        {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
+                      </Typography>
+                      <Box
+                        component="span"
+                        className="location-chip"
+                        sx={{
+                          display: "none",
+                          ml: 1,
+                          fontSize: "0.75rem",
+                          fontWeight: "bold",
+                          color: "warning.contrastText",
+                          bgcolor: "warning.light",
+                          px: 1,
+                          borderRadius: 1,
+                        }}
+                      >
+                        {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
+                        {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
+                      </Box>
                     </Box>
-                  </Box>
-                </Tooltip>
-              </Stack>
-            )}
+                  </Tooltip>
+                </Stack>
+              )}
 
             {page === 0 && purpose?.surveyId?.branchDetails?.isBranch && (
               <Stack
@@ -1742,7 +1746,7 @@ const RoadSurveyRowsForm = () => {
                   (rowType !== "Chainage" && isLastProposalReading) ? (
                     <>
                       <Typography fontSize={"16px"} fontWeight={600}>
-                        Finish ${purpose?.type}
+                        Finish {purpose?.type}
                       </Typography>
                       <MdDone fontSize={"20px"} />
                     </>
