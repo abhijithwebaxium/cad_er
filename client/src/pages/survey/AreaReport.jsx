@@ -44,6 +44,15 @@ const menuItems = [
     ),
     value: "excel download",
   },
+  {
+    label: (
+      <Stack direction={"row"} alignItems={"center"} gap={0.5}>
+        Spread Sheet
+        <MdDownload />
+      </Stack>
+    ),
+    value: "spread sheet",
+  },
 ];
 
 const initialDetails = {
@@ -185,6 +194,10 @@ const AreaReport = () => {
 
   const reportDetails = useRef(initialDetails);
 
+  const tokenClientRef = useRef(null);
+
+  const tableDataRef = useRef([]);
+
   const { state } = useLocation();
 
   const dispatch = useDispatch();
@@ -193,10 +206,22 @@ const AreaReport = () => {
 
   const [survey, setSurvey] = useState([]);
 
+  const [showArea, setShowArea] = useState({ cutting: false, filling: false });
+
   const handleMenuSelect = (item) => {
     if (item.value === "excel download") {
       exportToExcel();
     }
+
+    if (item.value === "spread sheet") {
+      if (!tokenClientRef.current) {
+        console.error("Token client not ready");
+        return;
+      }
+
+      tokenClientRef.current.requestAccessToken();
+    }
+
     if (item.value === "pdf download") {
       exportAreaReportPdf({ tableData, reportDetails: reportDetails.current });
     }
@@ -306,6 +331,18 @@ const AreaReport = () => {
                   2
                 ).toFixed(3);
 
+          const cuttingAreaSqMtr = Number(cuttingAvgMtr) * Number(widthMtr);
+
+          const fillingAreaSqMtr = Number(fillingAvgMtr) * Number(widthMtr);
+
+          if (!showArea.cutting && cuttingAreaSqMtr > 0) {
+            setShowArea((prev) => ({ ...prev, cutting: true }));
+          }
+
+          if (!showArea.filling && fillingAreaSqMtr > 0) {
+            setShowArea((prev) => ({ ...prev, filling: true }));
+          }
+
           const dataDoc = {
             offset: entry,
             initialEntryRL,
@@ -313,15 +350,11 @@ const AreaReport = () => {
             cuttingMtr,
             cuttingAvgMtr,
             cuttingWMtr: widthMtr,
-            cuttingAreaSqMtr: (
-              Number(cuttingAvgMtr) * Number(widthMtr)
-            ).toFixed(3),
+            cuttingAreaSqMtr: cuttingAreaSqMtr.toFixed(3),
             fillingMtr,
             fillingAvgMtr,
             fillingWMtr: widthMtr,
-            fillingAreaSqMtr: (
-              Number(fillingAvgMtr) * Number(widthMtr)
-            ).toFixed(3),
+            fillingAreaSqMtr: fillingAreaSqMtr.toFixed(3),
           };
 
           prevReadings.push(dataDoc);
@@ -511,6 +544,312 @@ const AreaReport = () => {
     saveAs(new Blob([buffer]), "Area_Report.xlsx");
   };
 
+  const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  const createSheet = async (accessToken) => {
+    const tableData = tableDataRef.current;
+
+    if (!tableData || tableData.length === 0) return;
+
+    // 1️⃣ Create Spreadsheet
+    const createRes = await fetch(
+      "https://sheets.googleapis.com/v4/spreadsheets",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          properties: { title: "Area Report" },
+        }),
+      },
+    );
+
+    const sheet = await createRes.json();
+    const spreadsheetId = sheet.spreadsheetId;
+    const sheetId = sheet.sheets[0].properties.sheetId;
+
+    // ===============================
+    // 2️⃣ BUILD ALL ROW DATA
+    // ===============================
+
+    const values = [];
+
+    // Title Row
+    values.push(["Area Report"]);
+
+    // Header Row 1
+    values.push([
+      "Sl.No.",
+      "Distance Meters",
+      "Initial Level Meters",
+      "Prop. Level Meters",
+      "Cutting Area",
+      "",
+      "",
+      "",
+      "Filling Area",
+      "",
+      "",
+      "",
+    ]);
+
+    // Header Row 2
+    values.push([
+      "",
+      "",
+      "",
+      "",
+      "Cutting Meters",
+      "Avg Meters",
+      "Width Meters",
+      "Area Sq. Mtrs",
+      "Filling Meters",
+      "Avg Meters",
+      "Width Meters",
+      "Area Sq. Mtrs",
+    ]);
+
+    let currentRowIndex = 3;
+
+    tableData.forEach((section) => {
+      // Section header
+      values.push([`Section: ${section.section}`]);
+      currentRowIndex++;
+
+      // Empty row
+      values.push([]);
+      currentRowIndex++;
+
+      section.data.forEach((entry, idx) => {
+        values.push([
+          idx + 1,
+          entry.offset,
+          entry.initialEntryRL,
+          entry.secondaryEntryRL,
+          entry.cuttingMtr,
+          entry.cuttingAvgMtr,
+          entry.cuttingWMtr,
+          entry.cuttingAreaSqMtr,
+          entry.fillingMtr,
+          entry.fillingAvgMtr,
+          entry.fillingWMtr,
+          entry.fillingAreaSqMtr,
+        ]);
+        currentRowIndex++;
+      });
+
+      // Totals row
+      values.push([
+        "",
+        "",
+        "",
+        "",
+        "Total",
+        "",
+        "",
+        Number(section.totalCuttingAreaSqMtr)?.toFixed(3),
+        "",
+        "",
+        "",
+        Number(section.totalFillingAreaSqMtr)?.toFixed(3),
+      ]);
+      currentRowIndex++;
+
+      // Empty row
+      values.push([]);
+      currentRowIndex++;
+    });
+
+    const totalRows = values.length;
+
+    // ===============================
+    // 3️⃣ INSERT DATA
+    // ===============================
+
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A1?valueInputOption=USER_ENTERED`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ values }),
+      },
+    );
+
+    // ===============================
+    // 4️⃣ FORMATTING (MERGE + STYLE)
+    // ===============================
+
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requests: [
+            // Merge Title A1:L1
+            {
+              mergeCells: {
+                range: {
+                  sheetId,
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                  startColumnIndex: 0,
+                  endColumnIndex: 12,
+                },
+                mergeType: "MERGE_ALL",
+              },
+            },
+
+            // Merge Cutting Area Header
+            {
+              mergeCells: {
+                range: {
+                  sheetId,
+                  startRowIndex: 1,
+                  endRowIndex: 2,
+                  startColumnIndex: 4,
+                  endColumnIndex: 8,
+                },
+                mergeType: "MERGE_ALL",
+              },
+            },
+
+            // Merge Filling Area Header
+            {
+              mergeCells: {
+                range: {
+                  sheetId,
+                  startRowIndex: 1,
+                  endRowIndex: 2,
+                  startColumnIndex: 8,
+                  endColumnIndex: 12,
+                },
+                mergeType: "MERGE_ALL",
+              },
+            },
+
+            // Bold + Center Title
+            {
+              repeatCell: {
+                range: {
+                  sheetId,
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                },
+                cell: {
+                  userEnteredFormat: {
+                    horizontalAlignment: "CENTER",
+                    textFormat: { bold: true, fontSize: 16 },
+                  },
+                },
+                fields: "userEnteredFormat(horizontalAlignment,textFormat)",
+              },
+            },
+
+            // Bold + Center Headers
+            {
+              repeatCell: {
+                range: {
+                  sheetId,
+                  startRowIndex: 1,
+                  endRowIndex: 3,
+                },
+                cell: {
+                  userEnteredFormat: {
+                    horizontalAlignment: "CENTER",
+                    verticalAlignment: "MIDDLE",
+                    textFormat: { bold: true },
+                  },
+                },
+                fields:
+                  "userEnteredFormat(horizontalAlignment,verticalAlignment,textFormat)",
+              },
+            },
+
+            // Add Borders for Full Table
+            {
+              updateBorders: {
+                range: {
+                  sheetId,
+                  startRowIndex: 1,
+                  endRowIndex: totalRows,
+                  startColumnIndex: 0,
+                  endColumnIndex: 12,
+                },
+                top: { style: "SOLID" },
+                bottom: { style: "SOLID" },
+                left: { style: "SOLID" },
+                right: { style: "SOLID" },
+                innerHorizontal: { style: "SOLID" },
+                innerVertical: { style: "SOLID" },
+              },
+            },
+
+            // Column Widths
+            {
+              updateDimensionProperties: {
+                range: {
+                  sheetId,
+                  dimension: "COLUMNS",
+                  startIndex: 0,
+                  endIndex: 12,
+                },
+                properties: { pixelSize: 120 },
+                fields: "pixelSize",
+              },
+            },
+          ],
+        }),
+      },
+    );
+
+    window.open(
+      `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+      "_blank",
+    );
+  };
+
+  useEffect(() => {
+    const initClient = async () => {
+      await new Promise((resolve) => {
+        window.gapi.load("client", resolve);
+      });
+
+      await window.gapi.client.init({
+        discoveryDocs: [
+          "https://sheets.googleapis.com/$discovery/rest?version=v4",
+        ],
+      });
+
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: "https://www.googleapis.com/auth/spreadsheets",
+        callback: async (tokenResponse) => {
+          if (!tokenResponse.access_token) {
+            console.error("No access token received");
+            return;
+          }
+
+          await createSheet(tokenResponse.access_token);
+        },
+      });
+    };
+
+    initClient();
+  }, []);
+
+  useEffect(() => {
+    tableDataRef.current = tableData;
+  }, [tableData]);
+
   useEffect(() => {
     fetchSurvey();
   }, []);
@@ -562,102 +901,154 @@ const AreaReport = () => {
           {reportDetails.current.secondaryEntry}
         </Typography>
 
-        <TableContainer component={Paper} sx={{ maxHeight: "90vh" }}>
-          <Table sx={{ minWidth: 650 }} size="small">
-            <TableHead
-              sx={{
-                backgroundColor: "#f4f6f8",
-                "& .MuiTableCell-root": {
-                  border: "1px solid rgba(224, 224, 224, 1)",
-                  fontWeight: 700,
-                },
-                position: "sticky",
-                top: 0,
-              }}
-            >
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
-                  Sl.No.
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
-                  Distance Meters
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
-                  {reportDetails?.current?.initialEntry || ""} Meters
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
-                  {reportDetails?.current?.secondaryEntry || ""} Meters
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }} colSpan={4} align="center">
-                  Cutting Area
-                </TableCell>
-                <TableCell sx={{ fontWeight: 700 }} colSpan={4} align="center">
-                  Filling Area
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Cutting Meters</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Avg Meters</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Width Meters</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
-
-                <TableCell sx={{ fontWeight: 700 }}>Filling Meters</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Avg Meters</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Width Meters</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {tableData.map((row, index) => (
-                <Fragment key={index}>
-                  <TableRow>
-                    <TableCell colSpan={12} sx={{ fontWeight: "bold" }}>
-                      Section: {row.section}
+        {tableData?.length > 0 ? (
+          <TableContainer component={Paper} sx={{ maxHeight: "90vh" }}>
+            <Table sx={{ minWidth: 650 }} size="small">
+              <TableHead
+                sx={{
+                  backgroundColor: "#f4f6f8",
+                  "& .MuiTableCell-root": {
+                    border: "1px solid rgba(224, 224, 224, 1)",
+                    fontWeight: 700,
+                  },
+                  position: "sticky",
+                  top: 0,
+                }}
+              >
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                    Sl.No.
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                    Distance Meters
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                    {reportDetails?.current?.initialEntry || ""} Meters
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                    {reportDetails?.current?.secondaryEntry || ""} Meters
+                  </TableCell>
+                  {showArea?.cutting && (
+                    <TableCell
+                      sx={{ fontWeight: 700 }}
+                      colSpan={4}
+                      align="center"
+                    >
+                      Cutting Area
                     </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell colSpan={12} sx={{ py: 1.8 }}></TableCell>
-                  </TableRow>
+                  )}
+                  {showArea?.filling && (
+                    <TableCell
+                      sx={{ fontWeight: 700 }}
+                      colSpan={4}
+                      align="center"
+                    >
+                      Filling Area
+                    </TableCell>
+                  )}
+                </TableRow>
+                <TableRow>
+                  {showArea?.cutting && (
+                    <>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        Cutting Meters
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Avg Meters</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        Width Meters
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        Area Sq. Mtrs
+                      </TableCell>
+                    </>
+                  )}
 
-                  {row?.data?.map((entry, idx) => (
-                    <TableRow key={`${index}-${idx}`}>
-                      <TableCell>{idx + 1}</TableCell>
-                      <TableCell>{entry.offset}</TableCell>
-                      <TableCell>{entry.initialEntryRL}</TableCell>
-                      <TableCell>{entry.secondaryEntryRL}</TableCell>
-                      <TableCell>{entry.cuttingMtr}</TableCell>
-                      <TableCell>{entry.cuttingAvgMtr}</TableCell>
-                      <TableCell>{entry.cuttingWMtr}</TableCell>
-                      <TableCell>{entry.cuttingAreaSqMtr}</TableCell>
-                      <TableCell>{entry.fillingMtr}</TableCell>
-                      <TableCell>{entry.fillingAvgMtr}</TableCell>
-                      <TableCell>{entry.fillingWMtr}</TableCell>
-                      <TableCell>{entry.fillingAreaSqMtr}</TableCell>
+                  {showArea?.filling && (
+                    <>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        Filling Meters
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Avg Meters</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        Width Meters
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        Area Sq. Mtrs
+                      </TableCell>
+                    </>
+                  )}
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {tableData.map((row, index) => (
+                  <Fragment key={index}>
+                    <TableRow>
+                      <TableCell colSpan={12} sx={{ fontWeight: "bold" }}>
+                        Section: {row.section}
+                      </TableCell>
                     </TableRow>
-                  ))}
+                    <TableRow>
+                      <TableCell colSpan={12} sx={{ py: 1.8 }}></TableCell>
+                    </TableRow>
 
-                  <TableRow>
-                    <TableCell colSpan={4}></TableCell>
+                    {row?.data?.map((entry, idx) => (
+                      <TableRow key={`${index}-${idx}`}>
+                        <TableCell>{idx + 1}</TableCell>
+                        <TableCell>{entry.offset}</TableCell>
+                        <TableCell>{entry.initialEntryRL}</TableCell>
+                        <TableCell>{entry.secondaryEntryRL}</TableCell>
 
-                    <TableCell colSpan={3} sx={{ fontWeight: "bold" }}>
-                      Total
-                    </TableCell>
+                        {showArea?.cutting && (
+                          <>
+                            <TableCell>{entry.cuttingMtr}</TableCell>
+                            <TableCell>{entry.cuttingAvgMtr}</TableCell>
+                            <TableCell>{entry.cuttingWMtr}</TableCell>
+                            <TableCell>{entry.cuttingAreaSqMtr}</TableCell>
+                          </>
+                        )}
 
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      {Number(row?.totalCuttingAreaSqMtr)?.toFixed(3)}
-                    </TableCell>
-                    <TableCell colSpan={3}></TableCell>
+                        {showArea?.filling && (
+                          <>
+                            <TableCell>{entry.fillingMtr}</TableCell>
+                            <TableCell>{entry.fillingAvgMtr}</TableCell>
+                            <TableCell>{entry.fillingWMtr}</TableCell>
+                            <TableCell>{entry.fillingAreaSqMtr}</TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    ))}
 
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
-                    </TableCell>
-                  </TableRow>
-                </Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                    <TableRow>
+                      <TableCell colSpan={4}></TableCell>
+
+                      <TableCell colSpan={3} sx={{ fontWeight: "bold" }}>
+                        Total
+                      </TableCell>
+
+                      {showArea?.cutting && (
+                        <TableCell sx={{ fontWeight: "bold" }}>
+                          {Number(row?.totalCuttingAreaSqMtr)?.toFixed(3)}
+                        </TableCell>
+                      )}
+
+                      {showArea?.filling && (
+                        <>
+                          <TableCell colSpan={3}></TableCell>
+                          <TableCell sx={{ fontWeight: "bold" }}>
+                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
+                          </TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  </Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Typography>Loading ...</Typography>
+        )}
       </Box>
     </Box>
   );

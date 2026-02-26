@@ -97,12 +97,12 @@ export const googleLogin = async (req, res, next) => {
 
     let user = await User.findOne({ email }).populate("company");
 
-    if (action === "login" && !user) {
-      throw Object.assign(
-        new Error("Account not found. Please sign up first."),
-        { statusCode: 404 },
-      );
-    }
+    // if (action === "login" && !user) {
+    //   throw Object.assign(
+    //     new Error("Account not found. Please sign up first."),
+    //     { statusCode: 404 },
+    //   );
+    // }
 
     if (!user) {
       user = await User.create({

@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { stopLoading } from "../../redux/loadingSlice";
 import { handleFormError } from "../../utils/handleFormError";
-import { getAllSurvey } from "../../services/surveyServices";
+import { deleteSurvey, getAllSurvey } from "../../services/surveyServices";
 import { motion, AnimatePresence } from "framer-motion";
 import BasicAccordion from "../../components/BasicAccordion";
 import LetterAvatar from "../../components/LetterAvatar";
@@ -27,6 +27,7 @@ import { highlightText } from "../../internals";
 import AlertDialogSlide from "../../components/AlertDialogSlide";
 import { showAlert } from "../../redux/alertSlice";
 import BasicButton from "../../components/BasicButton";
+import { MdDelete } from "react-icons/md";
 
 const alertDetails = {
   title: "Field Book",
@@ -34,6 +35,14 @@ const alertDetails = {
   content: "",
   cancelButtonText: "Cancel",
   submitButtonText: "View",
+};
+
+const deleteProjectAlertDetails = {
+  title: "Delete Project",
+  description: "Are you sure you want to delete this project?",
+  content: "",
+  cancelButtonText: "Cancel",
+  submitButtonText: "Delete",
 };
 
 const colors = {
@@ -69,6 +78,11 @@ const fieldsToMap = [
   {
     key: "updatedAt",
     value: "Last Edited",
+    type: "Date",
+  },
+  {
+    key: "scheduledDate",
+    value: "Scheduled Date",
     type: "Date",
   },
   {
@@ -110,11 +124,17 @@ export default function ProjectsList() {
 
   const { state } = useLocation();
 
-  const [tab, setTab] = useState("two");
+  const [tab, setTab] = useState("in_progress");
 
   const [loading, setLoading] = useState(true);
 
   const [surveys, setSurveys] = useState([]);
+
+  const [list, setList] = useState({
+    todo: [],
+    in_progress: [],
+    finished: [],
+  });
 
   const [searchMode, setSearchMode] = useState(false);
 
@@ -126,9 +146,13 @@ export default function ProjectsList() {
 
   const [search, setSearch] = useState("");
 
+  const [deleteProjectAlert, setDeleteProjectAlert] = useState(false);
+
+  const [deleteId, setDeleteId] = useState("");
+
   const handleChange = (e, newValue) => setTab(newValue);
 
-  const filteredSurveys = surveys.filter((s) =>
+  const filteredSurveys = list?.in_progress.filter((s) =>
     s.project.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -160,6 +184,46 @@ export default function ProjectsList() {
     setLink("");
 
     setOpen(false);
+  };
+
+  const handleOpenDeleteProjectAlert = (id) => {
+    setDeleteId(id);
+    setDeleteProjectAlert(true);
+  };
+
+  const handleCloseDeleteProjectAlert = () => {
+    setDeleteId("");
+    setDeleteProjectAlert(false);
+  };
+
+  const handleDeleteProject = async () => {
+    try {
+      const { data } = await deleteSurvey(deleteId);
+
+      const updatedList = list.in_progress.filter(
+        (s) => String(s._id) !== deleteId,
+      );
+
+      setList((prev) => ({
+        ...prev,
+        in_progress: updatedList,
+      }));
+
+      if (data.success) {
+        dispatch(
+          showAlert({
+            type: "success",
+            message: "Project deleted successfully",
+          }),
+        );
+      } else {
+        throw Error("Something went wrong");
+      }
+    } catch (error) {
+      handleFormError(error, null, dispatch, navigate);
+    } finally {
+      setDeleteProjectAlert(false);
+    }
   };
 
   const handleClickFiledBook = (surveyId) => {
@@ -256,6 +320,36 @@ export default function ProjectsList() {
           }) || [];
 
         setSurveys(updatedSurveys);
+
+        const grouped = updatedSurveys.reduce(
+          (acc, survey) => {
+            switch (survey.status) {
+              case "Scheduled":
+                acc.todo.push(survey);
+                break;
+
+              case "Active":
+                acc.in_progress.push(survey);
+                break;
+
+              case "Completed":
+                acc.finished.push(survey);
+                break;
+
+              default:
+                break;
+            }
+
+            return acc;
+          },
+          {
+            todo: [],
+            in_progress: [],
+            finished: [],
+          },
+        );
+
+        setList(grouped);
       } else {
         throw Error("Failed to fetch surveys");
       }
@@ -269,10 +363,15 @@ export default function ProjectsList() {
 
   useEffect(() => {
     const searchText = state?.search?.trim() || "";
+    const selectedTab = state?.tab;
 
     if (searchText) {
       setSearchMode(true);
       setSearch(searchText);
+    }
+
+    if (selectedTab) {
+      setTab(selectedTab);
     }
   }, [state]);
 
@@ -288,19 +387,147 @@ export default function ProjectsList() {
   };
 
   const tabContent = {
-    one: (
+    todo: (
       <motion.div {...fadeSlide}>
-        <Box textAlign="center" mt={6}>
-          <Typography fontSize="20px" fontWeight={600}>
-            To Do Items
-          </Typography>
-          <Typography fontSize="14px" color="gray" mt={1}>
-            Your scheduled projects will appear here.
-          </Typography>
-        </Box>
+        {list?.todo?.length ? (
+          <Stack spacing={2}>
+            {list?.todo?.map((survey, idx) => (
+              <BasicCard
+                key={idx}
+                content={
+                  <Box>
+                    <BasicAccordion
+                      summary={
+                        <Stack
+                          direction={"row"}
+                          alignItems={"center"}
+                          spacing={1}
+                        >
+                          <LetterAvatar
+                            letter={survey.project.slice(0, 1)}
+                            bgcolor={"rgba(0, 111, 253, 1)"}
+                            onClick={() => handleContinueSurvey(survey._id)}
+                          />
+
+                          <Box>
+                            <Typography fontWeight={600} fontSize="14px">
+                              {highlightText(survey.project, search)}
+                            </Typography>
+                            <Typography
+                              fontWeight={500}
+                              color="rgba(161, 161, 170, 1)"
+                              fontSize="14px"
+                            >
+                              {new Date(survey.createdAt)?.toLocaleDateString(
+                                "en-IN",
+                              )}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      }
+                      details={
+                        <Stack>
+                          {fieldsToMap
+                            ?.filter(
+                              (item) =>
+                                item.value !== "Field Book" &&
+                                item.value !== "Reports",
+                            )
+                            .map(({ key, value, type }, idx) => (
+                              <Item key={idx}>
+                                {value}
+
+                                {type === "Icon" ? (
+                                  value === "Field Book" ? (
+                                    <Box
+                                      onClick={() =>
+                                        handleClickFiledBook(survey._id)
+                                      }
+                                    >
+                                      {key}
+                                    </Box>
+                                  ) : (
+                                    <Link to={getLink(survey, value)}>
+                                      {key}
+                                    </Link>
+                                  )
+                                ) : (
+                                  <Typography
+                                    color={
+                                      key === "lastPurpose"
+                                        ? colors[
+                                            survey[key]?.includes("Initial")
+                                              ? "Initial"
+                                              : survey[key]?.includes("Final")
+                                                ? "Final"
+                                                : ""
+                                          ]
+                                        : ""
+                                    }
+                                    fontSize={14}
+                                    fontWeight={700}
+                                  >
+                                    {type === "Date"
+                                      ? new Date(
+                                          survey[key],
+                                        )?.toLocaleDateString("en-IN")
+                                      : type === "constant"
+                                        ? key
+                                        : survey[key]}
+                                  </Typography>
+                                )}
+                              </Item>
+                            ))}
+                        </Stack>
+                      }
+                      expandIcon={
+                        <MdOutlineExpandMore
+                          color="rgba(161, 161, 170, 1)"
+                          fontSize={28}
+                        />
+                      }
+                      sx={{ boxShadow: "none" }}
+                    />
+
+                    <BasicDivider borderBottomWidth={0.5} color="#d9d9d9" />
+
+                    <Stack
+                      direction={"row"}
+                      justifyContent={"space-between"}
+                      alignItems={"center"}
+                    >
+                      <Typography
+                        fontWeight={600}
+                        fontSize="14px"
+                        color="rgba(0, 0, 0, 0.74)"
+                      >
+                        Status
+                      </Typography>
+
+                      <StatusChip status={survey.status} />
+                    </Stack>
+                  </Box>
+                }
+                sx={{
+                  borderRadius: "12px",
+                  boxShadow: "0px 4px 8px 0px #1c252c2a",
+                }}
+              />
+            ))}
+          </Stack>
+        ) : (
+          <Box textAlign="center" mt={6}>
+            <Typography fontSize="20px" fontWeight={600}>
+              Todo Items
+            </Typography>
+            <Typography fontSize="14px" color="gray" mt={1}>
+              Your scheduled projects will appear here.
+            </Typography>
+          </Box>
+        )}
       </motion.div>
     ),
-    two: (
+    in_progress: (
       <motion.div {...fadeSlide}>
         {filteredSurveys?.length ? (
           <Stack spacing={2}>
@@ -340,49 +567,224 @@ export default function ProjectsList() {
                       }
                       details={
                         <Stack>
-                          {fieldsToMap.map(({ key, value, type }, idx) => (
-                            <Item key={idx}>
-                              {value}
+                          {fieldsToMap
+                            ?.filter((item) => item.value !== "Scheduled Date")
+                            .map(({ key, value, type }, idx) => (
+                              <Item key={idx}>
+                                {value}
 
-                              {type === "Icon" ? (
-                                value === "Field Book" ? (
-                                  <Box
-                                    onClick={() =>
-                                      handleClickFiledBook(survey._id)
-                                    }
-                                  >
-                                    {key}
-                                  </Box>
+                                {type === "Icon" ? (
+                                  value === "Field Book" ? (
+                                    <Box
+                                      onClick={() =>
+                                        handleClickFiledBook(survey._id)
+                                      }
+                                    >
+                                      {key}
+                                    </Box>
+                                  ) : (
+                                    <Link to={getLink(survey, value)}>
+                                      {key}
+                                    </Link>
+                                  )
                                 ) : (
-                                  <Link to={getLink(survey, value)}>{key}</Link>
-                                )
-                              ) : (
-                                <Typography
-                                  color={
-                                    key === "lastPurpose"
-                                      ? colors[
-                                          survey[key]?.includes("Initial")
-                                            ? "Initial"
-                                            : survey[key]?.includes("Final")
-                                              ? "Final"
-                                              : ""
-                                        ]
-                                      : ""
+                                  <Typography
+                                    color={
+                                      key === "lastPurpose"
+                                        ? colors[
+                                            survey[key]?.includes("Initial")
+                                              ? "Initial"
+                                              : survey[key]?.includes("Final")
+                                                ? "Final"
+                                                : ""
+                                          ]
+                                        : ""
+                                    }
+                                    fontSize={14}
+                                    fontWeight={700}
+                                  >
+                                    {type === "Date"
+                                      ? new Date(
+                                          survey[key],
+                                        )?.toLocaleDateString("en-IN")
+                                      : type === "constant"
+                                        ? key
+                                        : survey[key]}
+                                  </Typography>
+                                )}
+                              </Item>
+                            ))}
+
+                          {survey?.branchDetails?.hasBranching && (
+                            <Item>
+                              Branch Reports
+                              <Typography fontSize={14} fontWeight={700}>
+                                <TiEye
+                                  fontSize={20}
+                                  color="rgba(0, 111, 253, 1)"
+                                  onClick={() =>
+                                    navigate(`/survey/report`, {
+                                      state: {
+                                        getBranchReport: true,
+                                        surveyId: survey._id,
+                                      },
+                                    })
                                   }
-                                  fontSize={14}
-                                  fontWeight={700}
-                                >
-                                  {type === "Date"
-                                    ? new Date(survey[key])?.toLocaleDateString(
-                                        "en-IN",
-                                      )
-                                    : type === "constant"
-                                      ? key
-                                      : survey[key]}
-                                </Typography>
-                              )}
+                                  style={{ cursor: "pointer" }}
+                                />
+                              </Typography>
                             </Item>
-                          ))}
+                          )}
+
+                          <Item sx={{ color: "red" }}>
+                            Delete Project
+                            <Typography fontSize={14} fontWeight={700}>
+                              <MdDelete
+                                fontSize={20}
+                                color="red"
+                                style={{ cursor: "pointer" }}
+                                onClick={() =>
+                                  handleOpenDeleteProjectAlert(survey._id)
+                                }
+                              />
+                            </Typography>
+                          </Item>
+                        </Stack>
+                      }
+                      expandIcon={
+                        <MdOutlineExpandMore
+                          color="rgba(161, 161, 170, 1)"
+                          fontSize={28}
+                        />
+                      }
+                      sx={{ boxShadow: "none" }}
+                    />
+
+                    <BasicDivider borderBottomWidth={0.5} color="#d9d9d9" />
+
+                    <Stack
+                      direction={"row"}
+                      justifyContent={"space-between"}
+                      alignItems={"center"}
+                    >
+                      <Typography
+                        fontWeight={600}
+                        fontSize="14px"
+                        color="rgba(0, 0, 0, 0.74)"
+                      >
+                        Status
+                      </Typography>
+
+                      <StatusChip status={survey.status} />
+                    </Stack>
+                  </Box>
+                }
+                sx={{
+                  borderRadius: "12px",
+                  boxShadow: "0px 4px 8px 0px #1c252c2a",
+                }}
+              />
+            ))}
+          </Stack>
+        ) : (
+          <Box textAlign="center" mt={6}>
+            <Typography fontSize="20px" fontWeight={600}>
+              In Progress
+            </Typography>
+            <Typography fontSize="14px" color="gray" mt={1}>
+              Your ongoing projects will appear here.
+            </Typography>
+          </Box>
+        )}
+      </motion.div>
+    ),
+    finished: (
+      <motion.div {...fadeSlide}>
+        {list?.finished?.length ? (
+          <Stack spacing={2}>
+            {list?.finished?.map((survey, idx) => (
+              <BasicCard
+                key={idx}
+                content={
+                  <Box>
+                    <BasicAccordion
+                      summary={
+                        <Stack
+                          direction={"row"}
+                          alignItems={"center"}
+                          spacing={1}
+                        >
+                          <LetterAvatar
+                            letter={survey.project.slice(0, 1)}
+                            bgcolor={"rgba(0, 111, 253, 1)"}
+                            onClick={() => handleContinueSurvey(survey._id)}
+                          />
+
+                          <Box>
+                            <Typography fontWeight={600} fontSize="14px">
+                              {highlightText(survey.project, search)}
+                            </Typography>
+                            <Typography
+                              fontWeight={500}
+                              color="rgba(161, 161, 170, 1)"
+                              fontSize="14px"
+                            >
+                              {new Date(survey.createdAt)?.toLocaleDateString(
+                                "en-IN",
+                              )}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      }
+                      details={
+                        <Stack>
+                          {fieldsToMap
+                            ?.filter((item) => item.value !== "Scheduled Date")
+                            .map(({ key, value, type }, idx) => (
+                              <Item key={idx}>
+                                {value}
+
+                                {type === "Icon" ? (
+                                  value === "Field Book" ? (
+                                    <Box
+                                      onClick={() =>
+                                        handleClickFiledBook(survey._id)
+                                      }
+                                    >
+                                      {key}
+                                    </Box>
+                                  ) : (
+                                    <Link to={getLink(survey, value)}>
+                                      {key}
+                                    </Link>
+                                  )
+                                ) : (
+                                  <Typography
+                                    color={
+                                      key === "lastPurpose"
+                                        ? colors[
+                                            survey[key]?.includes("Initial")
+                                              ? "Initial"
+                                              : survey[key]?.includes("Final")
+                                                ? "Final"
+                                                : ""
+                                          ]
+                                        : ""
+                                    }
+                                    fontSize={14}
+                                    fontWeight={700}
+                                  >
+                                    {type === "Date"
+                                      ? new Date(
+                                          survey[key],
+                                        )?.toLocaleDateString("en-IN")
+                                      : type === "constant"
+                                        ? key
+                                        : survey[key]}
+                                  </Typography>
+                                )}
+                              </Item>
+                            ))}
 
                           {survey?.branchDetails?.hasBranching && (
                             <Item>
@@ -443,25 +845,13 @@ export default function ProjectsList() {
         ) : (
           <Box textAlign="center" mt={6}>
             <Typography fontSize="20px" fontWeight={600}>
-              In Progress
+              Finished Projects
             </Typography>
             <Typography fontSize="14px" color="gray" mt={1}>
-              Your ongoing projects will appear here.
+              Your finished projects will appear here.
             </Typography>
           </Box>
         )}
-      </motion.div>
-    ),
-    three: (
-      <motion.div {...fadeSlide}>
-        <Box textAlign="center" mt={6}>
-          <Typography fontSize="20px" fontWeight={600}>
-            Finished Projects
-          </Typography>
-          <Typography fontSize="14px" color="gray" mt={1}>
-            Completed projects will appear here.
-          </Typography>
-        </Box>
       </motion.div>
     ),
   };
@@ -473,6 +863,13 @@ export default function ProjectsList() {
         open={open}
         onCancel={handleClose}
         onSubmit={handleViewFieldBook}
+      />
+
+      <AlertDialogSlide
+        {...deleteProjectAlertDetails}
+        open={deleteProjectAlert}
+        onCancel={handleCloseDeleteProjectAlert}
+        onSubmit={handleDeleteProject}
       />
 
       <Box position={"sticky"} p={2} top={0} bgcolor={"white"} zIndex={1}>
@@ -528,7 +925,7 @@ export default function ProjectsList() {
                       borderRadius: "8px",
                       "& .MuiOutlinedInput-notchedOutline": { border: "none" },
                     }}
-                    InputProps={{
+                    slotProps={{
                       endAdornment: (
                         <IconButton
                           onClick={() => {
@@ -558,9 +955,9 @@ export default function ProjectsList() {
             value={tab}
             onChange={handleChange}
             tabs={[
-              { label: "To do", value: "one" },
-              { label: "In progress", value: "two" },
-              { label: "Finished", value: "three" },
+              { label: "To do", value: "todo" },
+              { label: "In progress", value: "in_progress" },
+              { label: "Finished", value: "finished" },
             ]}
           />
         </Box>

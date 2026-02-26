@@ -1,7 +1,7 @@
-import { Chip } from '@mui/material';
-import { green, red, yellow, grey as gray, blue } from '@mui/material/colors';
-import { chipClasses } from '@mui/material/Chip';
-import { svgIconClasses } from '@mui/material/SvgIcon';
+import { Chip } from "@mui/material";
+import { green, red, yellow, grey as gray, blue } from "@mui/material/colors";
+import { chipClasses } from "@mui/material/Chip";
+import { svgIconClasses } from "@mui/material/SvgIcon";
 
 const chipStyles = {
   default: {
@@ -38,12 +38,13 @@ const chipStyles = {
 
 const StatusChip = ({ status }) => {
   const colors = {
-    Active: 'default',
-    Completed: 'success',
-    Paused: 'warning',
-    Pending: 'warning',
-    'In Progress': 'inProgress',
-    Ineligible: 'error',
+    Active: "default",
+    Completed: "success",
+    Paused: "warning",
+    Pending: "warning",
+    Scheduled: "warning",
+    "In Progress": "inProgress",
+    Ineligible: "error",
   };
 
   const selected = chipStyles[colors[status]];
@@ -53,20 +54,20 @@ const StatusChip = ({ status }) => {
       label={status}
       size="small"
       sx={{
-        border: '1px solid',
-        borderRadius: '999px',
+        border: "1px solid",
+        borderRadius: "999px",
         borderColor: selected.borderColor,
         backgroundColor: selected.backgroundColor,
 
         [`& .${chipClasses.label}`]: {
           fontWeight: 600,
           color: selected.labelColor,
-          fontSize: '0.75rem',
+          fontSize: "0.75rem",
         },
 
         [`& .${svgIconClasses.root}`]: {
           color: selected.iconColor,
-          fontSize: '0.75rem',
+          fontSize: "0.75rem",
         },
 
         maxHeight: 20,

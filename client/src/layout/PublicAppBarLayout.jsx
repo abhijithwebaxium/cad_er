@@ -27,7 +27,10 @@ const PublicAppBarLayout = () => {
   }, []);
 
   return (
-    <Box sx={{ bgcolor: "#fff", minHeight: "100vh" }}>
+    <Box
+      id="main-scroll"
+      sx={{ bgcolor: "#fff", minHeight: "100vh", position: "relative" }}
+    >
       <LandingAppBar />
 
       <Outlet />

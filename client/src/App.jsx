@@ -35,6 +35,7 @@ import Careers from "./pages/public/Careers";
 import Placements from "./pages/public/Placements";
 import Pricing from "./pages/public/Pricing";
 import PublicAppBarLayout from "./layout/PublicAppBarLayout";
+import ImpactStats from "./pages/public/ImpactStats";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/placements" element={<Placements />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/impact" element={<ImpactStats />} />
           </Route>
 
           <Route element={<PublicRoute />}>

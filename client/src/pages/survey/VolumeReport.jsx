@@ -44,6 +44,15 @@ const menuItems = [
     ),
     value: "excel download",
   },
+  {
+    label: (
+      <Stack direction={"row"} alignItems={"center"} gap={0.5}>
+        Spread Sheet
+        <MdDownload />
+      </Stack>
+    ),
+    value: "spread sheet",
+  },
 ];
 
 const initialDetails = {
@@ -51,7 +60,7 @@ const initialDetails = {
   secondaryEntry: "",
 };
 
-const exportVolumeReportPdf = ({ tableData, reportDetails }) => {
+const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
   const doc = new jsPDF("p", "mm", "a4");
 
   // ===== BUILD TABLE BODY =====
@@ -81,15 +90,23 @@ const exportVolumeReportPdf = ({ tableData, reportDetails }) => {
       row.difference,
       row.width,
 
-      row.cuttingAreaSqMtr,
-      row.cuttingPrevArea,
-      row.cuttingAvgSqrMtr,
-      row.cuttingVolumeCubicMtr,
+      ...(showArea?.cutting
+        ? [
+            row.cuttingAreaSqMtr,
+            row.cuttingPrevArea,
+            row.cuttingAvgSqrMtr,
+            row.cuttingVolumeCubicMtr,
+          ]
+        : []),
 
-      row.fillingAreaSqMtr,
-      row.fillingPrevArea,
-      row.fillingAvgSqrMtr,
-      row.fillingVolumeCubicMtr,
+      ...(showArea?.filling
+        ? [
+            row.fillingAreaSqMtr,
+            row.fillingPrevArea,
+            row.fillingAvgSqrMtr,
+            row.fillingVolumeCubicMtr,
+          ]
+        : []),
     ]);
   });
 
@@ -101,17 +118,25 @@ const exportVolumeReportPdf = ({ tableData, reportDetails }) => {
     "",
     "",
     { content: "Total", colSpan: 3, styles: { fontStyle: "bold" } },
-    {
-      content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
-      styles: { fontStyle: "bold" },
-    },
-    "",
-    "",
-    "",
-    {
-      content: Number(tableData?.totalFillingVolume)?.toFixed(3),
-      styles: { fontStyle: "bold" },
-    },
+    ...(showArea?.cutting
+      ? [
+          {
+            content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
+            styles: { fontStyle: "bold" },
+          },
+        ]
+      : []),
+    ...(showArea?.filling
+      ? [
+          "",
+          "",
+          "",
+          {
+            content: Number(tableData?.totalFillingVolume)?.toFixed(3),
+            styles: { fontStyle: "bold" },
+          },
+        ]
+      : []),
   ]);
 
   autoTable(doc, {
@@ -124,19 +149,30 @@ const exportVolumeReportPdf = ({ tableData, reportDetails }) => {
         { content: "Previous Section", rowSpan: 2 },
         { content: "Difference", rowSpan: 2 },
         { content: "Width", rowSpan: 2 },
-        { content: "Cutting Volume", colSpan: 4 },
-        { content: "Filling Volume", colSpan: 4 },
+        ...(showArea?.cutting
+          ? [{ content: "Cutting Volume", colSpan: 4 }]
+          : []),
+        ...(showArea?.filling
+          ? [{ content: "Filling Volume", colSpan: 4 }]
+          : []),
       ],
       [
-        "Area Sq. Mtrs",
-        "Previous Area",
-        "Average Sq. Mtrs",
-        "Volume Cubic Meters",
-
-        "Area Sq. Mtrs",
-        "Previous Area",
-        "Average Sq. Mtrs",
-        "Volume Cubic Meters",
+        ...(showArea?.cutting
+          ? [
+              "Area Sq. Mtrs",
+              "Previous Area",
+              "Average Sq. Mtrs",
+              "Volume Cubic Meters",
+            ]
+          : []),
+        ...(showArea?.filling
+          ? [
+              "Area Sq. Mtrs",
+              "Previous Area",
+              "Average Sq. Mtrs",
+              "Volume Cubic Meters",
+            ]
+          : []),
       ],
     ],
     body,
@@ -179,6 +215,10 @@ const VolumeReport = () => {
 
   const reportDetails = useRef(initialDetails);
 
+  const tokenClientRef = useRef(null);
+
+  const tableDataRef = useRef([]);
+
   const { state } = useLocation();
 
   const dispatch = useDispatch();
@@ -187,14 +227,27 @@ const VolumeReport = () => {
 
   const [survey, setSurvey] = useState([]);
 
+  const [showArea, setShowArea] = useState({ cutting: false, filling: false });
+
   const handleMenuSelect = (item) => {
     if (item.value === "excel download") {
       exportToExcel();
     }
+
+    if (item.value === "spread sheet") {
+      if (!tokenClientRef.current) {
+        console.error("Token client not ready");
+        return;
+      }
+
+      tokenClientRef.current.requestAccessToken();
+    }
+
     if (item.value === "pdf download") {
       exportVolumeReportPdf({
         tableData,
         reportDetails: reportDetails.current,
+        showArea,
       });
     }
   };
@@ -438,6 +491,14 @@ const VolumeReport = () => {
         isDeductionRow: flag,
       });
 
+      if (!showArea.cutting && Number(totals.totalCuttingVolume) > 0) {
+        setShowArea((prev) => ({ ...prev, cutting: true }));
+      }
+
+      if (!showArea.filling && Number(totals.totalFillingVolume) > 0) {
+        setShowArea((prev) => ({ ...prev, filling: true }));
+      }
+
       // --- Prepare for next iteration ---
       cuttingPrevArea = Number(cuttingAreaSqMtr)?.toFixed(3);
       fillingPrevArea = Number(fillingAreaSqMtr)?.toFixed(3);
@@ -454,7 +515,9 @@ const VolumeReport = () => {
     const sheet = workbook.addWorksheet("Volume Report");
 
     // ===== Title =====
-    sheet.mergeCells("A1:M1");
+    sheet.mergeCells(
+      showArea?.cutting && showArea?.filling ? "A1:M1" : "A1:I1",
+    );
     const titleCell = sheet.getCell("A1");
     titleCell.value = "Volume Report";
     titleCell.font = { size: 16, bold: true };
@@ -470,14 +533,8 @@ const VolumeReport = () => {
       "Previous Section",
       "Difference",
       "Width",
-      "Cutting Volume",
-      "",
-      "",
-      "",
-      "Filling Volume",
-      "",
-      "",
-      "",
+      ...(showArea?.cutting ? ["Cutting Volume", "", "", ""] : []),
+      ...(showArea?.filling ? ["Filling Volume", "", "", ""] : []),
     ]);
 
     sheet.addRow([
@@ -486,19 +543,30 @@ const VolumeReport = () => {
       "",
       "",
       "",
-      "Area Sq. Mtrs",
-      "Previous Area",
-      "Average Sq. Mtrs",
-      "Volume Cubic Meters",
-      "Area Sq. Mtrs",
-      "Previous Area",
-      "Average Sq. Mtrs",
-      "Volume Cubic Meters",
+      ...(showArea?.cutting
+        ? [
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
+        : []),
+      ...(showArea?.filling
+        ? [
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
+        : []),
     ]);
 
     // ===== Merge Header Cells =====
     sheet.mergeCells("F2:I2"); // Cutting Area
-    sheet.mergeCells("J2:M2"); // Filling Area
+
+    if (showArea?.cutting && showArea?.filling) {
+      sheet.mergeCells("J2:M2"); // Filling Area
+    }
 
     // ===== Style Headers =====
     const headerRows = [2, 3];
@@ -560,14 +628,23 @@ const VolumeReport = () => {
         entry.prevSection,
         entry.difference,
         entry.width,
-        entry.cuttingAreaSqMtr,
-        entry.cuttingPrevArea,
-        entry.cuttingAvgSqrMtr,
-        entry.cuttingVolumeCubicMtr,
-        entry.fillingAreaSqMtr,
-        entry.fillingPrevArea,
-        entry.fillingAvgSqrMtr,
-        entry.fillingVolumeCubicMtr,
+
+        ...(showArea?.cutting
+          ? [
+              entry.cuttingAreaSqMtr,
+              entry.cuttingPrevArea,
+              entry.cuttingAvgSqrMtr,
+              entry.cuttingVolumeCubicMtr,
+            ]
+          : []),
+        ...(showArea?.filling
+          ? [
+              entry.fillingAreaSqMtr,
+              entry.fillingPrevArea,
+              entry.fillingAvgSqrMtr,
+              entry.fillingVolumeCubicMtr,
+            ]
+          : []),
       ]);
 
       dataRow.eachCell((cell) => {
@@ -594,11 +671,13 @@ const VolumeReport = () => {
       "Total",
       "",
       "",
-      Number(tableData?.totalCuttingVolume)?.toFixed(3),
-      "",
-      "",
-      "",
-      Number(tableData?.totalFillingVolume)?.toFixed(3),
+
+      ...(showArea?.cutting
+        ? [Number(tableData?.totalCuttingVolume)?.toFixed(3)]
+        : []),
+      ...(showArea?.filling
+        ? ["", "", "", Number(tableData?.totalFillingVolume)?.toFixed(3)]
+        : []),
     ]);
     totalRow.eachCell((cell) => {
       cell.font = { bold: true };
@@ -625,6 +704,322 @@ const VolumeReport = () => {
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), "Volume_Report.xlsx");
   };
+
+  const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  const createSheet = async (accessToken) => {
+    const tableData = tableDataRef.current;
+    if (!tableData || !tableData.rows?.length) return;
+
+    const showCutting = Number(tableData.totalCuttingVolume) > 0;
+    const showFilling = Number(tableData.totalFillingVolume) > 0;
+
+    // 1️⃣ Create Spreadsheet
+    const createRes = await fetch(
+      "https://sheets.googleapis.com/v4/spreadsheets",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          properties: { title: "Volume Report" },
+        }),
+      },
+    );
+
+    const sheet = await createRes.json();
+    const spreadsheetId = sheet.spreadsheetId;
+    const sheetId = sheet.sheets[0].properties.sheetId;
+
+    // ===============================
+    // 2️⃣ BUILD DATA
+    // ===============================
+
+    const values = [];
+
+    // ===== Title =====
+    values.push(["Volume Report"]);
+
+    // ===== Header Row 1 =====
+    values.push([
+      "Sl.No.",
+      "Section From",
+      "Previous Section",
+      "Difference",
+      "Width",
+      ...(showCutting ? ["Cutting Volume", "", "", ""] : []),
+      ...(showFilling ? ["Filling Volume", "", "", ""] : []),
+    ]);
+
+    // ===== Header Row 2 =====
+    values.push([
+      "",
+      "",
+      "",
+      "",
+      "",
+      ...(showCutting
+        ? [
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
+        : []),
+      ...(showFilling
+        ? [
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
+        : []),
+    ]);
+
+    // ===== Data Rows =====
+    tableData.rows.forEach((row, idx) => {
+      // Deduction row
+      if (row.isDeductionRow) {
+        values.push([row.deductionMessage]);
+        return;
+      }
+
+      values.push([
+        idx + 1,
+        row.section,
+        row.prevSection,
+        row.difference,
+        row.width,
+        ...(showCutting
+          ? [
+              row.cuttingAreaSqMtr,
+              row.cuttingPrevArea,
+              row.cuttingAvgSqrMtr,
+              row.cuttingVolumeCubicMtr,
+            ]
+          : []),
+        ...(showFilling
+          ? [
+              row.fillingAreaSqMtr,
+              row.fillingPrevArea,
+              row.fillingAvgSqrMtr,
+              row.fillingVolumeCubicMtr,
+            ]
+          : []),
+      ]);
+    });
+
+    // ===== Totals Row =====
+    values.push([
+      "",
+      "",
+      "",
+      "",
+      "",
+      ...(showCutting
+        ? ["", "", "", Number(tableData.totalCuttingVolume).toFixed(3)]
+        : []),
+      ...(showFilling
+        ? ["", "", "", Number(tableData.totalFillingVolume).toFixed(3)]
+        : []),
+    ]);
+
+    const totalColumns = 5 + (showCutting ? 4 : 0) + (showFilling ? 4 : 0);
+
+    const totalRows = values.length;
+
+    // ===============================
+    // 3️⃣ INSERT VALUES
+    // ===============================
+
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A1?valueInputOption=USER_ENTERED`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ values }),
+      },
+    );
+
+    // ===============================
+    // 4️⃣ FORMATTING
+    // ===============================
+
+    const requests = [];
+
+    // ===== Merge Title =====
+    requests.push({
+      mergeCells: {
+        range: {
+          sheetId,
+          startRowIndex: 0,
+          endRowIndex: 1,
+          startColumnIndex: 0,
+          endColumnIndex: totalColumns,
+        },
+        mergeType: "MERGE_ALL",
+      },
+    });
+
+    // ===== Merge Cutting Header =====
+    if (showCutting) {
+      requests.push({
+        mergeCells: {
+          range: {
+            sheetId,
+            startRowIndex: 1,
+            endRowIndex: 2,
+            startColumnIndex: 5,
+            endColumnIndex: 9,
+          },
+          mergeType: "MERGE_ALL",
+        },
+      });
+    }
+
+    // ===== Merge Filling Header =====
+    if (showFilling) {
+      const start = showCutting ? 9 : 5;
+      requests.push({
+        mergeCells: {
+          range: {
+            sheetId,
+            startRowIndex: 1,
+            endRowIndex: 2,
+            startColumnIndex: start,
+            endColumnIndex: start + 4,
+          },
+          mergeType: "MERGE_ALL",
+        },
+      });
+    }
+
+    // ===== Title Style =====
+    requests.push({
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 0,
+          endRowIndex: 1,
+        },
+        cell: {
+          userEnteredFormat: {
+            horizontalAlignment: "CENTER",
+            textFormat: { bold: true, fontSize: 16 },
+          },
+        },
+        fields: "userEnteredFormat(horizontalAlignment,textFormat)",
+      },
+    });
+
+    // ===== Header Style =====
+    requests.push({
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 1,
+          endRowIndex: 3,
+        },
+        cell: {
+          userEnteredFormat: {
+            horizontalAlignment: "CENTER",
+            verticalAlignment: "MIDDLE",
+            textFormat: { bold: true },
+          },
+        },
+        fields:
+          "userEnteredFormat(horizontalAlignment,verticalAlignment,textFormat)",
+      },
+    });
+
+    // ===== Borders =====
+    requests.push({
+      updateBorders: {
+        range: {
+          sheetId,
+          startRowIndex: 1,
+          endRowIndex: totalRows,
+          startColumnIndex: 0,
+          endColumnIndex: totalColumns,
+        },
+        top: { style: "SOLID" },
+        bottom: { style: "SOLID" },
+        left: { style: "SOLID" },
+        right: { style: "SOLID" },
+        innerHorizontal: { style: "SOLID" },
+        innerVertical: { style: "SOLID" },
+      },
+    });
+
+    // ===== Column Width =====
+    requests.push({
+      updateDimensionProperties: {
+        range: {
+          sheetId,
+          dimension: "COLUMNS",
+          startIndex: 0,
+          endIndex: totalColumns,
+        },
+        properties: { pixelSize: 120 },
+        fields: "pixelSize",
+      },
+    });
+
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ requests }),
+      },
+    );
+
+    window.open(
+      `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+      "_blank",
+    );
+  };
+
+  useEffect(() => {
+    const initClient = async () => {
+      await new Promise((resolve) => {
+        window.gapi.load("client", resolve);
+      });
+
+      await window.gapi.client.init({
+        discoveryDocs: [
+          "https://sheets.googleapis.com/$discovery/rest?version=v4",
+        ],
+      });
+
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: "https://www.googleapis.com/auth/spreadsheets",
+        callback: async (tokenResponse) => {
+          if (!tokenResponse.access_token) {
+            console.error("No access token received");
+            return;
+          }
+
+          await createSheet(tokenResponse.access_token);
+        },
+      });
+    };
+
+    initClient();
+  }, []);
+
+  useEffect(() => {
+    tableDataRef.current = tableData;
+  }, [tableData]);
 
   useEffect(() => {
     fetchSurvey();
@@ -705,27 +1100,45 @@ const VolumeReport = () => {
               <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
                 Width
               </TableCell>
-              <TableCell sx={{ fontWeight: 700 }} colSpan={4} align="center">
-                Cutting Volume
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700 }} colSpan={4} align="center">
-                Filling Volume
-              </TableCell>
+
+              {showArea?.cutting && (
+                <TableCell sx={{ fontWeight: 700 }} colSpan={4} align="center">
+                  Cutting Volume
+                </TableCell>
+              )}
+
+              {showArea?.filling && (
+                <TableCell sx={{ fontWeight: 700 }} colSpan={4} align="center">
+                  Filling Volume
+                </TableCell>
+              )}
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Previous Area</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Average Sq. Mtrs</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>
-                Volume Cubic Meters
-              </TableCell>
+              {showArea?.cutting && (
+                <>
+                  <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Previous Area</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Average Sq. Mtrs
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Volume Cubic Meters
+                  </TableCell>
+                </>
+              )}
 
-              <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Previous Area</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Average Sq. Mtrs</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>
-                Volume Cubic Meters
-              </TableCell>
+              {showArea?.filling && (
+                <>
+                  <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Previous Area</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Average Sq. Mtrs
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Volume Cubic Meters
+                  </TableCell>
+                </>
+              )}
             </TableRow>
           </TableHead>
 
@@ -744,14 +1157,22 @@ const VolumeReport = () => {
                   <TableCell>{row.prevSection}</TableCell>
                   <TableCell>{row.difference}</TableCell>
                   <TableCell>{row.width}</TableCell>
-                  <TableCell>{row.cuttingAreaSqMtr}</TableCell>
-                  <TableCell>{row.cuttingPrevArea}</TableCell>
-                  <TableCell>{row.cuttingAvgSqrMtr}</TableCell>
-                  <TableCell>{row.cuttingVolumeCubicMtr}</TableCell>
-                  <TableCell>{row.fillingAreaSqMtr}</TableCell>
-                  <TableCell>{row.fillingPrevArea}</TableCell>
-                  <TableCell>{row.fillingAvgSqrMtr}</TableCell>
-                  <TableCell>{row.fillingVolumeCubicMtr}</TableCell>
+                  {showArea?.cutting && (
+                    <>
+                      <TableCell>{row.cuttingAreaSqMtr}</TableCell>
+                      <TableCell>{row.cuttingPrevArea}</TableCell>
+                      <TableCell>{row.cuttingAvgSqrMtr}</TableCell>
+                      <TableCell>{row.cuttingVolumeCubicMtr}</TableCell>
+                    </>
+                  )}
+                  {showArea?.filling && (
+                    <>
+                      <TableCell>{row.fillingAreaSqMtr}</TableCell>
+                      <TableCell>{row.fillingPrevArea}</TableCell>
+                      <TableCell>{row.fillingAvgSqrMtr}</TableCell>
+                      <TableCell>{row.fillingVolumeCubicMtr}</TableCell>
+                    </>
+                  )}
                 </TableRow>
               </React.Fragment>
             ))}
@@ -763,14 +1184,20 @@ const VolumeReport = () => {
                 Total
               </TableCell>
 
-              <TableCell sx={{ fontWeight: "bold" }}>
-                {Number(tableData?.totalCuttingVolume)?.toFixed(3)}
-              </TableCell>
-              <TableCell colSpan={3}></TableCell>
+              {showArea?.cutting && (
+                <TableCell sx={{ fontWeight: "bold" }}>
+                  {Number(tableData?.totalCuttingVolume)?.toFixed(3)}
+                </TableCell>
+              )}
 
-              <TableCell sx={{ fontWeight: "bold" }}>
-                {Number(tableData?.totalFillingVolume)?.toFixed(3)}
-              </TableCell>
+              {showArea?.filling && (
+                <>
+                  <TableCell colSpan={3}></TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {Number(tableData?.totalFillingVolume)?.toFixed(3)}
+                  </TableCell>
+                </>
+              )}
             </TableRow>
           </TableBody>
         </Table>

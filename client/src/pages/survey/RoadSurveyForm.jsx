@@ -22,6 +22,7 @@ import AlertDialogSlide from "../../components/AlertDialogSlide";
 import { IoIosArrowForward } from "react-icons/io";
 import AdvancedAutoComplete from "../../components/AdvancedAutoComplete";
 import SmallHeader from "../../components/SmallHeader";
+import { FaCalendarAlt } from "react-icons/fa";
 
 const alertData = {
   title: "Generate Proposal",
@@ -204,6 +205,17 @@ const inputDetails = [
     hidden: true,
     for: "Proposed Level",
   },
+  {
+    label: "Formula*",
+    name: "formula",
+    mode: "select",
+    options: [
+      { label: "Default", value: "Default" },
+      { label: "Interpolation", value: "Interpolation" },
+    ],
+    hidden: true,
+    for: "Proposed Level",
+  },
   // {
   //   label: '',
   //   name: 'lSection',
@@ -284,6 +296,8 @@ const initialFormValues = {
   csSlop: "",
   csCamper: "",
   separator: "",
+  scheduledDate: "",
+  formula: "Default",
 };
 
 const RoadSurveyForm = () => {
@@ -314,6 +328,8 @@ const RoadSurveyForm = () => {
   const [formErrors, setFormErrors] = useState(null);
 
   const [open, setOpen] = useState(false);
+
+  const [scheduleProjectOpen, setScheduleProjectOpen] = useState(false);
 
   const [btnLoading, setBtnLoading] = useState(false);
 
@@ -378,6 +394,11 @@ const RoadSurveyForm = () => {
     length:
       type && entryType === "autoGenerate"
         ? Yup.string().required("Length is required")
+        : Yup.string().nullable(),
+
+    formula:
+      type && entryType === "autoGenerate"
+        ? Yup.string().required("Formula is required")
         : Yup.string().nullable(),
 
     proposedLevel:
@@ -445,6 +466,7 @@ const RoadSurveyForm = () => {
       type && crossSection === "camper"
         ? Yup.string().required("Cross section camper is required")
         : Yup.string().nullable(),
+    scheduledDate: Yup.string().nullable(),
   });
 
   const handleGoBack = () => navigate(-1);
@@ -484,6 +506,7 @@ const RoadSurveyForm = () => {
 
       if (data.success) {
         const purposeId = data?.survey?.purposeId;
+        const surveyStatus = data?.survey?.status;
 
         // const message =
         //   id && entryType === 'autoGenerate'
@@ -491,9 +514,11 @@ const RoadSurveyForm = () => {
         //     : 'Form Submitted Successfully';
 
         const link =
-          id && entryType === "autoGenerate"
-            ? `/survey/${id}/report`
-            : `/survey/road-survey/${purposeId}/rows`;
+          surveyStatus === "Scheduled"
+            ? "/survey"
+            : id && entryType === "autoGenerate"
+              ? `/survey/${id}/report`
+              : `/survey/road-survey/${purposeId}/rows`;
 
         // dispatch(
         //   showAlert({
@@ -504,7 +529,9 @@ const RoadSurveyForm = () => {
 
         dispatch(startLoading());
 
-        navigate(link);
+        navigate(link, {
+          state: surveyStatus === "Scheduled" ? { tab: "todo" } : null,
+        });
       } else {
         throw new Error("Something went wrong.");
       }
@@ -610,7 +637,11 @@ const RoadSurveyForm = () => {
               return { ...e, hidden: entryType === "manualEntry" };
             }
 
-            if (e.name === "length" || e.name === "width") {
+            if (
+              e.name === "length" ||
+              e.name === "width" ||
+              e.name === "formula"
+            ) {
               return { ...e, hidden: entryType === "manualEntry" };
             }
 
@@ -656,6 +687,49 @@ const RoadSurveyForm = () => {
     setOpen(false);
   };
 
+  const handleScheduleProjectClose = () => {
+    setScheduleProjectOpen(false);
+  };
+
+  const handleScheduleProjectSubmit = () => {
+    const inpSchedule = document.getElementById("scheduledDate").value;
+    if (!inpSchedule) {
+      setFormErrors((prev) => ({
+        ...prev,
+        scheduledDate: "Scheduled date is required",
+      }));
+      return;
+    } else {
+      setFormErrors((prev) => ({
+        ...prev,
+        scheduledDate: "",
+      }));
+    }
+
+    handleSubmit();
+    setScheduleProjectOpen(false);
+  };
+
+  const scheduleProjectAlertData = {
+    title: "Schedule Project",
+    description: "",
+    content: (
+      <Box mt={2}>
+        <BasicInput
+          id="scheduledDate"
+          type="date"
+          name="scheduledDate"
+          sx={{ width: "100%" }}
+          value={formValues?.scheduledDate}
+          error={(formErrors && formErrors.scheduledDate) || ""}
+          onChange={(e) => handleInputChange(e)}
+        />
+      </Box>
+    ),
+    cancelButtonText: "Cancel",
+    submitButtonText: "Continue",
+  };
+
   useEffect(() => {
     if (didMount.current) {
       const completedLevels = survey?.purposes?.map((p) => p.type) || [];
@@ -692,6 +766,14 @@ const RoadSurveyForm = () => {
           open={open}
           onCancel={handleClose}
           onSubmit={handleSubmit}
+        />
+
+        <AlertDialogSlide
+          {...scheduleProjectAlertData}
+          description={`Are you sure you want to schedule the ${formValues?.project || "Project"} `}
+          open={scheduleProjectOpen}
+          onCancel={handleScheduleProjectClose}
+          onSubmit={handleScheduleProjectSubmit}
         />
 
         <Box
@@ -842,7 +924,24 @@ const RoadSurveyForm = () => {
             </Grid>
           </Stack>
 
-          <Box width={"100%"}>
+          <Stack width={"100%"} gap={2} direction={{ md: "row" }}>
+            {!id && (
+              <BasicButtons
+                value={
+                  <Box display={"flex"} gap={1} alignItems={"center"}>
+                    <Typography fontSize={"16px"} fontWeight={600}>
+                      Schedule
+                    </Typography>
+                    <FaCalendarAlt fontSize={"20px"} />
+                  </Box>
+                }
+                sx={{ backgroundColor: "#ff9800", height: "45px" }}
+                fullWidth={true}
+                onClick={() => setScheduleProjectOpen(true)}
+                loading={btnLoading}
+              />
+            )}
+
             <BasicButtons
               value={
                 <Box display={"flex"} gap={1} alignItems={"center"}>
@@ -857,7 +956,7 @@ const RoadSurveyForm = () => {
               onClick={preSubmitCheck}
               loading={btnLoading}
             />
-          </Box>
+          </Stack>
         </Stack>
       </Box>
     </>

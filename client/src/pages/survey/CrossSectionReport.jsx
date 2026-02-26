@@ -28,8 +28,9 @@ import BasicInput from "../../components/BasicInput";
 import BasicButton from "../../components/BasicButton";
 import { MdDownload } from "react-icons/md";
 import { showAlert } from "../../redux/alertSlice";
-import Drawing from "dxf-writer";
+import { DxfWriter, point2d } from "@tarikjabiri/dxf";
 import { saveAs } from "file-saver";
+import ExportLoader from "../../components/ExportLoader";
 
 const LEVEL_ORDER = [
   "Initial Level",
@@ -135,6 +136,8 @@ const CrossSectionReport = () => {
   const downloadAllAsPDF = async () => {
     if (!allCsRef.current) return;
 
+    setLoading(true);
+
     const pdf = new jsPDF("p", "mm", "a4");
     const margin = 10;
     const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
@@ -170,6 +173,8 @@ const CrossSectionReport = () => {
     }
 
     pdf.save("cross-section.pdf");
+
+    setLoading(false);
   };
 
   const downloadPDF = async () => {
@@ -212,80 +217,45 @@ const CrossSectionReport = () => {
   };
 
   const exportToDWG = () => {
-    const d = new Drawing();
+    if (!selectedCs?.series?.length) return;
 
-    // Define some basic styles (layers)
-    d.addLayer("Text", Drawing.ACI.WHITE, "CONTINUOUS");
-    d.addLayer("Lines", Drawing.ACI.CYAN, "CONTINUOUS");
+    const dxf = new DxfWriter();
+    const scale = 1000; // Adjust based on your units (e.g., meters to mm)
 
-    let currentY = 0;
-    const rowHeight = 10;
-    const colWidths = [15, 40, 40, 30, 30]; // Adjust based on your needs
-    const startX = 0;
+    // 1. Calculate global offsets so the drawing starts near 0,0 in CAD
+    const allX = selectedCs.series.flatMap(
+      (s) => s.data?.map((p) => p.x) || [],
+    );
+    const allY = selectedCs.series.flatMap(
+      (s) => s.data?.map((p) => p.y) || [],
+    );
+    const minX = Math.min(...allX);
+    const minY = Math.min(...allY);
 
-    // --- Draw Title ---
-    d.drawText(startX, currentY, 8, 0, "VOLUME REPORT", { layer: "Text" });
-    currentY -= 20;
+    selectedCs.series.forEach((series, index) => {
+      // 2. Plotly data often separates X and Y, but your series.data seems
+      // to be an array of objects {x, y} based on your previous snippet.
+      if (!series.data || series.data.length < 2) return;
 
-    // --- Draw Table Header ---
-    const headers = [
-      "Sl.No.",
-      "Section",
-      "Prev Section",
-      "Cutting Vol",
-      "Filling Vol",
-    ];
-    let currentX = startX;
+      // Create a layer for each series using its name or index
+      const layerName = series.name?.replace(/\s+/g, "_") || `Series_${index}`;
+      dxf.addLayer(layerName, (index % 7) + 1); // Cycle through standard CAD colors
 
-    headers.forEach((header, i) => {
-      d.drawText(currentX + 2, currentY - 7, 4, 0, header, { layer: "Text" });
-      currentX += colWidths[i];
+      // 3. Map points to DXF vertex format
+      const cadPoints = series.data
+        .filter((p) => typeof p.x === "number" && typeof p.y === "number")
+        .map((p) => point2d((p.x - minX) * scale, (p.y - minY) * scale));
+
+      // 4. Add to DXF
+      if (cadPoints.length >= 2) {
+        dxf.addLWPolyline(cadPoints, { layerName });
+      }
     });
 
-    // Draw header bottom line
-    d.drawLine(startX, currentY - rowHeight, currentX, currentY - rowHeight, {
-      layer: "Lines",
-    });
-    currentY -= rowHeight;
-
-    // --- Draw Data Rows ---
-    tableData?.rows?.forEach((entry, idx) => {
-      currentX = startX;
-
-      // Draw Row Text
-      d.drawText(currentX + 2, currentY - 7, 3, 0, (idx + 1).toString());
-      d.drawText(
-        currentX + colWidths[0] + 2,
-        currentY - 7,
-        3,
-        0,
-        entry.section.toString(),
-      );
-      d.drawText(
-        currentX + colWidths[0] + colWidths[1] + 2,
-        currentY - 7,
-        3,
-        0,
-        entry.prevSection.toString(),
-      );
-      // ... add more columns as needed
-
-      // Draw horizontal line for this row
-      d.drawLine(
-        startX,
-        currentY - rowHeight,
-        currentX + 155,
-        currentY - rowHeight,
-        { layer: "Lines" },
-      );
-
-      currentY -= rowHeight;
-    });
-
-    // --- Finalize and Download ---
-    const dxfString = d.toDxfString();
-    const blob = new Blob([dxfString], { type: "application/dxf" });
-    saveAs(blob, "Volume_Report.dxf");
+    // 5. Generate and Download
+    const dxfString = dxf.stringify();
+    const blob = new Blob([dxfString], { type: "image/vnd.dxf" });
+    saveAs(blob, "plot-export.dxf");
   };
 
   const buildCsData = (row) => {
@@ -374,8 +344,6 @@ const CrossSectionReport = () => {
   };
 
   const handleDownloadAllChainage = async () => {
-    setLoading(true);
-
     try {
       const initialEntry = tableData[0];
       if (!initialEntry?.rows?.length) return;
@@ -388,8 +356,6 @@ const CrossSectionReport = () => {
       setAllCs(allFormattedData);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -808,6 +774,8 @@ const CrossSectionReport = () => {
 
   return (
     <Box p={2}>
+      <ExportLoader open={loading} />
+
       <Stack
         direction={"row"}
         justifyContent={"space-between"}

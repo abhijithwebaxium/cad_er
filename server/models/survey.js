@@ -15,7 +15,7 @@ const SurveySchema = new Schema(
     client: { type: String, trim: true },
     status: {
       type: String,
-      enum: ["Active", "Completed", "Deleted"],
+      enum: ["Scheduled", "Active", "Completed", "Deleted"],
       required: true,
       default: "Active",
     },
@@ -38,6 +38,9 @@ const SurveySchema = new Schema(
     DateOfSurvey: { type: Date, default: Date.now },
     surveyFinishDate: Date,
     deleted: { type: Boolean, default: false, index: true },
+    deletedAt: Date,
+    deletedBy: { type: Types.ObjectId, ref: "User" },
+    scheduledDate: Date,
   },
   { timestamps: true },
 );

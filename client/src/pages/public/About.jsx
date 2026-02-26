@@ -10,7 +10,6 @@ import {
   Grid,
 } from "@mui/material";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import BackgroundImage from "../../assets/back-ground-img.png";
 import ScrollToTop from "../../components/ScrollToTop";
 
 const CustomIcons = {
@@ -335,6 +334,7 @@ const About = () => {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: "-50px" }}
                       transition={{ delay: i * 0.1 }}
+                      style={{ height: "100%" }}
                     >
                       <Paper
                         elevation={0}

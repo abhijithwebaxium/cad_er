@@ -6,10 +6,13 @@ import {
   Grid,
   Divider,
   IconButton,
+  Collapse,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { Link as RouterLink } from "react-router-dom";
 import { styled } from "@mui/material/styles";
+import { useState } from "react";
+import { MdOutlineExpandLess, MdOutlineExpandMore } from "react-icons/md";
 
 const StyledLink = styled(RouterLink)(({ theme }) => ({
   fontSize: 13,
@@ -39,21 +42,6 @@ const StyledLink = styled(RouterLink)(({ theme }) => ({
 }));
 
 // --- Icons ---
-const CheckIcon = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="#6366f1"
-    strokeWidth="3"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
 const SocialIcons = {
   Twitter: () => (
     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
@@ -77,6 +65,15 @@ const SocialIcons = {
 };
 
 const LandingFooter = () => {
+  const [openSections, setOpenSections] = useState({});
+
+  const handleToggle = (key) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   return (
     <Box sx={{ bgcolor: "#f9fafb", py: 8, borderTop: "1px solid #f3f4f6" }}>
       <Container maxWidth="lg">
@@ -146,8 +143,35 @@ const LandingFooter = () => {
                   Product
                 </Typography>
                 <Stack spacing={1.5}>
-                  <StyledLink to="#">Features</StyledLink>
+                  <StyledLink to="#">What’s new</StyledLink>
                   <StyledLink to="/pricing">Pricing</StyledLink>
+                  <StyledLink to="#">Testimonials</StyledLink>
+                  <StyledLink to="#">Community</StyledLink>
+
+                  <StyledLink
+                    to="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleToggle("placements");
+                    }}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    <Stack direction={"row"} alignItems={"center"}>
+                      Placements{" "}
+                      {openSections.placements ? (
+                        <MdOutlineExpandLess fontSize={18} />
+                      ) : (
+                        <MdOutlineExpandMore fontSize={18} />
+                      )}
+                    </Stack>
+                  </StyledLink>
+
+                  <Collapse in={openSections.placements}>
+                    <Stack spacing={1.5} sx={{ pl: 2 }}>
+                      <StyledLink to="/placements">· Talents</StyledLink>
+                      <StyledLink to="#">· Recruiters</StyledLink>
+                    </Stack>
+                  </Collapse>
                 </Stack>
               </Grid>
 
@@ -163,6 +187,7 @@ const LandingFooter = () => {
                 <Stack spacing={1.5}>
                   <StyledLink to="#">Documentation</StyledLink>
                   <StyledLink to="#">Tutorials</StyledLink>
+                  <StyledLink to="#">Events</StyledLink>
                 </Stack>
               </Grid>
 
@@ -178,8 +203,40 @@ const LandingFooter = () => {
                 <Stack spacing={1.5}>
                   <StyledLink to="/about">About</StyledLink>
                   <StyledLink to="/careers">Careers</StyledLink>
-                  <StyledLink to="/placements">Placements</StyledLink>
-                  <StyledLink to="/our-team">Our Team</StyledLink>
+                  <StyledLink to="/impact">Impact</StyledLink>
+                  <StyledLink
+                    to="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleToggle("governance");
+                    }}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    <Stack direction={"row"} alignItems={"center"}>
+                      Governance{" "}
+                      {openSections.governance ? (
+                        <MdOutlineExpandLess fontSize={18} />
+                      ) : (
+                        <MdOutlineExpandMore fontSize={18} />
+                      )}
+                    </Stack>
+                  </StyledLink>
+
+                  <Collapse in={openSections.governance}>
+                    <Stack spacing={1.5} sx={{ pl: 2 }}>
+                      <StyledLink to="#">· Founder</StyledLink>
+                      <StyledLink to="#">· Business Architect</StyledLink>
+                      <StyledLink to="#">
+                        · Software Architect/ Developer
+                      </StyledLink>
+                      <StyledLink to="#">· Civil Survey Expert</StyledLink>
+                      <StyledLink to="#">· Sales & Partnership</StyledLink>
+                      <StyledLink to="#">
+                        · Technical support/ trainer
+                      </StyledLink>
+                      <StyledLink to="#">· UI/UX designer</StyledLink>
+                    </Stack>
+                  </Collapse>
                 </Stack>
               </Grid>
             </Grid>

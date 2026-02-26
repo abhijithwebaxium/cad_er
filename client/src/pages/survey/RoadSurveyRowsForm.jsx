@@ -45,11 +45,30 @@ import SmallHeader from "../../components/SmallHeader";
 import useHardBackLock from "../../hooks/useHardBackLock";
 import AddBranch from "./components/AddBranch";
 import EnterBranch from "./components/EnterBranch";
+import ObservationNotes from "./components/ObservationNotes";
 
 const colors = {
   Initial: "green",
   Proposed: "blue",
   Final: "red",
+};
+
+const addButtonSx = {
+  display: "flex",
+  alignItems: "center",
+  gap: 1,
+  px: 1.5,
+  py: 0.75,
+  borderRadius: 2,
+  bgcolor: "primary.50",
+  color: "primary.main",
+  cursor: "pointer",
+  fontSize: 14,
+  fontWeight: 600,
+  transition: "all 0.2s",
+  "&:hover": {
+    bgcolor: "primary.100",
+  },
 };
 
 const getColor = (type) => {
@@ -1532,14 +1551,27 @@ const RoadSurveyRowsForm = () => {
                     Default offset
                   </Typography>
                 </Stack> */}
-                  <Typography
-                    fontSize={"16px"}
-                    fontWeight={600}
-                    color="black"
-                    mb={1}
+
+                  <Stack
+                    direction={"row"}
+                    justifyContent={"space-between"}
+                    alignItems={"center"}
                   >
-                    Chainage: {formValues.chainage}
-                  </Typography>
+                    <Typography
+                      fontSize={"16px"}
+                      fontWeight={600}
+                      color="black"
+                      mb={1}
+                    >
+                      Chainage: {formValues.chainage}
+                    </Typography>
+
+                    <Box sx={addButtonSx} onClick={handleAddRow}>
+                      <IoAdd size={18} />
+                      Add Row
+                    </Box>
+                  </Stack>
+
                   <Stack spacing={2}>
                     {formValues.intermediateOffsets.map((row, idx) => (
                       <Stack key={idx} spacing={1}>
@@ -1634,13 +1666,6 @@ const RoadSurveyRowsForm = () => {
                                     />
                                   </Box>
                                 )}
-
-                                <Box
-                                  className="add-new-sight"
-                                  onClick={handleAddRow}
-                                >
-                                  <IoAdd fontSize={"24px"} color="#0059E7" />
-                                </Box>
                               </Stack>
                             ) : (
                               <Box
@@ -1676,6 +1701,11 @@ const RoadSurveyRowsForm = () => {
                       </Stack>
                     ))}
                   </Stack>
+                </Grid>
+              )}
+              {((page === 0 && rowType !== "Chainage") || page === 1) && (
+                <Grid width={"100%"}>
+                  <ObservationNotes />
                 </Grid>
               )}
             </Grid>

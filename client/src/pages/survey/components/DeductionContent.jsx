@@ -1,8 +1,9 @@
-import { Box, Stack, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, Stack, Typography, Divider } from "@mui/material";
+import { useEffect, useState, useMemo } from "react";
 import BasicSelect from "../../../components/BasicSelect";
 import { IoAdd } from "react-icons/io5";
 import { IoIosRemove } from "react-icons/io";
+import { IoTrashOutline } from "react-icons/io5";
 import BasicButton from "../../../components/BasicButton";
 import BasicInput from "../../../components/BasicInput";
 
@@ -32,36 +33,38 @@ const addButtonSx = {
 
 const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
   const [rows, setRows] = useState([initialRow]);
+  const [history, setHistory] = useState([]);
   const [selectableItems, setSelectableItems] = useState([]);
+
+  /* -------------------- Storage Key -------------------- */
+
+  const storageKey = useMemo(() => {
+    const projectId = purpose?.projectId || "default";
+    return `deduction_history_${projectId}`;
+  }, [purpose]);
 
   /* -------------------- Helpers -------------------- */
 
   const getIndex = (value) =>
     selectableItems.findIndex((i) => i.value === value);
 
-  // FROM options: allow previous `to`
   const getFromOptions = (rowIndex) => {
     if (rowIndex === 0) return selectableItems;
-
     const prevTo = rows[rowIndex - 1]?.to;
     if (!prevTo) return [];
-
     const prevToIndex = getIndex(prevTo);
     return selectableItems.slice(prevToIndex);
   };
 
-  // TO options: strictly after FROM
   const getToOptions = (rowIndex) => {
     const fromValue = rows[rowIndex]?.from;
     if (!fromValue) return [];
-
     const fromIndex = getIndex(fromValue);
     return selectableItems.slice(fromIndex + 1);
   };
 
   /* -------------------- Handlers -------------------- */
 
-  // 🔥 Cascading update — removes all rows after the changed row
   const handleInputChange = (index, field, value) => {
     setRows((prev) => {
       const updatedRow = {
@@ -70,7 +73,6 @@ const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
         ...(field === "from" ? { to: "" } : {}),
       };
 
-      // If TO is not selected yet, drop rows after
       if (!updatedRow.to) {
         return [...prev.slice(0, index), updatedRow];
       }
@@ -94,6 +96,7 @@ const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
         {
           from: lastRow.to || "",
           to: "",
+          remark: "",
         },
       ];
     });
@@ -101,14 +104,39 @@ const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
 
   const handleRemoveRow = (index) => {
     if (rows.length === 1) return;
-
     setRows((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleClickCancel = () => {
-    setRows([{ ...initialRow }]);
-    onCancel();
+  const handleRemoveHistory = (id) => {
+    const updated = history.filter((item) => item.id !== id);
+
+    setHistory(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
   };
+
+  /* -------------------- Generate & Save -------------------- */
+
+  const handleGenerate = () => {
+    if (!rows.length) return;
+
+    const newEntry = {
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      rows,
+    };
+
+    const updatedHistory = [newEntry, ...history];
+
+    setHistory(updatedHistory);
+    localStorage.setItem(storageKey, JSON.stringify(updatedHistory));
+
+    onSubmit(rows);
+  };
+
+  const handleSelectHistory = (entry) => {
+    onSubmit(entry.rows);
+  };
+
   /* -------------------- Effects -------------------- */
 
   useEffect(() => {
@@ -123,11 +151,22 @@ const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
     setSelectableItems(items);
   }, [purpose]);
 
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setHistory(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        setHistory([]);
+      }
+    }
+  }, [storageKey]);
+
   /* -------------------- Render -------------------- */
 
   return (
-    <Stack spacing={2}>
-      {/* Header */}
+    <Stack spacing={3}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography
           variant="h2"
@@ -144,9 +183,74 @@ const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
         </Box>
       </Stack>
 
-      {/* Rows */}
+      {/* ----------- History Section ----------- */}
+
+      {history.length > 0 && (
+        <>
+          <Typography fontWeight={500}>Previously Used</Typography>
+
+          <Stack spacing={1}>
+            {history.map((entry) => (
+              <Box
+                key={entry.id}
+                onClick={() => handleSelectHistory(entry)}
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: "grey.100",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  "&:hover": { bgcolor: "grey.200" },
+                }}
+              >
+                <Box>
+                  <Typography fontSize={13}>
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </Typography>
+
+                  <Typography fontSize={12} color="text.secondary">
+                    {entry.rows.map((r) => `${r.from} → ${r.to}`).join(", ")}
+                  </Typography>
+                </Box>
+
+                {/* DELETE ICON */}
+                <Box
+                  onClick={(e) => {
+                    e.stopPropagation(); // 🔥 prevents report generation
+                    handleRemoveHistory(entry.id);
+                  }}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 2,
+                    bgcolor: "error.50",
+                    color: "error.main",
+                    cursor: "pointer",
+                    "&:hover": {
+                      bgcolor: "error.100",
+                      transform: "scale(1.1)",
+                    },
+                  }}
+                >
+                  <IoTrashOutline size={16} />
+                </Box>
+              </Box>
+            ))}
+          </Stack>
+
+          <Divider />
+        </>
+      )}
+
+      {/* ----------- New Deduction Builder ----------- */}
+
       {rows.map((row, idx) => (
-        <Stack direction="row" alignItems="end" spacing={2} key={idx}>
+        <Stack direction="row" spacing={2} alignItems="end" key={idx}>
           <BasicSelect
             label="From"
             value={row.from}
@@ -166,49 +270,17 @@ const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
             label="Remark"
             value={row.remark}
             onChange={(e) => handleInputChange(idx, "remark", e.target.value)}
-            disabled={!row.from}
           />
 
-          <Box
-            onClick={() => handleRemoveRow(idx)}
-            sx={{
-              width: 36,
-              height: 36,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 2,
-              bgcolor: "error.50",
-              color: "error.main",
-              cursor: rows.length === 1 ? "not-allowed" : "pointer",
-              opacity: rows.length === 1 ? 0.4 : 1,
-              transition: "all 0.15s",
-              "&:hover":
-                rows.length === 1
-                  ? {}
-                  : {
-                      bgcolor: "error.100",
-                      transform: "scale(1.05)",
-                    },
-            }}
-          >
-            <IoIosRemove size={18} />
+          <Box onClick={() => handleRemoveRow(idx)}>
+            <IoIosRemove />
           </Box>
         </Stack>
       ))}
 
-      {/* Footer */}
       <Stack direction="row" justifyContent="end">
-        <BasicButton
-          value="Cancel"
-          variant="text"
-          onClick={handleClickCancel}
-        />
-        <BasicButton
-          value="Generate"
-          variant="text"
-          onClick={() => onSubmit(rows)}
-        />
+        <BasicButton value="Cancel" variant="text" onClick={onCancel} />
+        <BasicButton value="Generate" variant="text" onClick={handleGenerate} />
       </Stack>
     </Stack>
   );

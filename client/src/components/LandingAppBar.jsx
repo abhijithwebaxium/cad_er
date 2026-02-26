@@ -143,7 +143,11 @@ const LandingAppBar = () => {
                   onClick={() => navigate("/")}
                 >
                   {/* CAD<span style={{ color: "#6366f1" }}>er.</span> */}
-                  <img src={logo} alt="CADer" style={{ width: "150px", paddingTop:"10px" }}/>
+                  <img
+                    src={logo}
+                    alt="CADer"
+                    style={{ width: "125px", paddingTop: "10px" }}
+                  />
                 </Typography>
               </Stack>
 

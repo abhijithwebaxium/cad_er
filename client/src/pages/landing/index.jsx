@@ -12,6 +12,9 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
+  Card,
+  CardContent,
+  Chip,
 } from "@mui/material";
 
 import Lenis from "@studio-freight/lenis";
@@ -32,6 +35,100 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 const MotionButton = motion.create(Button);
 const MotionStack = motion.create(Stack);
+
+// Inline SVG Icons for better compatibility
+const Icons = {
+  Profile: () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  Portfolio: () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  ),
+  Update: () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M23 4v6h-6" />
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+    </svg>
+  ),
+  Career: () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  ),
+  Globe: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  ),
+  Arrow: () => (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  ),
+};
 
 // --- Theme Configuration ---
 const theme = createTheme({
@@ -93,6 +190,84 @@ const PulseDot = () => (
       ease: "easeInOut",
     }}
   />
+);
+
+const FeatureCard = ({ icon: Icon, title, description, badge }) => (
+  <Card
+    sx={{
+      height: "100%",
+      borderRadius: 6,
+      border: "1px solid rgba(99, 102, 241, 0.1)",
+      bgcolor: "rgba(255, 255, 255, 0.7)",
+      backdropFilter: "blur(10px)",
+      boxShadow: "0 4px 20px -10px rgba(0,0,0,0.08)",
+      transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+      overflow: "visible",
+      position: "relative",
+      "&:hover": {
+        transform: "translateY(-8px) scale(1.02)",
+        boxShadow: "0 25px 50px -12px rgba(99, 102, 241, 0.15)",
+        borderColor: "#6366f1",
+        "& .icon-box": {
+          bgcolor: "#6366f1",
+          color: "#fff",
+        },
+      },
+    }}
+  >
+    <CardContent sx={{ p: 4 }}>
+      {badge && (
+        <Chip
+          label={badge}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: -12,
+            right: 20,
+            bgcolor: "#6366f1",
+            color: "white",
+            fontWeight: 700,
+            fontSize: "0.7rem",
+          }}
+        />
+      )}
+      <Box
+        className="icon-box"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 52,
+          height: 52,
+          borderRadius: "16px",
+          bgcolor: "rgba(99, 102, 241, 0.1)",
+          color: "#6366f1",
+          mb: 2.5,
+          transition: "all 0.3s ease",
+        }}
+      >
+        <Icon />
+      </Box>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 800,
+          mb: 1,
+          fontSize: "1.15rem",
+          letterSpacing: -0.5,
+        }}
+      >
+        {title}
+      </Typography>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ lineHeight: 1.7, fontSize: "0.95rem" }}
+      >
+        {description}
+      </Typography>
+    </CardContent>
+  </Card>
 );
 
 const containerStagger = {
@@ -826,18 +1001,27 @@ const Landing = () => {
               >
                 <Stack spacing={4}>
                   <Box>
-                    <Typography
+                    <Box
                       sx={{
-                        color: "#6366f1",
-                        fontWeight: 700,
-                        letterSpacing: 2,
-                        fontSize: "0.85rem",
-                        mb: 1,
-                        textTransform: "uppercase",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        mb: 2,
                       }}
                     >
-                      Efficiency Reimagined
-                    </Typography>
+                      <Box sx={{ width: 40, height: 2, bgcolor: "#6366f1" }} />
+                      <Typography
+                        sx={{
+                          color: "#6366f1",
+                          fontWeight: 800,
+                          letterSpacing: 1.5,
+                          fontSize: "0.75rem",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Efficiency Reimagined
+                      </Typography>
+                    </Box>
                     <Typography
                       variant="h2"
                       sx={{
@@ -1037,18 +1221,29 @@ const Landing = () => {
                   >
                     <Stack spacing={4}>
                       <Box>
-                        <Typography
+                        <Box
                           sx={{
-                            color: "#6366f1",
-                            fontWeight: 700,
-                            letterSpacing: 2,
-                            fontSize: "0.85rem",
-                            mb: 1.5,
-                            textTransform: "uppercase",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            mb: 2,
                           }}
                         >
-                          Education Partnership
-                        </Typography>
+                          <Box
+                            sx={{ width: 40, height: 2, bgcolor: "#6366f1" }}
+                          />
+                          <Typography
+                            sx={{
+                              color: "#6366f1",
+                              fontWeight: 800,
+                              letterSpacing: 1.5,
+                              fontSize: "0.75rem",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Education Partnership
+                          </Typography>
+                        </Box>
                         <Typography
                           variant="h2"
                           sx={{
@@ -1227,6 +1422,234 @@ const Landing = () => {
                         </Grid>
                       </Grid>
                     </motion.div>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Container>
+          </Box>
+
+          <Box
+            sx={{
+              bgcolor: "#fcfdff",
+              py: { xs: 10, md: 15 },
+              overflow: "hidden",
+            }}
+          >
+            <Container maxWidth="lg">
+              <Grid container spacing={{ xs: 8, lg: 12 }} alignItems="center">
+                {/* CONTENT AREA */}
+                <Grid size={{ xs: 12, md: 5 }}>
+                  <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.5 }}
+                    transition={{ duration: 0.9 }}
+                  >
+                    <Stack spacing={5}>
+                      <Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            mb: 2,
+                          }}
+                        >
+                          <Box
+                            sx={{ width: 40, height: 2, bgcolor: "#6366f1" }}
+                          />
+                          <Typography
+                            sx={{
+                              color: "#6366f1",
+                              fontWeight: 800,
+                              letterSpacing: 1.5,
+                              fontSize: "0.75rem",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Career Advantage
+                          </Typography>
+                        </Box>
+
+                        <Typography
+                          variant="h2"
+                          sx={{
+                            fontSize: { xs: "2.5rem", md: "3.5rem" },
+                            fontWeight: 900,
+                            lineHeight: 1,
+                            mb: 3,
+                            color: "#1a1a1a",
+                            letterSpacing: -1,
+                          }}
+                        >
+                          Your Professional <br />
+                          <Box component="span" sx={{ color: "#6366f1" }}>
+                            Identity, Reimagined.
+                          </Box>
+                        </Typography>
+
+                        <Typography
+                          sx={{
+                            fontSize: "1.15rem",
+                            lineHeight: 1.8,
+                            color: "#555",
+                            maxWidth: 480,
+                          }}
+                        >
+                          Stop settling for static PDFs. Build a living,
+                          breathing portfolio that talks to recruiters even when
+                          you're not in the room.
+                        </Typography>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          p: 3,
+                          borderRadius: 4,
+                          bgcolor: "rgba(99, 102, 241, 0.03)",
+                          borderLeft: "4px solid #6366f1",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 800, mb: 0.5 }}
+                        >
+                          20–30% Faster Hiring
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Partner companies browse active student profiles and
+                          trigger direct interview invites through our
+                          integrated pipeline.
+                        </Typography>
+                      </Box>
+
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={2}
+                      >
+                        <Button
+                          component={motion.button}
+                          variant="contained"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          sx={{
+                            py: 2,
+                            px: 5,
+                            bgcolor: "#6366f1",
+                            borderRadius: "12px",
+                            fontWeight: 800,
+                            textTransform: "none",
+                            fontSize: "1rem",
+                            boxShadow:
+                              "0 15px 30px -10px rgba(99, 102, 241, 0.4)",
+                            "&:hover": { bgcolor: "#4f46e5" },
+                          }}
+                          onClick={() => navigate("/get-started")}
+                        >
+                          Claim Your Profile
+                        </Button>
+
+                        <Button
+                          variant="text"
+                          sx={{
+                            color: "#1a1a1a",
+                            fontWeight: 800,
+                            textTransform: "none",
+                            fontSize: "1rem",
+                            display: "flex",
+                            gap: 1,
+                            "&:hover": {
+                              color: "#6366f1",
+                              bgcolor: "transparent",
+                            },
+                          }}
+                        >
+                          See Example <Icons.Arrow />
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  </motion.div>
+                </Grid>
+
+                {/* VISUAL FEATURE GRID */}
+                <Grid size={{ xs: 12, md: 7 }}>
+                  <Box sx={{ position: "relative" }}>
+                    {/* Abstract decorative shape */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: -50,
+                        right: -50,
+                        width: 300,
+                        height: 300,
+                        borderRadius: "50%",
+                        background:
+                          "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(255, 255, 255, 0) 70%)",
+                        zIndex: 0,
+                      }}
+                    />
+
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Stack spacing={3}>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            viewport={{ once: true, amount: 0.5 }}
+                          >
+                            <FeatureCard
+                              icon={Icons.Profile}
+                              title="Dynamic Profile"
+                              description="A professional bio that updates in real-time with your latest certifications."
+                              badge="Popular"
+                            />
+                          </motion.div>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            viewport={{ once: true, amount: 0.5 }}
+                          >
+                            <FeatureCard
+                              icon={Icons.Portfolio}
+                              title="Project Vault"
+                              description="Upload CAD designs, fieldwork logs, and academic milestones in one hub."
+                            />
+                          </motion.div>
+                        </Stack>
+                      </Grid>
+
+                      <Grid size={{ xs: 12, sm: 6 }} sx={{ mt: { sm: 6 } }}>
+                        <Stack spacing={3}>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            viewport={{ once: true, amount: 0.5 }}
+                          >
+                            <FeatureCard
+                              icon={Icons.Globe}
+                              title="Two-Way Visibility"
+                              description="Explore company insights while recruiters discover your talent."
+                            />
+                          </motion.div>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            viewport={{ once: true, amount: 0.5 }}
+                          >
+                            <FeatureCard
+                              icon={Icons.Career}
+                              title="Earning Edge"
+                              description="Access part-time career-related gigs while you complete your degree."
+                              badge="+30% Reach"
+                            />
+                          </motion.div>
+                        </Stack>
+                      </Grid>
+                    </Grid>
                   </Box>
                 </Grid>
               </Grid>

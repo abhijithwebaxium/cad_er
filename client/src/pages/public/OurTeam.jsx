@@ -222,7 +222,11 @@ const OurTeam = () => {
           >
             {teamMembers.map((member, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-                <motion.div variants={cardVariants} whileHover={{ y: -10 }}>
+                <motion.div
+                  variants={cardVariants}
+                  whileHover={{ y: -10 }}
+                  style={{ height: "100%" }}
+                >
                   <Paper
                     elevation={0}
                     sx={{

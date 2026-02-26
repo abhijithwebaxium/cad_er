@@ -99,6 +99,7 @@ const createSurvey = async (req, res, next) => {
         section,
         consultant,
         client,
+        scheduledDate,
       },
     } = req;
 
@@ -160,6 +161,8 @@ const createSurvey = async (req, res, next) => {
           separator,
           reducedLevel: Number(reducedLevel).toFixed(3),
           agreementNo,
+          status: scheduledDate ? "Scheduled" : "Active",
+          scheduledDate: scheduledDate || null,
           contractor,
           ...(isPublicProject
             ? { department, division, subDivision, section }
@@ -295,7 +298,41 @@ const getSurvey = async (req, res, next) => {
 };
 
 const updateSurvey = () => {};
-const deleteSurvey = () => {};
+const deleteSurvey = async (req, res, next) => {
+  try {
+    const {
+      user: { userId },
+      params: { id },
+    } = req;
+
+    if (!isValidObjectId(id)) {
+      throw createHttpError(400, "Invalid survey ID");
+    }
+
+    const survey = await Survey.findOne({
+      _id: id,
+      deleted: false,
+      createdBy: userId,
+    });
+
+    if (!survey) {
+      throw createHttpError(404, "Survey not found or has been deleted");
+    }
+
+    survey.status = "Deleted";
+    survey.deleted = true;
+    survey.deletedAt = new Date();
+    survey.deletedBy = userId;
+    await survey.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Survey deleted successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 const createSurveyRow = async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -1292,6 +1329,7 @@ const generateSurveyPurpose = async (req, res, next) => {
         cSection,
         csSlop,
         csCamper,
+        formula,
       },
     } = req;
 
@@ -1426,19 +1464,105 @@ const generateSurveyPurpose = async (req, res, next) => {
       Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 0;
 
     const bulkOps = readingsToCreate.map((reading) => {
-      const totalReadingReducedLevel = reading.reducedLevels.reduce(
-        (acc, curr) => acc + Number(curr),
-        0,
-      );
+      const reducedLevels = [];
+      const offsets = [];
 
-      const avgReadingReducedLevel =
-        totalReadingReducedLevel / reading.reducedLevels.length;
+      if (formula === "Interpolation") {
+        function processReading(width, reading) {
+          // 🔥 Always treat width as distance
+          width = Math.abs(width);
 
-      const height = (limit * roadWidth) / safeQuantity;
+          const numericOffsets = reading.offsets
+            .map(Number)
+            .sort((a, b) => a - b);
+          const formattedWidth = width.toFixed(3);
+          const negativeWidth = (-width).toFixed(3);
 
-      const reducedLevels = reading.reducedLevels.map(() =>
-        Number(avgReadingReducedLevel + height).toFixed(3),
-      );
+          // Map offsets -> reducedLevels
+          const levelMap = {};
+          reading.offsets.forEach((o, idx) => {
+            levelMap[o] = reading.reducedLevels[idx];
+          });
+
+          // ---- Find inner levels (between -width and width)
+          const insideOffsets = numericOffsets.filter(
+            (v) => v !== 0 && Math.abs(v) < width,
+          );
+
+          const newOffsets = [
+            negativeWidth,
+            ...insideOffsets.filter((v) => v < 0).map((v) => v.toFixed(3)),
+            "0.000",
+            ...insideOffsets.filter((v) => v > 0).map((v) => v.toFixed(3)),
+            formattedWidth,
+          ];
+
+          // ---- Find boundary pair for interpolation (LEFT SIDE)
+          let x1, x2;
+
+          for (let i = 0; i < numericOffsets.length - 1; i++) {
+            if (
+              numericOffsets[i] <= -width &&
+              numericOffsets[i + 1] >= -width
+            ) {
+              x1 = numericOffsets[i].toFixed(3);
+              x2 = numericOffsets[i + 1].toFixed(3);
+              break;
+            }
+          }
+
+          return {
+            reading: {
+              offsets: newOffsets,
+              reducedLevels: newOffsets.map((o) => levelMap[o] ?? null),
+            },
+            levelMap,
+            x1,
+            x2,
+          };
+        }
+
+        const processedData = processReading(roadWidth, reading);
+
+        const x = -Math.abs(roadWidth);
+
+        const { x1, x2, levelMap } = processedData;
+
+        const y1 = levelMap[x1];
+        const y2 = levelMap[x2];
+
+        const y =
+          Number(y1) +
+          (Number(x) - Number(x1)) *
+            ((Number(y2) - Number(y1)) / (Number(x2) - Number(x1)));
+
+        // ---- Replace first & last reducedLevels
+        processedData.reading.reducedLevels[0] = y.toFixed(3);
+        processedData.reading.reducedLevels[
+          processedData.reading.reducedLevels.length - 1
+        ] = y.toFixed(3);
+
+        reducedLevels.push(...processedData.reading.reducedLevels);
+        offsets.push(...processedData.reading.offsets);
+      } else {
+        const totalReadingReducedLevel = reading.reducedLevels.reduce(
+          (acc, curr) => acc + Number(curr),
+          0,
+        );
+
+        const avgReadingReducedLevel =
+          totalReadingReducedLevel / reading.reducedLevels.length;
+
+        const height = (limit * roadWidth) / safeQuantity;
+
+        reading.reducedLevels.forEach(() =>
+          reducedLevels.push(
+            Number(avgReadingReducedLevel + height).toFixed(3),
+          ),
+        );
+
+        offsets.push(...reading.offsets);
+      }
 
       return {
         insertOne: {
@@ -1449,10 +1573,11 @@ const generateSurveyPurpose = async (req, res, next) => {
             type: "Chainage",
             chainage: reading.chainage,
             spacing: reading.spacing,
-            roadWidth: reading.roadWidth,
+            roadWidth:
+              formula === "Interpolation" ? roadWidth : reading.roadWidth,
             reducedLevels,
             heightOfInstrument: reading.heightOfInstrument,
-            offsets: reading.offsets,
+            offsets,
             remarks: reading.remarks,
           },
         },
