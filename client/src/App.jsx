@@ -36,6 +36,7 @@ import Placements from "./pages/public/Placements";
 import Pricing from "./pages/public/Pricing";
 import PublicAppBarLayout from "./layout/PublicAppBarLayout";
 import ImpactStats from "./pages/public/ImpactStats";
+import PlottingAndQuantityReport from "./pages/survey/PlottingAndQuantityReport";
 
 function App() {
   return (
@@ -112,6 +113,10 @@ function App() {
                     <Route
                       path=":id/volume-report"
                       element={<VolumeReport />}
+                    />
+                    <Route
+                      path=":id/plotting-and-quantity-report"
+                      element={<PlottingAndQuantityReport />}
                     />
                   </Route>
                 </Route>

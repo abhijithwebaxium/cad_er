@@ -97,3 +97,7 @@ export const enterBranch = (surveyId, formData) => {
     formData,
   );
 };
+
+export const createBreak = (id, formData) => {
+  return axiosInstance.post(`surveys/${id}/rows/break`, formData);
+};

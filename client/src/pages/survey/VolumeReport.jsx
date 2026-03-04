@@ -24,6 +24,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import BasicMenu from "../../components/BasicMenu";
 import { BsThreeDots } from "react-icons/bs";
+import { TbArrowsExchange } from "react-icons/tb";
 
 const menuItems = [
   {
@@ -52,6 +53,15 @@ const menuItems = [
       </Stack>
     ),
     value: "spread sheet",
+  },
+  {
+    label: (
+      <Stack direction={"row"} alignItems={"center"} gap={0.5}>
+        Calculation Mode
+        <TbArrowsExchange />
+      </Stack>
+    ),
+    value: "calculation mode",
   },
 ];
 
@@ -229,6 +239,10 @@ const VolumeReport = () => {
 
   const [showArea, setShowArea] = useState({ cutting: false, filling: false });
 
+  const [calculationMode, setCalculationMode] = useState(false);
+
+  const calculationModeRef = useRef(calculationMode);
+
   const handleMenuSelect = (item) => {
     if (item.value === "excel download") {
       exportToExcel();
@@ -249,6 +263,9 @@ const VolumeReport = () => {
         reportDetails: reportDetails.current,
         showArea,
       });
+    }
+    if (item.value === "calculation mode") {
+      setCalculationMode(!calculationMode);
     }
   };
 
@@ -480,6 +497,7 @@ const VolumeReport = () => {
         difference,
         width: row?.roadWidth ?? "-",
         cuttingAreaSqMtr: cuttingAreaSqMtr.toFixed(3),
+        data,
         cuttingPrevArea,
         cuttingAvgSqrMtr,
         cuttingVolumeCubicMtr,
@@ -707,10 +725,11 @@ const VolumeReport = () => {
 
   const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  const createSheet = async (accessToken) => {
+  const createSheet = async (accessToken, isCalc) => {
     const tableData = tableDataRef.current;
     if (!tableData || !tableData.rows?.length) return;
 
+    // Detect visibility based on data totals
     const showCutting = Number(tableData.totalCuttingVolume) > 0;
     const showFilling = Number(tableData.totalFillingVolume) > 0;
 
@@ -739,10 +758,10 @@ const VolumeReport = () => {
 
     const values = [];
 
-    // ===== Title =====
+    // Title
     values.push(["Volume Report"]);
 
-    // ===== Header Row 1 =====
+    // Header Row 1
     values.push([
       "Sl.No.",
       "Section From",
@@ -753,7 +772,7 @@ const VolumeReport = () => {
       ...(showFilling ? ["Filling Volume", "", "", ""] : []),
     ]);
 
-    // ===== Header Row 2 =====
+    // Header Row 2
     values.push([
       "",
       "",
@@ -778,13 +797,30 @@ const VolumeReport = () => {
         : []),
     ]);
 
-    // ===== Data Rows =====
+    // Data Rows
     tableData.rows.forEach((row, idx) => {
-      // Deduction row
+      // Handle Deduction Rows
       if (row.isDeductionRow) {
         values.push([row.deductionMessage]);
         return;
       }
+
+      // Calculation Formatter Helpers
+      const formatArea = (val, type) => {
+        if (!isCalc || !row.data) return val;
+        const parts = row.data.map((x) => x[`${type}AreaSqMtr`]).join(" + ");
+        return `(${parts}) = ${val}`;
+      };
+
+      const formatAvg = (val, area, prev) => {
+        if (!isCalc) return val;
+        return `(${area} + ${prev}) / 2 = ${val}`;
+      };
+
+      const formatVol = (val, avg, diff) => {
+        if (!isCalc) return val;
+        return `(${avg} * ${diff}) = ${val}`;
+      };
 
       values.push([
         idx + 1,
@@ -794,30 +830,46 @@ const VolumeReport = () => {
         row.width,
         ...(showCutting
           ? [
-              row.cuttingAreaSqMtr,
+              formatArea(row.cuttingAreaSqMtr, "cutting"),
               row.cuttingPrevArea,
-              row.cuttingAvgSqrMtr,
-              row.cuttingVolumeCubicMtr,
+              formatAvg(
+                row.cuttingAvgSqrMtr,
+                row.cuttingAreaSqMtr,
+                row.cuttingPrevArea,
+              ),
+              formatVol(
+                row.cuttingVolumeCubicMtr,
+                row.cuttingAvgSqrMtr,
+                row.difference,
+              ),
             ]
           : []),
         ...(showFilling
           ? [
-              row.fillingAreaSqMtr,
+              formatArea(row.fillingAreaSqMtr, "filling"),
               row.fillingPrevArea,
-              row.fillingAvgSqrMtr,
-              row.fillingVolumeCubicMtr,
+              formatAvg(
+                row.fillingAvgSqrMtr,
+                row.fillingAreaSqMtr,
+                row.fillingPrevArea,
+              ),
+              formatVol(
+                row.fillingVolumeCubicMtr,
+                row.fillingAvgSqrMtr,
+                row.difference,
+              ),
             ]
           : []),
       ]);
     });
 
-    // ===== Totals Row =====
+    // Totals Row
     values.push([
       "",
       "",
       "",
       "",
-      "",
+      "TOTAL",
       ...(showCutting
         ? ["", "", "", Number(tableData.totalCuttingVolume).toFixed(3)]
         : []),
@@ -827,13 +879,9 @@ const VolumeReport = () => {
     ]);
 
     const totalColumns = 5 + (showCutting ? 4 : 0) + (showFilling ? 4 : 0);
-
     const totalRows = values.length;
 
-    // ===============================
-    // 3️⃣ INSERT VALUES
-    // ===============================
-
+    // 3️⃣ Send Values to Sheet
     await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A1?valueInputOption=USER_ENTERED`,
       {
@@ -852,7 +900,7 @@ const VolumeReport = () => {
 
     const requests = [];
 
-    // ===== Merge Title =====
+    // Merge Title
     requests.push({
       mergeCells: {
         range: {
@@ -866,7 +914,7 @@ const VolumeReport = () => {
       },
     });
 
-    // ===== Merge Cutting Header =====
+    // Merge "Cutting Volume" Header
     if (showCutting) {
       requests.push({
         mergeCells: {
@@ -882,7 +930,7 @@ const VolumeReport = () => {
       });
     }
 
-    // ===== Merge Filling Header =====
+    // Merge "Filling Volume" Header
     if (showFilling) {
       const start = showCutting ? 9 : 5;
       requests.push({
@@ -899,45 +947,38 @@ const VolumeReport = () => {
       });
     }
 
-    // ===== Title Style =====
-    requests.push({
-      repeatCell: {
-        range: {
-          sheetId,
-          startRowIndex: 0,
-          endRowIndex: 1,
-        },
-        cell: {
-          userEnteredFormat: {
-            horizontalAlignment: "CENTER",
-            textFormat: { bold: true, fontSize: 16 },
+    // Apply Styles (Title & Headers)
+    requests.push(
+      {
+        repeatCell: {
+          range: { sheetId, startRowIndex: 0, endRowIndex: 1 },
+          cell: {
+            userEnteredFormat: {
+              horizontalAlignment: "CENTER",
+              textFormat: { bold: true, fontSize: 14 },
+            },
           },
+          fields: "userEnteredFormat(horizontalAlignment,textFormat)",
         },
-        fields: "userEnteredFormat(horizontalAlignment,textFormat)",
       },
-    });
-
-    // ===== Header Style =====
-    requests.push({
-      repeatCell: {
-        range: {
-          sheetId,
-          startRowIndex: 1,
-          endRowIndex: 3,
-        },
-        cell: {
-          userEnteredFormat: {
-            horizontalAlignment: "CENTER",
-            verticalAlignment: "MIDDLE",
-            textFormat: { bold: true },
+      {
+        repeatCell: {
+          range: { sheetId, startRowIndex: 1, endRowIndex: 3 },
+          cell: {
+            userEnteredFormat: {
+              horizontalAlignment: "CENTER",
+              verticalAlignment: "MIDDLE",
+              textFormat: { bold: true },
+              backgroundColor: { red: 0.95, green: 0.96, blue: 0.97 },
+            },
           },
+          fields:
+            "userEnteredFormat(horizontalAlignment,verticalAlignment,textFormat,backgroundColor)",
         },
-        fields:
-          "userEnteredFormat(horizontalAlignment,verticalAlignment,textFormat)",
       },
-    });
+    );
 
-    // ===== Borders =====
+    // Borders
     requests.push({
       updateBorders: {
         range: {
@@ -956,20 +997,31 @@ const VolumeReport = () => {
       },
     });
 
-    // ===== Column Width =====
-    requests.push({
-      updateDimensionProperties: {
-        range: {
-          sheetId,
-          dimension: "COLUMNS",
-          startIndex: 0,
-          endIndex: totalColumns,
+    // Dynamic Column Width
+    // If Calculation Mode is ON, we need much wider columns (approx 250px)
+    requests.push(
+      {
+        updateDimensionProperties: {
+          range: { sheetId, dimension: "COLUMNS", startIndex: 0, endIndex: 5 },
+          properties: { pixelSize: 80 },
+          fields: "pixelSize",
         },
-        properties: { pixelSize: 120 },
-        fields: "pixelSize",
       },
-    });
+      {
+        updateDimensionProperties: {
+          range: {
+            sheetId,
+            dimension: "COLUMNS",
+            startIndex: 5,
+            endIndex: totalColumns,
+          },
+          properties: { pixelSize: isCalc ? 250 : 130 },
+          fields: "pixelSize",
+        },
+      },
+    );
 
+    // Execute Batch Update
     await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
       {
@@ -1004,18 +1056,22 @@ const VolumeReport = () => {
         client_id: CLIENT_ID,
         scope: "https://www.googleapis.com/auth/spreadsheets",
         callback: async (tokenResponse) => {
-          if (!tokenResponse.access_token) {
-            console.error("No access token received");
-            return;
-          }
+          if (!tokenResponse.access_token) return;
 
-          await createSheet(tokenResponse.access_token);
+          await createSheet(
+            tokenResponse.access_token,
+            calculationModeRef.current,
+          );
         },
       });
     };
 
     initClient();
   }, []);
+
+  useEffect(() => {
+    calculationModeRef.current = calculationMode;
+  }, [calculationMode]);
 
   useEffect(() => {
     tableDataRef.current = tableData;
@@ -1159,18 +1215,80 @@ const VolumeReport = () => {
                   <TableCell>{row.width}</TableCell>
                   {showArea?.cutting && (
                     <>
-                      <TableCell>{row.cuttingAreaSqMtr}</TableCell>
+                      <TableCell>
+                        {calculationMode && (
+                          <>
+                            (
+                            {row.data?.map((x, idx) => {
+                              return (
+                                <Box key={idx}>
+                                  {x.cuttingAreaSqMtr}{" "}
+                                  {idx === row?.data?.length - 1 ? "" : "+"}
+                                </Box>
+                              );
+                            })}
+                            ) =
+                          </>
+                        )}{" "}
+                        {row.cuttingAreaSqMtr}
+                      </TableCell>
                       <TableCell>{row.cuttingPrevArea}</TableCell>
-                      <TableCell>{row.cuttingAvgSqrMtr}</TableCell>
-                      <TableCell>{row.cuttingVolumeCubicMtr}</TableCell>
+                      <TableCell>
+                        {calculationMode && (
+                          <>
+                            ({row.cuttingAreaSqMtr} + {row.cuttingPrevArea}) / 2
+                            =
+                          </>
+                        )}
+                        {row.cuttingAvgSqrMtr}
+                      </TableCell>
+                      <TableCell>
+                        {calculationMode && (
+                          <>
+                            ({row.cuttingAvgSqrMtr} * {row.difference}) =
+                          </>
+                        )}
+                        {row.cuttingVolumeCubicMtr}
+                      </TableCell>
                     </>
                   )}
                   {showArea?.filling && (
                     <>
-                      <TableCell>{row.fillingAreaSqMtr}</TableCell>
+                      <TableCell>
+                        {calculationMode && (
+                          <>
+                            (
+                            {row.data?.map((x, idx) => {
+                              return (
+                                <Box key={idx}>
+                                  {x.fillingAreaSqMtr}{" "}
+                                  {idx === row?.data?.length - 1 ? "" : "+"}
+                                </Box>
+                              );
+                            })}
+                            ) =
+                          </>
+                        )}{" "}
+                        {row.fillingAreaSqMtr}
+                      </TableCell>
                       <TableCell>{row.fillingPrevArea}</TableCell>
-                      <TableCell>{row.fillingAvgSqrMtr}</TableCell>
-                      <TableCell>{row.fillingVolumeCubicMtr}</TableCell>
+                      <TableCell>
+                        {calculationMode && (
+                          <>
+                            ({row.fillingAreaSqMtr} + {row.fillingPrevArea}) / 2
+                            =
+                          </>
+                        )}
+                        {row.fillingAvgSqrMtr}
+                      </TableCell>
+                      <TableCell>
+                        {calculationMode && (
+                          <>
+                            ({row.fillingAvgSqrMtr} * {row.difference}) =
+                          </>
+                        )}
+                        {row.fillingVolumeCubicMtr}
+                      </TableCell>
                     </>
                   )}
                 </TableRow>

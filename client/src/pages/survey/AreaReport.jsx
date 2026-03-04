@@ -24,6 +24,7 @@ import BasicMenu from "../../components/BasicMenu";
 import { BsThreeDots } from "react-icons/bs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { TbArrowsExchange } from "react-icons/tb";
 
 const menuItems = [
   {
@@ -52,6 +53,15 @@ const menuItems = [
       </Stack>
     ),
     value: "spread sheet",
+  },
+  {
+    label: (
+      <Stack direction={"row"} alignItems={"center"} gap={0.5}>
+        Calculation Mode
+        <TbArrowsExchange />
+      </Stack>
+    ),
+    value: "calculation mode",
   },
 ];
 
@@ -206,11 +216,17 @@ const AreaReport = () => {
 
   const [survey, setSurvey] = useState([]);
 
+  const [calculationMode, setCalculationMode] = useState(false);
+
   const [showArea, setShowArea] = useState({ cutting: false, filling: false });
 
   const handleMenuSelect = (item) => {
     if (item.value === "excel download") {
       exportToExcel();
+    }
+
+    if (item.value === "calculation mode") {
+      setCalculationMode(!calculationMode);
     }
 
     if (item.value === "spread sheet") {
@@ -344,6 +360,8 @@ const AreaReport = () => {
           }
 
           const dataDoc = {
+            initRL,
+            propRL,
             offset: entry,
             initialEntryRL,
             secondaryEntryRL,

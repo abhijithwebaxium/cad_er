@@ -11,7 +11,7 @@ const SurveyRowSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["Instrument setup", "Chainage", "TBM", "CP"],
+      enum: ["Instrument setup", "Chainage", "TBM", "CP", "Break"],
       required: true,
     },
     upcomingBranches: {
@@ -26,6 +26,8 @@ const SurveyRowSchema = new Schema(
     intermediateSight: [{ type: String, trim: true }],
     foreSight: { type: String, trim: true },
     chainage: { type: String, trim: true, default: null },
+    from: { type: String, trim: true, default: null },
+    to: { type: String, trim: true, default: null },
     roadWidth: { type: String, trim: true },
     spacing: { type: String, trim: true },
     offsets: [{ type: String, trim: true }],

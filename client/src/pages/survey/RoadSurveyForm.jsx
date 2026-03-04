@@ -272,6 +272,48 @@ const inputDetails = [
     hidden: true,
     for: "Proposed Level",
   },
+  {
+    label: "Engineer / Surveyor",
+    name: "engineerSurveyor",
+    type: "text",
+    for: "Initial Level",
+    size: 6,
+  },
+  {
+    label: "Assistant 1",
+    name: "assistant1",
+    type: "text",
+    for: "Initial Level",
+    size: 6,
+  },
+  {
+    label: "Assistant 2",
+    name: "assistant2",
+    type: "text",
+    for: "Initial Level",
+    size: 6,
+  },
+  {
+    label: "Assistant 3",
+    name: "assistant3",
+    type: "text",
+    for: "Initial Level",
+    size: 6,
+  },
+  {
+    label: "Assistant 4",
+    name: "assistant4",
+    type: "text",
+    for: "Initial Level",
+    size: 6,
+  },
+  {
+    label: "Assistant 5",
+    name: "assistant5",
+    type: "text",
+    for: "Initial Level",
+    size: 6,
+  },
 ];
 
 const initialFormValues = {
@@ -298,6 +340,12 @@ const initialFormValues = {
   separator: "",
   scheduledDate: "",
   formula: "Default",
+  engineerSurveyor: "",
+  assistant1: "",
+  assistant2: "",
+  assistant3: "",
+  assistant4: "",
+  assistant5: "",
 };
 
 const RoadSurveyForm = () => {
@@ -467,6 +515,12 @@ const RoadSurveyForm = () => {
         ? Yup.string().required("Cross section camper is required")
         : Yup.string().nullable(),
     scheduledDate: Yup.string().nullable(),
+    engineerSurveyor: Yup.string().nullable(),
+    assistant1: Yup.string().nullable(),
+    assistant2: Yup.string().nullable(),
+    assistant3: Yup.string().nullable(),
+    assistant4: Yup.string().nullable(),
+    assistant5: Yup.string().nullable(),
   });
 
   const handleGoBack = () => navigate(-1);

@@ -2,19 +2,12 @@ import * as Yup from "yup";
 import Plot from "react-plotly.js";
 import { Activity, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { handleFormError } from "../../utils/handleFormError";
 import { startLoading, stopLoading } from "../../redux/loadingSlice";
-import {
-  Box,
-  Stack,
-  Typography,
-  Grid,
-  InputAdornment,
-  Tooltip,
-} from "@mui/material";
+import { Box, Stack, Typography, Grid, Tooltip } from "@mui/material";
 import BasicButtons from "../../components/BasicButton";
-import { IoAdd, IoPauseCircleOutline } from "react-icons/io5";
+import { IoAdd } from "react-icons/io5";
 import { IoIosAddCircleOutline, IoIosArrowForward } from "react-icons/io";
 import { IoIosRemove } from "react-icons/io";
 import BasicCheckbox from "../../components/BasicCheckbox";
@@ -46,6 +39,7 @@ import useHardBackLock from "../../hooks/useHardBackLock";
 import AddBranch from "./components/AddBranch";
 import EnterBranch from "./components/EnterBranch";
 import ObservationNotes from "./components/ObservationNotes";
+import AddBreak from "./components/AddBreak";
 
 const colors = {
   Initial: "green",
@@ -144,6 +138,7 @@ const RoadSurveyRowsForm = () => {
   useHardBackLock(true);
 
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const didMount = useRef(false);
@@ -165,6 +160,7 @@ const RoadSurveyRowsForm = () => {
   const [compareData, setCompareData] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
   const [openAddBranch, setOpenAddBranch] = useState(false);
+  const [openAddBreak, setOpenAddBreak] = useState(false);
   const [openEnterBranch, setOpenEnterBranch] = useState(false);
   const [upcomingBranches, setUpcomingBranches] = useState([]);
 
@@ -313,6 +309,14 @@ const RoadSurveyRowsForm = () => {
     setOpenAddBranch(false);
   };
 
+  const handleOpenAddBreak = () => {
+    setOpenAddBreak(true);
+  };
+
+  const handleCloseAddBreak = () => {
+    setOpenAddBreak(false);
+  };
+
   const handleOpenEnterBranch = () => {
     if (!upcomingBranches?.length) {
       return dispatch(
@@ -346,7 +350,7 @@ const RoadSurveyRowsForm = () => {
     {
       icon: <PiLinkSimpleBreakBold />,
       name: "Add Break",
-      onClick: () => {},
+      onClick: () => handleOpenAddBreak(),
       show: true,
     },
     {
@@ -720,7 +724,7 @@ const RoadSurveyRowsForm = () => {
         }
       } else {
         const isFirstChainage = purpose?.rows?.find(
-          (r) => r.type === "Chainage",
+          (r) => r.type === "Chainage" || r.type === "Break",
         );
 
         if (!isFirstChainage) {
@@ -730,12 +734,17 @@ const RoadSurveyRowsForm = () => {
           }));
         } else {
           const lastChainage = purpose?.rows
-            ?.filter((r) => r.type === "Chainage")
+            ?.filter((r) => r.type === "Chainage" || r.type === "Break")
             ?.at(-1);
+
+          const lastChainageDigit =
+            lastChainage.type === "Chainage"
+              ? lastChainage.chainage
+              : lastChainage.to;
 
           const chainageMultiple = purpose?.surveyId?.chainageMultiple;
           const lastDigit = Number(
-            lastChainage.chainage.split(purpose?.surveyId?.separator || "/")[1],
+            lastChainageDigit.split(purpose?.surveyId?.separator || "/")[1],
           );
 
           const remainder = lastDigit % chainageMultiple;
@@ -1248,7 +1257,7 @@ const RoadSurveyRowsForm = () => {
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, location.state]);
 
   return (
     <>
@@ -1263,6 +1272,7 @@ const RoadSurveyRowsForm = () => {
           surveyId={purpose?.surveyId?._id}
           purposeId={purpose?._id}
         />
+
         <EnterBranch
           phase={purpose?.phase}
           open={openEnterBranch}
@@ -1270,6 +1280,13 @@ const RoadSurveyRowsForm = () => {
           surveyId={purpose?.surveyId?._id}
           purposeId={purpose?._id}
           branches={upcomingBranches}
+        />
+
+        <AddBreak
+          open={openAddBreak}
+          handleClose={handleCloseAddBreak}
+          purposeId={purpose?._id}
+          chainage={formValues.chainage}
         />
 
         {page === 1 && (

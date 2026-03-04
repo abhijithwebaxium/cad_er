@@ -243,7 +243,15 @@ const Report = () => {
         className="overlapping-header"
         sx={{ mx: "auto" }}
       >
-        <Typography variant="h6" fontSize={18} fontWeight={700} align="center">
+        <Typography
+          variant="h6"
+          fontSize={18}
+          fontWeight={700}
+          align="center"
+          onClick={() =>
+            navigate(`/survey/road-survey/${id}/plotting-and-quantity-report`)
+          }
+        >
           Generate Survey Report
         </Typography>
 

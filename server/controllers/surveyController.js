@@ -100,6 +100,12 @@ const createSurvey = async (req, res, next) => {
         consultant,
         client,
         scheduledDate,
+        engineerSurveyor,
+        assistant1,
+        assistant2,
+        assistant3,
+        assistant4,
+        assistant5,
       },
     } = req;
 
@@ -168,6 +174,12 @@ const createSurvey = async (req, res, next) => {
             ? { department, division, subDivision, section }
             : {}),
           ...(isPrivateProject ? { consultant, client } : {}),
+          engineerSurveyor,
+          assistant1,
+          assistant2,
+          assistant3,
+          assistant4,
+          assistant5,
         },
       ],
       { session },
@@ -2218,6 +2230,65 @@ const enterBranch = async (req, res, next) => {
   }
 };
 
+const createBreak = async (req, res, next) => {
+  try {
+    const {
+      params: { id },
+      user: { userId },
+      body: { from, to, remark },
+    } = req;
+
+    // 🔹 Validate purpose
+    if (!id) throw createHttpError(400, "Purpose ID is required");
+
+    const purpose = await SurveyPurpose.findOne({
+      _id: id,
+      deleted: false,
+    }).populate({
+      path: "surveyId",
+      match: { deleted: false },
+    });
+
+    if (!from || !to || !remark)
+      throw createHttpError(409, "Missing required fields");
+
+    if (!purpose) throw createHttpError(404, "Purpose not found");
+    if (purpose.isPurposeFinish)
+      throw createHttpError(409, `${purpose.type} already completed`);
+
+    const survey = purpose.surveyId;
+    if (survey.isSurveyFinish)
+      throw createHttpError(409, "Survey is already finished");
+    if (!survey || survey.deleted)
+      throw createHttpError(404, "Survey not found or has been deleted");
+
+    const isChainageExist = await SurveyRow.findOne({
+      purposeId: id,
+      $or: [{ chainage: from?.trim() }, { chainage: to?.trim() }],
+      deleted: false,
+    });
+
+    if (isChainageExist) throw createHttpError(409, "Chainage already exist");
+
+    const newRow = await SurveyRow.create({
+      type: "Break",
+      purposeId: purpose._id,
+      createdBy: userId,
+      remarks: [remark],
+      from,
+      to,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Break added successfully",
+      row: newRow,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export {
   checkSurveyExists,
   getAllSurvey,
@@ -2240,4 +2311,5 @@ export {
   updateReducedLevels,
   createBranch,
   enterBranch,
+  createBreak,
 };

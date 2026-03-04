@@ -24,6 +24,7 @@ import {
   createBranch,
   enterBranch,
   getFieldBook,
+  createBreak,
 } from "../controllers/surveyController.js";
 import { isAuthenticated, requireAuth } from "../middleware/auth.js";
 
@@ -55,6 +56,7 @@ router.put("/:id/purposes/:purposeId/edit", editSurveyPurpose);
 router.post("/:id/rows", createSurveyRow);
 router.patch("/:id/rows/:rowId", updateSurveyRow);
 router.delete("/:id/rows/:rowId", deleteSurveyRow);
+router.post("/:id/rows/break", createBreak);
 
 // 🔹 Branch routes (nested under a survey)
 router.post("/:surveyId/branches", createBranch);
