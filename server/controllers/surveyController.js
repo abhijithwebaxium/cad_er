@@ -1565,7 +1565,7 @@ const generateSurveyPurpose = async (req, res, next) => {
         const avgReadingReducedLevel =
           totalReadingReducedLevel / reading.reducedLevels.length;
 
-        const height = (limit * roadWidth) / safeQuantity;
+        const height = safeQuantity / (limit * roadWidth);
 
         reading.reducedLevels.forEach(() =>
           reducedLevels.push(
