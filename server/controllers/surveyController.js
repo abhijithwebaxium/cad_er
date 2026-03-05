@@ -288,10 +288,9 @@ const getSurvey = async (req, res, next) => {
         populate: {
           path: "rows",
           match: { deleted: false },
-          options: { sort: { createdAt: 1 } },
+          options: { sort: { _id: 1 ,createdAt: 1 } },
         },
       })
-      .lean();
 
     if (!survey) {
       return res.status(404).json({
@@ -1568,11 +1567,13 @@ const generateSurveyPurpose = async (req, res, next) => {
 
         const height = safeQuantity / (limit * roadWidth);
 
-        reading.reducedLevels.forEach(() =>
-          reducedLevels.push(
-            Number(avgReadingReducedLevel + height).toFixed(3),
-          ),
-        );
+        reading.reducedLevels.forEach(() => {
+          const value = avgReadingReducedLevel + height;
+
+          const rounded = Math.round(value / 0.005) * 0.005;
+
+          reducedLevels.push(rounded.toFixed(3));
+        });
 
         offsets.push(...reading.offsets);
       }
