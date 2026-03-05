@@ -1052,7 +1052,7 @@ const AreaReport = () => {
 
                       {showArea?.filling && (
                         <>
-                          <TableCell colSpan={3}></TableCell>
+                          {/* <TableCell colSpan={3}></TableCell> */}
                           <TableCell sx={{ fontWeight: "bold" }}>
                             {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
                           </TableCell>

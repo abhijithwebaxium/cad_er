@@ -1310,7 +1310,7 @@ const VolumeReport = () => {
 
               {showArea?.filling && (
                 <>
-                  <TableCell colSpan={3}></TableCell>
+                  {/* <TableCell colSpan={3}></TableCell> */}
                   <TableCell sx={{ fontWeight: "bold" }}>
                     {Number(tableData?.totalFillingVolume)?.toFixed(3)}
                   </TableCell>
