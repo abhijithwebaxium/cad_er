@@ -281,16 +281,15 @@ const getSurvey = async (req, res, next) => {
       _id: id,
       deleted: false,
       createdBy: userId,
-    })
-      .populate({
-        path: "purposes",
+    }).populate({
+      path: "purposes",
+      match: { deleted: false },
+      populate: {
+        path: "rows",
         match: { deleted: false },
-        populate: {
-          path: "rows",
-          match: { deleted: false },
-          options: { sort: { _id: 1 ,createdAt: 1 } },
-        },
-      })
+        options: { sort: { _id: 1, createdAt: 1 } },
+      },
+    });
 
     if (!survey) {
       return res.status(404).json({
@@ -1799,11 +1798,14 @@ const updateReducedLevels = async (req, res, next) => {
       const oldRL = existingRow.reducedLevels || [];
       const oldIS = existingRow.intermediateSight || [];
 
-      if (oldRL.length !== s.data.length || oldIS.length !== s.data.length) {
-        throw createHttpError(
-          400,
-          "Reduced levels and intermediate sight length mismatch",
-        );
+      const hasIntermediateSight = oldIS.length > 0;
+
+      if (oldRL.length !== s.data.length) {
+        throw createHttpError(400, "Reduced levels length mismatch");
+      }
+
+      if (hasIntermediateSight && oldIS.length !== s.data.length) {
+        throw createHttpError(400, "Intermediate sight length mismatch");
       }
 
       const newReducedLevels = [];
@@ -1818,20 +1820,27 @@ const updateReducedLevels = async (req, res, next) => {
 
         const newRLNum = Number(newValue);
         const oldRLNum = Number(oldRL[i]);
-        const oldISNum = Number(oldIS[i]);
 
-        if (
-          Number.isNaN(newRLNum) ||
-          Number.isNaN(oldRLNum) ||
-          Number.isNaN(oldISNum)
-        ) {
+        if (Number.isNaN(newRLNum) || Number.isNaN(oldRLNum)) {
           throw createHttpError(400, "Reduced level must be a valid number");
         }
 
         const delta = newRLNum - oldRLNum;
 
         newReducedLevels.push(newRLNum.toFixed(3));
-        newIntermediateSight.push((oldISNum + delta).toFixed(3));
+
+        if (hasIntermediateSight) {
+          const oldISNum = Number(oldIS[i]);
+
+          if (Number.isNaN(oldISNum)) {
+            throw createHttpError(
+              400,
+              "Intermediate sight must be a valid number",
+            );
+          }
+
+          newIntermediateSight.push((oldISNum + delta).toFixed(3));
+        }
       }
 
       bulkOps.push({
@@ -1840,7 +1849,9 @@ const updateReducedLevels = async (req, res, next) => {
           update: {
             $set: {
               reducedLevels: newReducedLevels,
-              intermediateSight: newIntermediateSight,
+              ...(hasIntermediateSight && {
+                intermediateSight: newIntermediateSight,
+              }),
             },
           },
         },
