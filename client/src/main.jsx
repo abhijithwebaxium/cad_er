@@ -6,8 +6,19 @@ import { Provider } from 'react-redux';
 import { store, persistor } from './redux/store.js';
 import { PersistGate } from 'redux-persist/integration/react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { registerSW } from "virtual:pwa-register";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    window.location.reload();
+  },
+  onOfflineReady() {
+    console.log("Offline ready");
+  },
+});
 
 createRoot(document.getElementById('root')).render(
   <GoogleOAuthProvider clientId={clientId}>

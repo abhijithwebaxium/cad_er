@@ -10,8 +10,16 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
 
+      // 1. Force the service worker to check for updates more frequently
+      devOptions: {
+        enabled: true,
+      },
       workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // fix large bundle error
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        navigateFallbackDenylist: [/^\/api/],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
       },
 
       manifest: {
