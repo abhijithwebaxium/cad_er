@@ -1,6 +1,10 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { readFileSync } from "node:fs";
+
+// Read package.json to get the version reliably in production environments
+const packageJson = JSON.parse(readFileSync("./package.json", "utf-8"));
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -74,5 +78,10 @@ export default defineConfig({
     port: 8080,
     host: true,
     allowedHosts: ["cader-8kvsl.ondigitalocean.app", "getcader.com"],
+  },
+
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 });
