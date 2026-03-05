@@ -177,6 +177,12 @@ const inputDetails = [
     for: "actual",
   },
   {
+    label: "Remark*",
+    name: "remark",
+    type: "text",
+    for: "actual",
+  },
+  {
     label: "Set chainage multiple*",
     name: "chainageMultiple",
     mode: "solo-create",
@@ -189,13 +195,6 @@ const inputDetails = [
     mode: "select",
     options: ["/", "+", ","].map((n) => ({ label: n, value: n })),
     for: "Initial Level",
-  },
-  {
-    label: "Width*",
-    name: "width",
-    type: "number",
-    hidden: true,
-    for: "Proposed Level",
   },
   {
     label: "Length*",
@@ -330,6 +329,7 @@ const initialFormValues = {
   proposal: "",
   instrumentNo: "",
   backSight: "",
+  remark: "TBM - 1",
   reducedLevel: "",
   chainageMultiple: "",
   lSection: "",
@@ -434,11 +434,6 @@ const RoadSurveyForm = () => {
             .required("Quantity is required")
         : Yup.string().nullable(),
 
-    width:
-      type && entryType === "autoGenerate"
-        ? Yup.string().required("Width is required")
-        : Yup.string().nullable(),
-
     length:
       type && entryType === "autoGenerate"
         ? Yup.string().required("Length is required")
@@ -466,6 +461,11 @@ const RoadSurveyForm = () => {
             .typeError("Backsight is required")
             .required("Backsight is required")
         : Yup.string().nullable(),
+
+    remark: !id
+      ? Yup.string().required("Remark is required")
+      : Yup.string().nullable(),
+
     reducedLevel:
       !id || (id && !type)
         ? Yup.number()
@@ -691,11 +691,7 @@ const RoadSurveyForm = () => {
               return { ...e, hidden: entryType === "manualEntry" };
             }
 
-            if (
-              e.name === "length" ||
-              e.name === "width" ||
-              e.name === "formula"
-            ) {
+            if (e.name === "length" || e.name === "formula") {
               return { ...e, hidden: entryType === "manualEntry" };
             }
 

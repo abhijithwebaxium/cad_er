@@ -521,7 +521,18 @@ const RoadSurveyRowsForm = () => {
     setInputData(filteredInputData);
   };
 
-  const handleChangeRowType = (type) => setRowType(type);
+  const handleChangeRowType = (type) => {
+    if (type === "CP" || type === "TBM") {
+      const length = purpose?.rows?.filter((r) => r.type === type)?.length || 0;
+
+      setFormValues((prev) => ({
+        ...prev,
+        remark: `${type} - ${length + (type === "TBM" && purpose.type === "Initial Level" ? 2 : 1)}`,
+      }));
+    }
+
+    setRowType(type);
+  };
 
   const calculateOffset = () => {
     const roadWidth = Number(formValues.roadWidth || 0);
@@ -867,6 +878,10 @@ const RoadSurveyRowsForm = () => {
           intermediateOffsets: [
             { intermediateSight: "", offset: "", remark: "" },
           ],
+          remark:
+            rowType === "CP"
+              ? `${rowType} - ${purposeDoc.rows.filter((r) => r.type === rowType)?.length + 1}`
+              : "",
         });
 
         getNewChainage(purposeDoc);

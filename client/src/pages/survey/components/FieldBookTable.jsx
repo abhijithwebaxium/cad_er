@@ -32,8 +32,10 @@ export function calculateTableData(survey) {
     idx: 0,
   };
 
+  let branchCounter = 0;
+
   // Helper function to process a set of rows (main or branch)
-  const processRows = (purposeRows, surveyContext, isBranch = false) => {
+  const processRows = (purposeRows, surveyContext, isBranch = false, branchName = "") => {
     if (!purposeRows) return;
 
     if (isBranch) {
@@ -47,7 +49,7 @@ export function calculateTableData(survey) {
         HI: "-",
         RL: "-",
         Offset: "-",
-        remarks: "BRANCH",
+        remarks: `Branch - ${branchCounter}_ ${branchName}`,
       });
     }
 
@@ -102,7 +104,8 @@ export function calculateTableData(survey) {
           const branch = survey.branches?.find((b) => b._id === branchId);
 
           if (branch && branch.purposes?.[0]) {
-            processRows(branch.purposes[0].rows, branch.surveyId, true);
+            branchCounter ++;
+            processRows(branch.purposes[0].rows, branch.surveyId, true, branch.name);
           }
         });
       }

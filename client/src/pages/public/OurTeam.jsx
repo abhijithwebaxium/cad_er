@@ -17,6 +17,16 @@ import ScrollToTop from "../../components/ScrollToTop";
  * Custom SVG Icons for Social Media
  */
 const SocialIcons = {
+  X: () => (
+    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  ),
+  Instagram: () => (
+    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.266.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.981 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.981-6.98.058-1.28.072-1.689.072-4.948 0-3.259-.014-3.668-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+    </svg>
+  ),
   LinkedIn: () => (
     <svg
       width="20"
@@ -33,78 +43,38 @@ const SocialIcons = {
       <circle cx="4" cy="4" r="2" />
     </svg>
   ),
-  Twitter: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-    </svg>
-  ),
-  Github: () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-    </svg>
-  ),
 };
 
 const teamMembers = [
   {
     name: "Anees Majeed",
     role: "Founder & Chief Executive Officer",
-    // image:
-    //   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    bio: "With over a decade of expertise in mapping, mining, and boring, Anees is the visionary force behind CADer. He combines technical mastery with strategic foresight, ensuring the platform delivers measurable impact for institutions and professionals. His leadership drives innovation and long‑term growth.",
+    bio: "A visionary leader with a decade of expertise in mapping and mining, driving CADer’s innovation and strategic growth.",
   },
   {
     name: "Muhjir Ibrahim Shajahan",
     role: "Product Architect",
-    // image:
-    //   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-    bio: "Muhjir specializes in designing intuitive human–computer interfaces that simplify complex workflows. His passion for usability ensures CADer remains accessible and efficient for engineers, supervisors, and project managers. He is committed to bridging technology with human experience.",
+    bio: "Expert in human–computer interfaces, dedicated to simplifying complex workflows through intuitive and accessible design.",
   },
   {
     name: "Jaseem CM",
     role: "Research & Development, Civil Engineer",
-    // image:
-    //   "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
-    bio: "Jaseem leads applied research and technical innovation, advancing CADer’s engineering capabilities. With a strong civil engineering background, he focuses on precision, reliability, and practical solutions that meet industry standards. His work ensures CADer evolves with cutting‑edge methodologies.",
+    bio: "Leads technical innovation by applying civil engineering precision to CADer’s cutting-edge methodologies.",
   },
   {
     name: "Asif Majeed",
     role: "Head of Accounts",
-    // image:
-    //   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
-    bio: "Asif oversees financial operations with a focus on accuracy, transparency, and sustainability. His expertise in fiscal management ensures CADer’s growth is supported by sound financial practices. He plays a key role in maintaining operational efficiency.",
+    bio: "Manages financial operations with a focus on transparency, sustainability, and long-term operational efficiency.",
   },
   {
     name: "Muhammed Noor",
     role: "Human Resources Lead",
-    // image:
-    //   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
-    bio: "Noor is dedicated to building strong teams and fostering organizational culture. He manages talent acquisition, employee development, and workplace engagement, ensuring CADer attracts and retains top professionals. His leadership strengthens collaboration across the company.",
+    bio: "Focuses on talent acquisition and fostering a collaborative organizational culture to build high-performing teams.",
   },
   {
     name: "Kishore K. Ajayan",
     role: "Head of Marketing",
-    // image:
-    //   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
-    bio: "Kishore drives brand strategy, institutional outreach, and market positioning. With a focus on educational impact and industry adoption, he ensures CADer’s message resonates with both technical institutions and professionals. His campaigns expand CADer’s reach and credibility.",
+    bio: "Drives brand strategy and institutional outreach to expand CADer’s market presence and industry credibility.",
   },
 ];
 
@@ -136,6 +106,10 @@ const cardVariants = {
 };
 
 const OurTeam = () => {
+  const handleNavigate = (path) => {
+    if (path) window.open(path, "_blank");
+  };
+
   return (
     <>
       <ScrollToTop />
@@ -328,10 +302,13 @@ const OurTeam = () => {
                       }}
                     >
                       {[
-                        <SocialIcons.Twitter />,
-                        <SocialIcons.LinkedIn />,
-                        <SocialIcons.Github />,
-                      ].map((icon, i) => (
+                        { icon: <SocialIcons.X key="x" />, path: "" },
+                        {
+                          icon: <SocialIcons.LinkedIn key="li" />,
+                          path: "https://www.linkedin.com/company/archstructures",
+                        },
+                        { icon: <SocialIcons.Instagram key="in" />, path: "" },
+                      ].map(({ icon, path }, i) => (
                         <IconButton
                           key={i}
                           size="medium"
@@ -348,6 +325,7 @@ const OurTeam = () => {
                             transition: "color 0.2s",
                             "&:hover": { bgcolor: "#eef2ff" },
                           }}
+                          onClick={() => handleNavigate(path)}
                         >
                           {icon}
                         </IconButton>

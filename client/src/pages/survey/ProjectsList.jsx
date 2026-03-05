@@ -28,6 +28,7 @@ import AlertDialogSlide from "../../components/AlertDialogSlide";
 import { showAlert } from "../../redux/alertSlice";
 import BasicButton from "../../components/BasicButton";
 import { MdDelete } from "react-icons/md";
+import SmallHeader from "../../components/SmallHeader";
 
 const alertDetails = {
   title: "Field Book",
@@ -857,7 +858,9 @@ export default function ProjectsList() {
   };
 
   return (
-    <Box>
+    <Box overflow={"hidden"}>
+      <SmallHeader />
+
       <AlertDialogSlide
         {...alertData}
         open={open}
@@ -872,7 +875,14 @@ export default function ProjectsList() {
         onSubmit={handleDeleteProject}
       />
 
-      <Box position={"sticky"} p={2} top={0} bgcolor={"white"} zIndex={1}>
+      <Box
+        className="overlapping-header"
+        position={"sticky"}
+        p={2}
+        top={0}
+        bgcolor={"white"}
+        zIndex={1}
+      >
         {/* Header */}
         <Box
           sx={{

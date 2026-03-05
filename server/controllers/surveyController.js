@@ -89,6 +89,7 @@ const createSurvey = async (req, res, next) => {
         instrumentNo,
         reducedLevel,
         backSight,
+        remark,
         chainageMultiple,
         separator,
         agreementNo,
@@ -211,7 +212,7 @@ const createSurvey = async (req, res, next) => {
           createdBy: userId,
           type: "Instrument setup",
           backSight: Number(backSight).toFixed(3),
-          remarks: ["TBM"],
+          remarks: [remark || "TBM - 1"],
           reducedLevels: [Number(reducedLevel).toFixed(3)],
           heightOfInstrument: Number(
             Number(reducedLevel) + Number(backSight),
@@ -441,12 +442,7 @@ const createSurveyRow = async (req, res, next) => {
     if (type === "Chainage") {
       remarks.push(...remark);
     } else {
-      if (type === "CP") {
-        const allCp = purpose.rows?.filter((r) => r.type === "CP");
-        remarks.push(`${type} - ${allCp.length + 1} - ${remark}`);
-      } else {
-        remarks.push(`${type} - ${remark}`);
-      }
+      remarks.push(remark);
     }
 
     const initialSurvey = survey.purposes?.find(
@@ -879,7 +875,7 @@ const createSurveyPurpose = async (req, res, next) => {
             createdBy: userId,
             type: "Instrument setup",
             backSight: Number(backSight).toFixed(3),
-            remarks: ["TBM"],
+            remarks: ["TBM - 1"],
             reducedLevels: [Number(reducedLevel).toFixed(3)],
             heightOfInstrument: Number(
               Number(reducedLevel) + Number(backSight),
@@ -1335,7 +1331,6 @@ const generateSurveyPurpose = async (req, res, next) => {
         proposal,
         quantity,
         length,
-        width,
         // lSection,
         // lsSlop,
         cSection,
@@ -1352,7 +1347,7 @@ const generateSurveyPurpose = async (req, res, next) => {
 
     // Required fields used for proposal generation
     // const requiredFields = [quantity, lSection, lsSlop, length];
-    const requiredFields = [quantity, length, width];
+    const requiredFields = [quantity, length];
     const missingRequired = requiredFields.some(
       (x) => x === undefined || x === null || x === "",
     );
@@ -1439,6 +1434,12 @@ const generateSurveyPurpose = async (req, res, next) => {
         `No chainage readings found to generate "${proposal}".`,
       );
     }
+
+    const totalWidth = readingsToCreate.reduce((acc, curr) => {
+      return acc + (Number(curr.roadWidth) || 0);
+    }, 0);
+
+    const width = Number((totalWidth / readingsToCreate.length).toFixed(3));
 
     // 🔹 Create new proposal purpose
     const [purposeDoc] = await SurveyPurpose.create(
@@ -2187,7 +2188,7 @@ const enterBranch = async (req, res, next) => {
             createdBy: userId,
             type: "Instrument setup",
             backSight: Number(backSight).toFixed(3),
-            remarks: ["TBM"],
+            remarks: ["TBM - 1"],
             reducedLevels: [Number(reducedLevel).toFixed(3)],
             heightOfInstrument: Number(
               Number(reducedLevel) + Number(backSight),
