@@ -2302,6 +2302,33 @@ const createBreak = async (req, res, next) => {
   }
 };
 
+const deleteSurveyPurpose = async (req, res, next) => {
+  try {
+    const {
+      params: { purposeId },
+    } = req;
+
+    const purpose = await SurveyPurpose.findOne({
+      _id: purposeId,
+      deleted: false,
+    });
+    
+    if (!purpose) throw createHttpError(404, "Purpose not found");
+    if (purpose.isPurposeFinish)
+      throw createHttpError(409, `${purpose.type} already completed`);
+
+    purpose.deleted = true;
+    await purpose.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Survey purpose deleted successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export {
   checkSurveyExists,
   getAllSurvey,
@@ -2325,4 +2352,5 @@ export {
   createBranch,
   enterBranch,
   createBreak,
+  deleteSurveyPurpose,
 };

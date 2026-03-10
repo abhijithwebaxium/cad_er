@@ -48,6 +48,10 @@ export const createSurveyPurpose = (id, formData) => {
   return axiosInstance.post(`surveys/${id}/purposes`, formData);
 };
 
+export const deleteSurveyPurpose = (id) => {
+  return axiosInstance.delete(`surveys/${id}/purposes`);
+};
+
 export const generateSurveyPurpose = (id, formData) => {
   return axiosInstance.post(`surveys/${id}/purposes/generate`, formData);
 };

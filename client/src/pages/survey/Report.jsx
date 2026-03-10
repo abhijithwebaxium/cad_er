@@ -3,7 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { startLoading, stopLoading } from "../../redux/loadingSlice";
 import { handleFormError } from "../../utils/handleFormError";
-import { getAllSurvey, getSurvey } from "../../services/surveyServices";
+import {
+  deleteSurveyPurpose,
+  getAllSurvey,
+  getSurvey,
+} from "../../services/surveyServices";
 
 // MUI
 import {
@@ -233,6 +237,19 @@ const Report = () => {
     onCancel: handleClose,
   };
 
+  const handleDeletePurpose = async (id) => {
+    try {
+      await deleteSurveyPurpose(id);
+      setSelectedPurposes((prev) => prev.filter((p) => p._id !== id));
+      setSurvey((prev) => ({
+        ...prev,
+        purposes: prev.purposes.filter((p) => p._id !== id),
+      }));
+    } catch (error) {
+      handleFormError(error, null, dispatch, navigate);
+    }
+  };
+
   return (
     <>
       <SmallHeader />
@@ -441,11 +458,12 @@ const Report = () => {
                   <Chip
                     key={p._id}
                     label={p.type}
-                    onDelete={() =>
-                      setSelectedPurposes((prev) =>
-                        prev.filter((x) => x._id !== p._id),
-                      )
-                    }
+                    // onDelete={() =>
+                    //   setSelectedPurposes((prev) =>
+                    //     prev.filter((x) => x._id !== p._id),
+                    //   )
+                    // }
+                    onDelete={() => handleDeletePurpose(p._id)}
                     deleteIcon={<MdDelete />}
                     sx={{
                       fontSize: { xs: 10, sm: 12 },
