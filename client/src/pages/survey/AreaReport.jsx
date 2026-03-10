@@ -120,22 +120,29 @@ const exportAreaReportPdf = ({ tableData, reportDetails }) => {
 
     // Total row (exact UI alignment)
     body.push([
-      "",
-      "",
-      "",
-      "",
-      { content: "Total", colSpan: 3, styles: { fontStyle: "bold" } },
-      {
-        content: Number(section.totalCuttingAreaSqMtr).toFixed(3),
-        styles: { fontStyle: "bold" },
-      },
-      "",
-      "",
-      "",
-      {
-        content: Number(section.totalFillingAreaSqMtr).toFixed(3),
-        styles: { fontStyle: "bold" },
-      },
+      { content: "", colSpan: 4 },
+
+      { content: "Total", styles: { fontStyle: "bold" } },
+
+      ...(showArea?.cutting
+        ? [
+            { content: "", colSpan: 2 },
+            {
+              content: Number(section?.totalCuttingAreaSqMtr)?.toFixed(3),
+              styles: { fontStyle: "bold" },
+            },
+          ]
+        : []),
+
+      ...(showArea?.filling
+        ? [
+            { content: "", colSpan: showArea?.cutting ? 3 : 2 },
+            {
+              content: Number(section?.totalFillingAreaSqMtr)?.toFixed(3),
+              styles: { fontStyle: "bold" },
+            },
+          ]
+        : []),
     ]);
   });
 
@@ -1038,26 +1045,35 @@ const AreaReport = () => {
                     ))}
 
                     <TableRow>
-                      <TableCell colSpan={4}></TableCell>
-
-                      <TableCell colSpan={3} sx={{ fontWeight: "bold" }}>
-                        Total
-                      </TableCell>
-
+                      {" "}
+                      <TableCell colSpan={4}></TableCell>{" "}
+                      <TableCell sx={{ fontWeight: "bold" }}>Total</TableCell>{" "}
                       {showArea?.cutting && (
-                        <TableCell sx={{ fontWeight: "bold" }}>
-                          {Number(row?.totalCuttingAreaSqMtr)?.toFixed(3)}
-                        </TableCell>
-                      )}
-
+                        <>
+                          {" "}
+                          <TableCell colSpan={2}></TableCell>{" "}
+                          <TableCell sx={{ fontWeight: "bold" }}>
+                            {" "}
+                            {Number(row?.totalCuttingAreaSqMtr)?.toFixed(
+                              3,
+                            )}{" "}
+                          </TableCell>{" "}
+                        </>
+                      )}{" "}
                       {showArea?.filling && (
                         <>
-                          {/* <TableCell colSpan={3}></TableCell> */}
+                          {" "}
+                          <TableCell
+                            colSpan={showArea?.cutting ? 3 : 2}
+                          ></TableCell>{" "}
                           <TableCell sx={{ fontWeight: "bold" }}>
-                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
-                          </TableCell>
+                            {" "}
+                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(
+                              3,
+                            )}{" "}
+                          </TableCell>{" "}
                         </>
-                      )}
+                      )}{" "}
                     </TableRow>
                   </Fragment>
                 ))}

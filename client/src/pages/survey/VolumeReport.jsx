@@ -127,20 +127,22 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
     "",
     "",
     "",
-    { content: "Total", colSpan: 3, styles: { fontStyle: "bold" } },
+
+    { content: "Total", styles: { fontStyle: "bold" } },
+
     ...(showArea?.cutting
       ? [
+          { content: "", colSpan: 2 },
           {
             content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
             styles: { fontStyle: "bold" },
           },
         ]
       : []),
+
     ...(showArea?.filling
       ? [
-          "",
-          "",
-          "",
+          { content: "", colSpan: showArea?.cutting ? 3 : 2 },
           {
             content: Number(tableData?.totalFillingVolume)?.toFixed(3),
             styles: { fontStyle: "bold" },
@@ -1298,19 +1300,21 @@ const VolumeReport = () => {
             <TableRow>
               <TableCell colSpan={5}></TableCell>
 
-              <TableCell colSpan={3} sx={{ fontWeight: "bold" }}>
-                Total
-              </TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Total</TableCell>
 
               {showArea?.cutting && (
-                <TableCell sx={{ fontWeight: "bold" }}>
-                  {Number(tableData?.totalCuttingVolume)?.toFixed(3)}
-                </TableCell>
+                <>
+                  <TableCell colSpan={2}></TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    {Number(tableData?.totalCuttingVolume)?.toFixed(3)}
+                  </TableCell>
+                </>
               )}
 
               {showArea?.filling && (
                 <>
-                  {/* <TableCell colSpan={3}></TableCell> */}
+                  <TableCell colSpan={showArea?.cutting ? 3 : 2}></TableCell>
+
                   <TableCell sx={{ fontWeight: "bold" }}>
                     {Number(tableData?.totalFillingVolume)?.toFixed(3)}
                   </TableCell>
