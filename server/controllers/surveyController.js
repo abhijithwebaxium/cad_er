@@ -2312,8 +2312,10 @@ const deleteSurveyPurpose = async (req, res, next) => {
       _id: purposeId,
       deleted: false,
     });
-
+    
     if (!purpose) throw createHttpError(404, "Purpose not found");
+    if (purpose.type === 'Initial Level')
+      throw createHttpError(409, `You cannot delete the Initial Level`);
 
     purpose.deleted = true;
     await purpose.save();
