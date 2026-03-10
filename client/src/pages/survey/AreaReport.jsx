@@ -411,7 +411,9 @@ const AreaReport = () => {
     const sheet = workbook.addWorksheet("Area Report");
 
     // ===== Title =====
-    sheet.mergeCells("A1:L1");
+    sheet.mergeCells(
+      showArea?.cutting && showArea?.filling ? "A1:L1" : "A1:H1",
+    );
     const titleCell = sheet.getCell("A1");
     titleCell.value = "Area Report";
     titleCell.font = { size: 16, bold: true };
@@ -423,14 +425,8 @@ const AreaReport = () => {
       "Distance Meters",
       "Initial Level Meters",
       "Prop. Level Meters",
-      "Cutting Area",
-      "",
-      "",
-      "",
-      "Filling Area",
-      "",
-      "",
-      "",
+      ...(showArea?.cutting ? ["Cutting Area", "", "", ""] : []),
+      ...(showArea?.filling ? ["Filling Area", "", "", ""] : []),
     ]);
 
     sheet.addRow([
@@ -438,19 +434,20 @@ const AreaReport = () => {
       "",
       "",
       "",
-      "Cutting Meters",
-      "Avg Meters",
-      "Width Meters",
-      "Area Sq. Mtrs",
-      "Filling Meters",
-      "Avg Meters",
-      "Width Meters",
-      "Area Sq. Mtrs",
+
+      ...(showArea?.cutting
+        ? ["Cutting Meters", "Avg Meters", "Width Meters", "Area Sq. Mtrs"]
+        : []),
+      ...(showArea?.filling
+        ? ["Filling Meters", "Avg Meters", "Width Meters", "Area Sq. Mtrs"]
+        : []),
     ]);
 
     // ===== Merge Header Cells =====
     sheet.mergeCells("E2:H2"); // Cutting Area
-    sheet.mergeCells("I2:L2"); // Filling Area
+     if (showArea?.cutting && showArea?.filling) {
+      sheet.mergeCells("I2:L2"); // Filling Area
+    }
 
     // ===== Style Headers =====
     const headerRows = [2, 3];
@@ -503,14 +500,23 @@ const AreaReport = () => {
           entry.offset,
           entry.initialEntryRL,
           entry.secondaryEntryRL,
-          entry.cuttingMtr,
-          entry.cuttingAvgMtr,
-          entry.cuttingWMtr,
-          entry.cuttingAreaSqMtr,
-          entry.fillingMtr,
-          entry.fillingAvgMtr,
-          entry.fillingWMtr,
-          entry.fillingAreaSqMtr,
+
+          ...(showArea?.cutting
+            ? [
+                entry.cuttingMtr,
+                entry.cuttingAvgMtr,
+                entry.cuttingWMtr,
+                entry.cuttingAreaSqMtr,
+              ]
+            : []),
+          ...(showArea?.filling
+            ? [
+                entry.fillingMtr,
+                entry.fillingAvgMtr,
+                entry.fillingWMtr,
+                entry.fillingAreaSqMtr,
+              ]
+            : []),
         ]);
 
         dataRow.eachCell((cell, colNumber) => {
@@ -532,15 +538,24 @@ const AreaReport = () => {
         "",
         "",
         "",
-        "",
+        "", // colSpan={4}
+
         "Total",
-        "",
-        "",
-        Number(section.totalCuttingAreaSqMtr)?.toFixed(3),
-        "",
-        "",
-        "",
-        Number(section.totalFillingAreaSqMtr)?.toFixed(3),
+
+        ...(showArea?.cutting
+          ? [
+              "",
+              "", // colSpan={2}
+              Number(section.totalCuttingAreaSqMtr)?.toFixed(3),
+            ]
+          : []),
+
+        ...(showArea?.filling
+          ? [
+              ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
+              Number(section.totalFillingAreaSqMtr)?.toFixed(3),
+            ]
+          : []),
       ]);
       totalRow.eachCell((cell) => {
         cell.font = { bold: true };

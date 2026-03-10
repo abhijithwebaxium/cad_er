@@ -688,15 +688,22 @@ const VolumeReport = () => {
       "",
       "",
       "",
+
       "Total",
-      "",
-      "",
 
       ...(showArea?.cutting
-        ? [Number(tableData?.totalCuttingVolume)?.toFixed(3)]
+        ? [
+            "",
+            "", // colSpan={2}
+            Number(tableData?.totalCuttingVolume)?.toFixed(3),
+          ]
         : []),
+
       ...(showArea?.filling
-        ? ["", "", "", Number(tableData?.totalFillingVolume)?.toFixed(3)]
+        ? [
+            ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
+            Number(tableData?.totalFillingVolume)?.toFixed(3),
+          ]
         : []),
     ]);
     totalRow.eachCell((cell) => {
