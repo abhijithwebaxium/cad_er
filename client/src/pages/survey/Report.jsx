@@ -454,23 +454,26 @@ const Report = () => {
               </Typography>
 
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {selectedPurposes.map((p) => (
-                  <Chip
-                    key={p._id}
-                    label={p.type}
-                    // onDelete={() =>
-                    //   setSelectedPurposes((prev) =>
-                    //     prev.filter((x) => x._id !== p._id),
-                    //   )
-                    // }
-                    onDelete={() => handleDeletePurpose(p._id)}
-                    deleteIcon={<MdDelete />}
-                    sx={{
-                      fontSize: { xs: 10, sm: 12 },
-                      height: { xs: 24, sm: 28 },
-                    }}
-                  />
-                ))}
+                {selectedPurposes.map(
+                  (p) =>
+                    p.type !== "Initial Level" && (
+                      <Chip
+                        key={p._id}
+                        label={p.type}
+                        // onDelete={() =>
+                        //   setSelectedPurposes((prev) =>
+                        //     prev.filter((x) => x._id !== p._id),
+                        //   )
+                        // }
+                        onDelete={() => handleDeletePurpose(p._id)}
+                        deleteIcon={<MdDelete />}
+                        sx={{
+                          fontSize: { xs: 10, sm: 12 },
+                          height: { xs: 24, sm: 28 },
+                        }}
+                      />
+                    ),
+                )}
               </Box>
 
               <Divider sx={{ my: 2 }} />
