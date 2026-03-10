@@ -1576,7 +1576,7 @@ const generateSurveyPurpose = async (req, res, next) => {
             doHaveCamper &&
             (idx === 0 || idx === reading.reducedLevels.length - 1)
           ) {
-            value += (roadWidth / 2) * doHaveCamper;
+            value -= (roadWidth / 2) * doHaveCamper;
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
