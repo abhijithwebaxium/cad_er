@@ -848,6 +848,7 @@ const CrossSectionReport = () => {
           zIndex: 3,
         }}
       >
+        {console.log(selectedCs, chartOptions)}
         {selectedCs && selectedCs?.series && chartOptions && (
           <CrossSectionChart
             selectedCs={selectedCs}
