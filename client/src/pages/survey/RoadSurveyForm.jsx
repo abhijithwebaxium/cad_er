@@ -336,7 +336,7 @@ const initialFormValues = {
   lsSlop: "",
   cSection: "",
   csSlop: "",
-  csCamper: "",
+  csCamper: "0",
   separator: "",
   scheduledDate: "",
   formula: "Default",
