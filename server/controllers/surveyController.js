@@ -2312,10 +2312,8 @@ const deleteSurveyPurpose = async (req, res, next) => {
       _id: purposeId,
       deleted: false,
     });
-    
+
     if (!purpose) throw createHttpError(404, "Purpose not found");
-    if (purpose.isPurposeFinish)
-      throw createHttpError(409, `${purpose.type} already completed`);
 
     purpose.deleted = true;
     await purpose.save();
