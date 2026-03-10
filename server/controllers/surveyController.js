@@ -1566,8 +1566,18 @@ const generateSurveyPurpose = async (req, res, next) => {
 
         const height = safeQuantity / (limit * roadWidth);
 
-        reading.reducedLevels.forEach(() => {
-          const value = avgReadingReducedLevel + height;
+        // If cross-section camber is provided, add it to the height
+        const doHaveCamper = csCamper > 0 ? Number(csCamper) : null;
+
+        reading.reducedLevels.forEach((_, idx) => {
+          let value = avgReadingReducedLevel + height;
+
+          if (
+            doHaveCamper &&
+            (idx === 0 || idx === reading.reducedLevels.length - 1)
+          ) {
+            value += (roadWidth / 2) * doHaveCamper;
+          }
 
           const rounded = Math.round(value / 0.005) * 0.005;
 
@@ -2312,9 +2322,9 @@ const deleteSurveyPurpose = async (req, res, next) => {
       _id: purposeId,
       deleted: false,
     });
-    
+
     if (!purpose) throw createHttpError(404, "Purpose not found");
-    if (purpose.type === 'Initial Level')
+    if (purpose.type === "Initial Level")
       throw createHttpError(409, `You cannot delete the Initial Level`);
 
     purpose.deleted = true;
