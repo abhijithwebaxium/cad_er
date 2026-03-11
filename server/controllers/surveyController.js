@@ -1335,6 +1335,7 @@ const generateSurveyPurpose = async (req, res, next) => {
         csSlop,
         csCamper,
         formula,
+        interpolation,
       },
     } = req;
 
@@ -1468,6 +1469,34 @@ const generateSurveyPurpose = async (req, res, next) => {
     // 🔹 Bulk Insert Rows (FASTEST)
     // -----------------------------
 
+    const parseChainage = (str) => {
+      const [km, m] = str.split(survey.separator).map(Number);
+      return km * 1000 + m;
+    };
+
+    const ranges = interpolation.map((range) => ({
+      start: parseChainage(range.from),
+      end: parseChainage(range.to),
+      width: range.width,
+    }));
+
+    const interpolationChainage = readingsToCreate.reduce((acc, item) => {
+      const currentVal = parseChainage(item.chainage);
+
+      const matchedRange = ranges.find(
+        (r) => currentVal >= r.start && currentVal <= r.end,
+      );
+
+      if (matchedRange) {
+        acc.push({
+          chainage: item.chainage,
+          width: matchedRange.width,
+        });
+      }
+
+      return acc;
+    }, []);
+
     const roadWidth = Number(width);
     const safeQuantity = Number(quantity);
     const lastReading = readingsToCreate.at(-1);
@@ -1478,83 +1507,102 @@ const generateSurveyPurpose = async (req, res, next) => {
       const reducedLevels = [];
       const offsets = [];
 
-      if (formula === "Interpolation") {
-        function processReading(width, reading) {
-          // 🔥 Always treat width as distance
-          width = Math.abs(width);
+      let isInterpolate = null;
 
-          const numericOffsets = reading.offsets
+      if (interpolation?.length) {
+        isInterpolate = interpolationChainage.find(
+          (item) => item.chainage === reading.chainage,
+        );
+      }
+
+      if (isInterpolate) {
+        const initialLevelMap = {};
+        reading.offsets.forEach((o, idx) => {
+          initialLevelMap[o] = reading.reducedLevels[idx];
+        });
+
+        const cropAndInterpolate = (targetWidth, sourceMap) => {
+          const result = {};
+          const width = Number(targetWidth);
+
+          // 1. Get all original offsets as sorted numbers
+          const originalOffsets = Object.keys(sourceMap)
             .map(Number)
             .sort((a, b) => a - b);
-          const formattedWidth = width.toFixed(3);
-          const negativeWidth = (-width).toFixed(3);
 
-          // Map offsets -> reducedLevels
-          const levelMap = {};
-          reading.offsets.forEach((o, idx) => {
-            levelMap[o] = reading.reducedLevels[idx];
-          });
+          const lowerBound = -width;
+          const upperBound = width;
 
-          // ---- Find inner levels (between -width and width)
-          const insideOffsets = numericOffsets.filter(
-            (v) => v !== 0 && Math.abs(v) < width,
+          // Helper to safely get value from map even if key format varies
+          const getLevel = (num) => {
+            // Try different common precisions or the raw string
+            return (
+              sourceMap[num.toFixed(3)] ||
+              sourceMap[num.toFixed(2)] ||
+              sourceMap[num.toFixed(1)] ||
+              sourceMap[num.toString()]
+            );
+          };
+
+          // 2. Add the NEW lower boundary (-2.8)
+          result[lowerBound.toFixed(3)] = calculateInterpolation(
+            lowerBound,
+            originalOffsets,
+            getLevel,
           );
 
-          const newOffsets = [
-            negativeWidth,
-            ...insideOffsets.filter((v) => v < 0).map((v) => v.toFixed(3)),
-            "0.000",
-            ...insideOffsets.filter((v) => v > 0).map((v) => v.toFixed(3)),
-            formattedWidth,
-          ];
+          // 3. Keep all original points strictly INSIDE the range
+          originalOffsets.forEach((offset) => {
+            if (offset > lowerBound && offset < upperBound) {
+              result[offset.toFixed(3)] = getLevel(offset);
+            }
+          });
 
-          // ---- Find boundary pair for interpolation (LEFT SIDE)
+          // 4. Add the NEW upper boundary (2.8)
+          result[upperBound.toFixed(3)] = calculateInterpolation(
+            upperBound,
+            originalOffsets,
+            getLevel,
+          );
+
+          return result;
+        };
+
+        const calculateInterpolation = (x, offsets, getLevelFn) => {
           let x1, x2;
-
-          for (let i = 0; i < numericOffsets.length - 1; i++) {
-            if (
-              numericOffsets[i] <= -width &&
-              numericOffsets[i + 1] >= -width
-            ) {
-              x1 = numericOffsets[i].toFixed(3);
-              x2 = numericOffsets[i + 1].toFixed(3);
+          for (let i = 0; i < offsets.length - 1; i++) {
+            if (x >= offsets[i] && x <= offsets[i + 1]) {
+              x1 = offsets[i];
+              x2 = offsets[i + 1];
               break;
             }
           }
 
-          return {
-            reading: {
-              offsets: newOffsets,
-              reducedLevels: newOffsets.map((o) => levelMap[o] ?? null),
-            },
-            levelMap,
-            x1,
-            x2,
-          };
+          // If x is exactly an existing offset, just return that level
+          if (x === x1) return getLevelFn(x1);
+          if (x === x2) return getLevelFn(x2);
+
+          if (x1 === undefined || x2 === undefined) return "0.000";
+
+          const y1 = parseFloat(getLevelFn(x1));
+          const y2 = parseFloat(getLevelFn(x2));
+
+          // Formula: y = y1 + (x - x1) * (y2 - y1) / (x2 - x1)
+          const y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1));
+
+          return y.toFixed(3);
+        };
+
+        // Testing with your example
+        const finalMap = cropAndInterpolate(
+          Number(isInterpolate.width),
+          initialLevelMap,
+        );
+
+        for (const [offset, level] of Object.entries(finalMap)) {
+          reducedLevels.push(level);
+          offsets.push(offset);
         }
-
-        const processedData = processReading(roadWidth, reading);
-
-        const x = -Math.abs(roadWidth);
-
-        const { x1, x2, levelMap } = processedData;
-
-        const y1 = levelMap[x1];
-        const y2 = levelMap[x2];
-
-        const y =
-          Number(y1) +
-          (Number(x) - Number(x1)) *
-            ((Number(y2) - Number(y1)) / (Number(x2) - Number(x1)));
-
-        // ---- Replace first & last reducedLevels
-        processedData.reading.reducedLevels[0] = y.toFixed(3);
-        processedData.reading.reducedLevels[
-          processedData.reading.reducedLevels.length - 1
-        ] = y.toFixed(3);
-
-        reducedLevels.push(...processedData.reading.reducedLevels);
-        offsets.push(...processedData.reading.offsets);
       } else {
         const totalReadingReducedLevel = reading.reducedLevels.reduce(
           (acc, curr) => acc + Number(curr),

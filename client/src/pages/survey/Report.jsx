@@ -460,11 +460,6 @@ const Report = () => {
                       <Chip
                         key={p._id}
                         label={p.type}
-                        // onDelete={() =>
-                        //   setSelectedPurposes((prev) =>
-                        //     prev.filter((x) => x._id !== p._id),
-                        //   )
-                        // }
                         onDelete={() => handleDeletePurpose(p._id)}
                         deleteIcon={<MdDelete />}
                         sx={{

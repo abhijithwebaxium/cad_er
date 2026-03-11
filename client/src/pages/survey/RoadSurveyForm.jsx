@@ -19,10 +19,11 @@ import {
   getSurvey,
 } from "../../services/surveyServices";
 import AlertDialogSlide from "../../components/AlertDialogSlide";
-import { IoIosArrowForward } from "react-icons/io";
+import { IoIosArrowForward, IoIosRemove } from "react-icons/io";
 import AdvancedAutoComplete from "../../components/AdvancedAutoComplete";
 import SmallHeader from "../../components/SmallHeader";
 import { FaCalendarAlt } from "react-icons/fa";
+import { IoAdd } from "react-icons/io5";
 
 const alertData = {
   title: "Generate Proposal",
@@ -30,6 +31,24 @@ const alertData = {
   content: "",
   cancelButtonText: "Cancel",
   submitButtonText: "Continue",
+};
+
+const addButtonSx = {
+  display: "flex",
+  alignItems: "center",
+  gap: 1,
+  px: 1.5,
+  py: 0.75,
+  borderRadius: 2,
+  bgcolor: "primary.50",
+  color: "primary.main",
+  cursor: "pointer",
+  fontSize: 14,
+  fontWeight: 600,
+  transition: "all 0.2s",
+  "&:hover": {
+    bgcolor: "primary.100",
+  },
 };
 
 const inputDetails = [
@@ -135,12 +154,12 @@ const inputDetails = [
     for: "Proposed Level",
     options: [
       {
-        name: "manualEntry",
-        label: "Manual entry",
-      },
-      {
         name: "autoGenerate",
         label: "Auto Generate",
+      },
+      {
+        name: "manualEntry",
+        label: "Manual entry",
       },
     ],
   },
@@ -195,6 +214,17 @@ const inputDetails = [
     mode: "select",
     options: ["/", "+", ","].map((n) => ({ label: n, value: n })),
     for: "Initial Level",
+  },
+  {
+    label: "Width*",
+    name: "width",
+    mode: "select",
+    options: [
+      { label: "Full width", value: "Full width" },
+      { label: "Custom", value: "Custom" },
+    ],
+    hidden: true,
+    for: "Proposed Level",
   },
   {
     label: "Length*",
@@ -315,6 +345,12 @@ const inputDetails = [
   },
 ];
 
+const initialRow = {
+  from: "",
+  to: "",
+  width: "",
+};
+
 const initialFormValues = {
   project: "",
   agreementNo: "",
@@ -329,6 +365,7 @@ const initialFormValues = {
   proposal: "",
   instrumentNo: "",
   backSight: "",
+  width: "",
   remark: "TBM - 1",
   reducedLevel: "",
   chainageMultiple: "",
@@ -367,7 +404,7 @@ const RoadSurveyForm = () => {
 
   const [crossSection, setCrossSection] = useState("camper");
 
-  const [entryType, setEntryType] = useState("manualEntry");
+  const [entryType, setEntryType] = useState("autoGenerate");
 
   const [category, setCategory] = useState("publicProject");
 
@@ -380,6 +417,14 @@ const RoadSurveyForm = () => {
   const [scheduleProjectOpen, setScheduleProjectOpen] = useState(false);
 
   const [btnLoading, setBtnLoading] = useState(false);
+
+  const [selectableItems, setSelectableItems] = useState([]);
+
+  const [rows, setRows] = useState([initialRow]);
+
+  const [selectedPurpose, setSelectedPurpose] = useState(null);
+
+  const [openInterpolationSetup, setOpenInterpolationSetup] = useState(false);
 
   const schema = Yup.object().shape({
     project: Yup.string().required("Project name is required"),
@@ -432,6 +477,11 @@ const RoadSurveyForm = () => {
         ? Yup.number()
             .typeError("Quantity is required")
             .required("Quantity is required")
+        : Yup.string().nullable(),
+
+    width:
+      type && entryType === "autoGenerate"
+        ? Yup.string().required("Width is required")
         : Yup.string().nullable(),
 
     length:
@@ -537,6 +587,28 @@ const RoadSurveyForm = () => {
       [name]: value,
     }));
 
+    if (id && name === "purpose") {
+      const selected = survey?.purposes?.find((p) => p.type === value);
+      const items =
+        selected?.rows
+          ?.filter((r) => r.type === "Chainage")
+          ?.map((s) => ({
+            label: s.chainage,
+            value: s.chainage,
+          })) || [];
+
+      setSelectableItems(items);
+      setSelectedPurpose(selected);
+    }
+
+    if (name === "width") {
+      if (value !== "Custom") {
+        setRows([initialRow]);
+      }
+
+      setOpenInterpolationSetup(value === "Custom");
+    }
+
     try {
       await Yup.reach(schema, name).validate(value);
 
@@ -555,7 +627,10 @@ const RoadSurveyForm = () => {
       const { data } = id
         ? entryType === "manualEntry"
           ? await createSurveyPurpose(id, formValues)
-          : await generateSurveyPurpose(id, formValues)
+          : await generateSurveyPurpose(id, {
+              ...formValues,
+              interpolation: rows,
+            })
         : await createSurvey(formValues);
 
       if (data.success) {
@@ -691,7 +766,11 @@ const RoadSurveyForm = () => {
               return { ...e, hidden: entryType === "manualEntry" };
             }
 
-            if (e.name === "length" || e.name === "formula") {
+            if (
+              e.name === "length" ||
+              e.name === "width" ||
+              e.name === "formula"
+            ) {
               return { ...e, hidden: entryType === "manualEntry" };
             }
 
@@ -780,6 +859,127 @@ const RoadSurveyForm = () => {
     submitButtonText: "Continue",
   };
 
+  const handleCloseInterpolationSetup = () => {
+    setOpenInterpolationSetup(false);
+  };
+
+  const getIndex = (value) =>
+    selectableItems.findIndex((i) => i.value === value);
+
+  const getFromOptions = (rowIndex) => {
+    if (rowIndex === 0) return selectableItems;
+    const prevTo = rows[rowIndex - 1]?.to;
+    if (!prevTo) return [];
+    const prevToIndex = getIndex(prevTo);
+    return selectableItems.slice(prevToIndex);
+  };
+
+  const getToOptions = (rowIndex) => {
+    const fromValue = rows[rowIndex]?.from;
+    if (!fromValue) return [];
+    const fromIndex = getIndex(fromValue);
+    return selectableItems.slice(fromIndex + 1);
+  };
+
+  const handleRowChange = (index, field, value) => {
+    setRows((prev) => {
+      const updatedRow = {
+        ...prev[index],
+        [field]: value,
+        ...(field === "from" ? { to: "" } : {}),
+      };
+
+      if (!updatedRow.to) {
+        return [...prev.slice(0, index), updatedRow];
+      }
+
+      const updatedToIndex = getIndex(updatedRow.to);
+
+      const validNextRows = prev.slice(index + 1).filter((row) => {
+        if (!row.from) return false;
+        return getIndex(row.from) >= updatedToIndex;
+      });
+
+      return [...prev.slice(0, index), updatedRow, ...validNextRows];
+    });
+  };
+
+  const handleAddRow = () => {
+    setRows((prev) => {
+      const lastRow = prev[prev.length - 1];
+      return [
+        ...prev,
+        {
+          from: lastRow.to || "",
+          to: "",
+          remark: "",
+        },
+      ];
+    });
+  };
+
+  const handleRemoveRow = (index) => {
+    if (rows.length === 1) return;
+    setRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const interpolationSetupAlertData = {
+    title: (
+      <Stack
+        direction={"row"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+      >
+        Interpolation Setup{" "}
+        <Box sx={addButtonSx} onClick={handleAddRow}>
+          <IoAdd size={18} />
+          Add Range
+        </Box>
+      </Stack>
+    ),
+    description: "",
+    content: (
+      <Box mt={2}>
+        {rows?.map((row, index) => (
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="end"
+            mb={2}
+            key={index}
+          >
+            <BasicSelect
+              label="From"
+              value={row.from}
+              options={getFromOptions(index)}
+              onChange={(e) => handleRowChange(index, "from", e.target.value)}
+            />
+
+            <BasicSelect
+              label="To"
+              value={row.to}
+              options={getToOptions(index)}
+              onChange={(e) => handleRowChange(index, "to", e.target.value)}
+            />
+
+            <BasicInput
+              label="Width"
+              value={row.width}
+              type="number"
+              onChange={(e) => handleRowChange(index, "width", e.target.value)}
+            />
+
+            <Box onClick={() => handleRemoveRow(index)}>
+              <IoIosRemove />
+            </Box>
+          </Stack>
+        ))}
+      </Box>
+    ),
+    cancelButtonText: "Cancel",
+    submitButtonText: "Continue",
+  };
+
   useEffect(() => {
     if (didMount.current) {
       const completedLevels = survey?.purposes?.map((p) => p.type) || [];
@@ -824,6 +1024,13 @@ const RoadSurveyForm = () => {
           open={scheduleProjectOpen}
           onCancel={handleScheduleProjectClose}
           onSubmit={handleScheduleProjectSubmit}
+        />
+
+        <AlertDialogSlide
+          {...interpolationSetupAlertData}
+          open={openInterpolationSetup}
+          onCancel={handleCloseInterpolationSetup}
+          onSubmit={handleCloseInterpolationSetup}
         />
 
         <Box
