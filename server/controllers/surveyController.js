@@ -1595,7 +1595,7 @@ const generateSurveyPurpose = async (req, res, next) => {
 
         // Testing with your example
         const finalMap = cropAndInterpolate(
-          Number(isInterpolate.width),
+          Number(isInterpolate.width / 2),
           initialLevelMap,
         );
 
