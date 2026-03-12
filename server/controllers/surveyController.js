@@ -1644,8 +1644,9 @@ const generateSurveyPurpose = async (req, res, next) => {
             type: "Chainage",
             chainage: reading.chainage,
             spacing: reading.spacing,
-            roadWidth:
-              formula === "Interpolation" ? roadWidth : reading.roadWidth,
+            roadWidth: isInterpolate
+              ? Number(isInterpolate.width)
+              : reading.roadWidth,
             reducedLevels,
             heightOfInstrument: reading.heightOfInstrument,
             offsets,
