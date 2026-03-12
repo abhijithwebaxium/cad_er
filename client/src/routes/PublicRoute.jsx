@@ -7,7 +7,7 @@ const PublicRoute = () => {
   const location = useLocation();
 
   // Only redirect if user tries to access auth pages
-  const authRoutes = ["/login", "/register", "/landing"];
+  const authRoutes = ["/login", "/register"];
 
   if (user && authRoutes.includes(location.pathname)) {
     return <Navigate to="/" replace />;

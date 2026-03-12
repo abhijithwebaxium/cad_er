@@ -23,7 +23,6 @@ import LongitudinalSectionReport from "./pages/survey/LongitudinalSectionReport"
 import ProjectsList from "./pages/survey/ProjectsList";
 import CameraPage from "./pages/home/components/CameraPage";
 import SelectEquipment from "./pages/survey/SelectEquipment";
-import Landing from "./pages/landing";
 import Quiz from "./pages/quiz";
 import TicketsDashboard from "./pages/tickets";
 import Followup from "./pages/tickets/Followup";
@@ -53,7 +52,6 @@ function App() {
           </Route>
 
           <Route element={<PublicRoute />}>
-            <Route path="/landing" element={<Landing />} />
             <Route path="/login" element={<SignIn />} />
             <Route path="/register" element={<SignUp />} />
           </Route>

@@ -541,6 +541,7 @@ const SignIn = () => {
                       cursor: "pointer",
                       mb: 4,
                     }}
+                    onClick={() => navigate("/")}
                   >
                     CAD<span style={{ color: "#6366f1" }}>er.</span>
                   </Typography>

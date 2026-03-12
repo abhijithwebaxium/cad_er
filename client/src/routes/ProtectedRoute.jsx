@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Landing from "../pages/landing";
 
 const ProtectedRoute = ({ requiredRoles = [], requiredTypes = [] }) => {
   const { user, hasLoggedInBefore } = useSelector((state) => state.user);
@@ -7,12 +8,10 @@ const ProtectedRoute = ({ requiredRoles = [], requiredTypes = [] }) => {
 
   // 1️⃣ Not authenticated
   if (!user) {
-    return (
-      <Navigate
-        to={hasLoggedInBefore === true ? "/login" : "/landing"}
-        replace
-      />
-    );
+    if (hasLoggedInBefore === true) {
+      return <Navigate to="/login" replace />;
+    }
+    return <Landing />;
   }
 
   // 2️⃣ User-type restriction (route-level, if defined)

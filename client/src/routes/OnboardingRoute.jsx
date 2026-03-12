@@ -6,10 +6,7 @@ const OnboardingRoute = () => {
 
   if (!user) {
     return (
-      <Navigate
-        to={hasLoggedInBefore === true ? "/login" : "/landing"}
-        replace
-      />
+      <Navigate to={hasLoggedInBefore === true ? "/login" : "/"} replace />
     );
   }
 
