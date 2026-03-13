@@ -450,7 +450,9 @@ const VolumeReport = () => {
               isDeductionStarted = false;
             }
 
-            difference = "0.000";
+            difference = prevSection
+            ? (currentChainage - prevChainage).toFixed(3)
+            : "0.000";
           }
         } else {
           difference = prevSection

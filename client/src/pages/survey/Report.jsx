@@ -269,9 +269,6 @@ const Report = () => {
           fontSize={18}
           fontWeight={700}
           align="center"
-          onClick={() =>
-            navigate(`/survey/road-survey/${id}/plotting-and-quantity-report`)
-          }
         >
           Generate Survey Report
         </Typography>
