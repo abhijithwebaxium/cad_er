@@ -1509,6 +1509,7 @@ const generateSurveyPurpose = async (req, res, next) => {
     const roadWidth = Number(width);
     const safeQuantity = Number(quantity);
     const lastReading = readingsToCreate.at(-1);
+    const doHaveCamper = csCamper > 0 ? Number(csCamper) : null;
     const limit =
       Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 0;
 
@@ -1607,9 +1608,24 @@ const generateSurveyPurpose = async (req, res, next) => {
           initialLevelMap,
         );
 
+        let count = 0;
+
         for (const [offset, level] of Object.entries(finalMap)) {
-          reducedLevels.push(level);
+          let value = Number(level);
+
+          if (
+            doHaveCamper &&
+            (count === 0 || count === reading.reducedLevels.length - 1)
+          ) {
+            value -= (roadWidth / 2) * doHaveCamper;
+          }
+
+          const rounded = Math.round(value / 0.005) * 0.005;
+
+          reducedLevels.push(rounded.toFixed(3));
           offsets.push(offset);
+
+          count++;
         }
       } else {
         const totalReadingReducedLevel = reading.reducedLevels.reduce(
@@ -1621,9 +1637,6 @@ const generateSurveyPurpose = async (req, res, next) => {
           totalReadingReducedLevel / reading.reducedLevels.length;
 
         const height = safeQuantity / (limit * roadWidth);
-
-        // If cross-section camber is provided, add it to the height
-        const doHaveCamper = csCamper > 0 ? Number(csCamper) : null;
 
         reading.reducedLevels.forEach((_, idx) => {
           let value = avgReadingReducedLevel + height;
