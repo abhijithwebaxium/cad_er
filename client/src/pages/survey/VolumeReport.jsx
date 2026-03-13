@@ -131,7 +131,7 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
 
     ...(showArea?.cutting
       ? [
-          { content: "", colSpan: 3 }, // Fixed span logic to align under Volume
+          { content: "", colSpan: 2 },
           {
             content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
             styles: { fontStyle: "bold", halign: "center" },
@@ -141,7 +141,7 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
 
     ...(showArea?.filling
       ? [
-          { content: "", colSpan: 3 },
+          { content: "", colSpan: showArea?.cutting ? 3 : 2 },
           {
             content: Number(tableData?.totalFillingVolume)?.toFixed(3),
             styles: { fontStyle: "bold", halign: "center" },

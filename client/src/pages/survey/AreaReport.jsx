@@ -97,15 +97,23 @@ const exportAreaReportPdf = ({ tableData, reportDetails, showArea }) => {
         row.initialEntryRL,
         row.secondaryEntryRL,
 
-        row.cuttingMtr,
-        row.cuttingAvgMtr,
-        row.cuttingWMtr,
-        row.cuttingAreaSqMtr,
+        ...(showArea?.cutting
+          ? [
+              row.cuttingMtr,
+              row.cuttingAvgMtr,
+              row.cuttingWMtr,
+              row.cuttingAreaSqMtr,
+            ]
+          : []),
 
-        row.fillingMtr,
-        row.fillingAvgMtr,
-        row.fillingWMtr,
-        row.fillingAreaSqMtr,
+        ...(showArea?.filling
+          ? [
+              row.fillingMtr,
+              row.fillingAvgMtr,
+              row.fillingWMtr,
+              row.fillingAreaSqMtr,
+            ]
+          : []),
       ]);
     });
 
@@ -148,18 +156,18 @@ const exportAreaReportPdf = ({ tableData, reportDetails, showArea }) => {
         { content: "Distance Meters", rowSpan: 2 },
         { content: `${reportDetails.initialEntry} Meters`, rowSpan: 2 },
         { content: `${reportDetails.secondaryEntry} Meters`, rowSpan: 2 },
-        { content: "Cutting Area", colSpan: 4 },
-        { content: "Filling Area", colSpan: 4 },
+
+        ...(showArea?.cutting ? [{ content: "Cutting Area", colSpan: 4 }] : []),
+        ...(showArea?.filling ? [{ content: "Filling Area", colSpan: 4 }] : []),
       ],
       [
-        "Cutting Meters",
-        "Avg Meters",
-        "Width Meters",
-        "Area Sq. Mtrs",
-        "Filling Meters",
-        "Avg Meters",
-        "Width Meters",
-        "Area Sq. Mtrs",
+        ...(showArea?.cutting
+          ? ["Cutting Meters", "Avg Meters", "Width Meters", "Area Sq. Mtrs"]
+          : []),
+
+        ...(showArea?.filling
+          ? ["Filling Meters", "Avg Meters", "Width Meters", "Area Sq. Mtrs"]
+          : []),
       ],
     ],
     body,
