@@ -1434,7 +1434,44 @@ const generateSurveyPurpose = async (req, res, next) => {
       );
     }
 
+    const parseChainage = (str) => {
+      const [km, m] = str.split(survey.separator).map(Number);
+      return km * 1000 + m;
+    };
+
+    const ranges = interpolation.map((range) => ({
+      start: parseChainage(range.from),
+      end: parseChainage(range.to),
+      width: range.width,
+    }));
+
+    const interpolationChainage = readingsToCreate.reduce((acc, item) => {
+      const currentVal = parseChainage(item.chainage);
+
+      const matchedRange = ranges.find(
+        (r) => currentVal >= r.start && currentVal <= r.end,
+      );
+
+      if (matchedRange) {
+        acc.push({
+          chainage: item.chainage,
+          width: matchedRange.width,
+        });
+      }
+
+      return acc;
+    }, []);
+
     const totalWidth = readingsToCreate.reduce((acc, curr) => {
+      if (interpolation?.length) {
+        const matchedItem = interpolationChainage.find(
+          (item) => item.chainage === curr.chainage,
+        );
+        if (matchedItem) {
+          return acc + (Number(matchedItem.width) || 0);
+        }
+      }
+
       return acc + (Number(curr.roadWidth) || 0);
     }, 0);
 
@@ -1468,34 +1505,6 @@ const generateSurveyPurpose = async (req, res, next) => {
     // -----------------------------
     // 🔹 Bulk Insert Rows (FASTEST)
     // -----------------------------
-
-    const parseChainage = (str) => {
-      const [km, m] = str.split(survey.separator).map(Number);
-      return km * 1000 + m;
-    };
-
-    const ranges = interpolation.map((range) => ({
-      start: parseChainage(range.from),
-      end: parseChainage(range.to),
-      width: range.width,
-    }));
-
-    const interpolationChainage = readingsToCreate.reduce((acc, item) => {
-      const currentVal = parseChainage(item.chainage);
-
-      const matchedRange = ranges.find(
-        (r) => currentVal >= r.start && currentVal <= r.end,
-      );
-
-      if (matchedRange) {
-        acc.push({
-          chainage: item.chainage,
-          width: matchedRange.width,
-        });
-      }
-
-      return acc;
-    }, []);
 
     const roadWidth = Number(width);
     const safeQuantity = Number(quantity);
@@ -1593,7 +1602,6 @@ const generateSurveyPurpose = async (req, res, next) => {
           return y.toFixed(3);
         };
 
-        // Testing with your example
         const finalMap = cropAndInterpolate(
           Number(isInterpolate.width / 2),
           initialLevelMap,
