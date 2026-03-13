@@ -152,7 +152,7 @@ const exportPdf = async ({
         ]);
       });
 
-      body.push([
+      volumeBody.push([
         "",
         "",
         "",
@@ -1178,7 +1178,7 @@ const PlottingAndQuantityReport = () => {
         mt={4}
         mb={2}
       >
-        Volume Report {reportDetails.current.initialEntry} and{" "}
+        Volume Report {reportDetails.current.initialEntry} and
         {reportDetails.current.secondaryEntry}
       </Typography>
 
@@ -1324,7 +1324,7 @@ const PlottingAndQuantityReport = () => {
           align="center"
           mb={2}
         >
-          Area Report Between {reportDetails.current.initialEntry} and{" "}
+          Area Report Between {reportDetails.current.initialEntry} and
           {reportDetails.current.secondaryEntry}
         </Typography>
 
@@ -1447,35 +1447,26 @@ const PlottingAndQuantityReport = () => {
                     ))}
 
                     <TableRow>
-                      {" "}
-                      <TableCell colSpan={4}></TableCell>{" "}
-                      <TableCell sx={{ fontWeight: "bold" }}>Total</TableCell>{" "}
+                      <TableCell colSpan={4}></TableCell>
+                      <TableCell sx={{ fontWeight: "bold" }}>Total</TableCell>
                       {showArea?.cutting && (
                         <>
-                          {" "}
-                          <TableCell colSpan={2}></TableCell>{" "}
+                          <TableCell colSpan={2}></TableCell>
                           <TableCell sx={{ fontWeight: "bold" }}>
-                            {" "}
-                            {Number(row?.totalCuttingAreaSqMtr)?.toFixed(
-                              3,
-                            )}{" "}
-                          </TableCell>{" "}
+                            {Number(row?.totalCuttingAreaSqMtr)?.toFixed(3)}
+                          </TableCell>
                         </>
-                      )}{" "}
+                      )}
                       {showArea?.filling && (
                         <>
-                          {" "}
                           <TableCell
                             colSpan={showArea?.cutting ? 3 : 2}
-                          ></TableCell>{" "}
+                          ></TableCell>
                           <TableCell sx={{ fontWeight: "bold" }}>
-                            {" "}
-                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(
-                              3,
-                            )}{" "}
-                          </TableCell>{" "}
+                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
+                          </TableCell>
                         </>
-                      )}{" "}
+                      )}
                     </TableRow>
                   </Fragment>
                 ))}
