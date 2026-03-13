@@ -148,6 +148,10 @@ const Report = () => {
       link += "volume-report";
     }
 
+    if (reportType === "batch-plotting") {
+      link += "plotting-and-quantity-report";
+    }
+
     return link;
   };
 
@@ -330,19 +334,24 @@ const Report = () => {
             exclusive
             fullWidth
             onChange={(e, value) => setReportType(value)}
-            sx={{ display: "flex", gap: 2 }}
+            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
-            <ToggleButton value="cross" sx={toggleButtonSx}>
-              CS
-            </ToggleButton>
-            <ToggleButton value="longitudinal" sx={toggleButtonSx}>
-              LS
-            </ToggleButton>
-            <ToggleButton value="area" sx={toggleButtonSx}>
-              Area
-            </ToggleButton>
-            <ToggleButton value="volume" sx={toggleButtonSx}>
-              Volume
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <ToggleButton value="cross" sx={toggleButtonSx}>
+                CS
+              </ToggleButton>
+              <ToggleButton value="longitudinal" sx={toggleButtonSx}>
+                LS
+              </ToggleButton>
+              <ToggleButton value="area" sx={toggleButtonSx}>
+                Area
+              </ToggleButton>
+              <ToggleButton value="volume" sx={toggleButtonSx}>
+                Volume
+              </ToggleButton>
+            </Box>
+            <ToggleButton value="batch-plotting" sx={toggleButtonSx}>
+              Batch plotting
             </ToggleButton>
           </ToggleButtonGroup>
         </Paper>
