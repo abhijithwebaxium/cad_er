@@ -1608,10 +1608,21 @@ const generateSurveyPurpose = async (req, res, next) => {
           initialLevelMap,
         );
 
+        // 1. Get the values from the object as an array
+        const values = Object.values(finalMap);
+
+        // 2. Sum the values (converting strings to numbers)
+        const sum = values.reduce((acc, val) => acc + parseFloat(val), 0);
+
+        // 3. Divide by the number of elements
+        const avg = sum / values.length;
+
+        const height = safeQuantity / (limit * roadWidth);
+
         let count = 0;
 
         for (const [offset, level] of Object.entries(finalMap)) {
-          let value = Number(level);
+          let value = avg + height;
 
           if (
             doHaveCamper &&
@@ -1676,7 +1687,7 @@ const generateSurveyPurpose = async (req, res, next) => {
         },
       };
     });
-
+    return;
     if (bulkOps.length > 0) {
       await SurveyRow.bulkWrite(bulkOps, { session });
     } else {
