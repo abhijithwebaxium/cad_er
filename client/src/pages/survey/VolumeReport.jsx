@@ -85,7 +85,7 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
           colSpan: 13,
           styles: {
             fontStyle: "bolditalic",
-            halign: "left",
+            halign: "left", // Usually, long messages look better left-aligned
             fillColor: [245, 245, 245],
           },
         },
@@ -120,32 +120,31 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
     ]);
   });
 
-  // ===== TOTAL ROW (EXACT UI ALIGNMENT) =====
+  // ===== TOTAL ROW =====
   body.push([
     "",
     "",
     "",
     "",
     "",
-
-    { content: "Total", styles: { fontStyle: "bold" } },
+    { content: "Total", styles: { fontStyle: "bold", halign: "center" } },
 
     ...(showArea?.cutting
       ? [
-          { content: "", colSpan: 2 },
+          { content: "", colSpan: 3 }, // Fixed span logic to align under Volume
           {
             content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
-            styles: { fontStyle: "bold" },
+            styles: { fontStyle: "bold", halign: "center" },
           },
         ]
       : []),
 
     ...(showArea?.filling
       ? [
-          { content: "", colSpan: showArea?.cutting ? 3 : 2 },
+          { content: "", colSpan: 3 },
           {
             content: Number(tableData?.totalFillingVolume)?.toFixed(3),
-            styles: { fontStyle: "bold" },
+            styles: { fontStyle: "bold", halign: "center" },
           },
         ]
       : []),
@@ -170,20 +169,10 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
       ],
       [
         ...(showArea?.cutting
-          ? [
-              "Area Sq. Mtrs",
-              "Previous Area",
-              "Average Sq. Mtrs",
-              "Volume Cubic Meters",
-            ]
+          ? ["Area Sq. Mtrs", "Prev Area", "Avg Sq. Mtrs", "Vol (m³)"]
           : []),
         ...(showArea?.filling
-          ? [
-              "Area Sq. Mtrs",
-              "Previous Area",
-              "Average Sq. Mtrs",
-              "Volume Cubic Meters",
-            ]
+          ? ["Area Sq. Mtrs", "Prev Area", "Avg Sq. Mtrs", "Vol (m³)"]
           : []),
       ],
     ],
@@ -194,23 +183,23 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
       textColor: 0,
       lineWidth: 0.1,
       valign: "middle",
+      halign: "center", // <--- THIS ALIGNS ALL BODY CELLS TO CENTER
     },
     headStyles: {
       fontSize: 7.5,
       fontStyle: "bold",
-      halign: "center",
+      halign: "center", // <--- THIS ALIGNS ALL HEADER CELLS TO CENTER
       valign: "middle",
-      fillColor: false,
+      fillColor: [240, 240, 240], // Light gray header looks cleaner than 'false'
       textColor: 0,
       lineWidth: 0.1,
     },
-    didDrawPage: () => {
-      // ===== REPEATING TITLE =====
+    didDrawPage: (data) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text(
-        `Volume Report ${reportDetails.initialEntry} and ${reportDetails.secondaryEntry}`,
-        105,
+        `Volume Report: ${reportDetails.initialEntry} to ${reportDetails.secondaryEntry}`,
+        doc.internal.pageSize.width / 2,
         15,
         { align: "center" },
       );
@@ -1150,19 +1139,19 @@ const VolumeReport = () => {
             }}
           >
             <TableRow>
-              <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+              <TableCell sx={{ fontWeight: 700 }} rowSpan={2} align="center">
                 Sl.No.
               </TableCell>
-              <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+              <TableCell sx={{ fontWeight: 700 }} rowSpan={2} align="center">
                 Section From
               </TableCell>
-              <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+              <TableCell sx={{ fontWeight: 700 }} rowSpan={2} align="center">
                 Previous Section
               </TableCell>
-              <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+              <TableCell sx={{ fontWeight: 700 }} rowSpan={2} align="center">
                 Difference
               </TableCell>
-              <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+              <TableCell sx={{ fontWeight: 700 }} rowSpan={2} align="center">
                 Width
               </TableCell>
 
@@ -1181,12 +1170,16 @@ const VolumeReport = () => {
             <TableRow>
               {showArea?.cutting && (
                 <>
-                  <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Previous Area</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
+                    Area Sq. Mtrs
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
+                    Previous Area
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
                     Average Sq. Mtrs
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
                     Volume Cubic Meters
                   </TableCell>
                 </>
@@ -1194,12 +1187,16 @@ const VolumeReport = () => {
 
               {showArea?.filling && (
                 <>
-                  <TableCell sx={{ fontWeight: 700 }}>Area Sq. Mtrs</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Previous Area</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
+                    Area Sq. Mtrs
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
+                    Previous Area
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
                     Average Sq. Mtrs
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">
                     Volume Cubic Meters
                   </TableCell>
                 </>
@@ -1217,14 +1214,14 @@ const VolumeReport = () => {
                 )}
 
                 <TableRow>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{row.section}</TableCell>
-                  <TableCell>{row.prevSection}</TableCell>
-                  <TableCell>{row.difference}</TableCell>
-                  <TableCell>{row.width}</TableCell>
+                  <TableCell align="center">{index + 1}</TableCell>
+                  <TableCell align="center">{row.section}</TableCell>
+                  <TableCell align="center">{row.prevSection}</TableCell>
+                  <TableCell align="center">{row.difference}</TableCell>
+                  <TableCell align="center">{row.width}</TableCell>
                   {showArea?.cutting && (
                     <>
-                      <TableCell>
+                      <TableCell align="center">
                         {calculationMode && (
                           <>
                             (
@@ -1241,8 +1238,10 @@ const VolumeReport = () => {
                         )}{" "}
                         {row.cuttingAreaSqMtr}
                       </TableCell>
-                      <TableCell>{row.cuttingPrevArea}</TableCell>
-                      <TableCell>
+                      <TableCell align="center">
+                        {row.cuttingPrevArea}
+                      </TableCell>
+                      <TableCell align="center">
                         {calculationMode && (
                           <>
                             ({row.cuttingAreaSqMtr} + {row.cuttingPrevArea}) / 2
@@ -1251,7 +1250,7 @@ const VolumeReport = () => {
                         )}
                         {row.cuttingAvgSqrMtr}
                       </TableCell>
-                      <TableCell>
+                      <TableCell align="center">
                         {calculationMode && (
                           <>
                             ({row.cuttingAvgSqrMtr} * {row.difference}) =
@@ -1263,7 +1262,7 @@ const VolumeReport = () => {
                   )}
                   {showArea?.filling && (
                     <>
-                      <TableCell>
+                      <TableCell align="center">
                         {calculationMode && (
                           <>
                             (
@@ -1280,8 +1279,10 @@ const VolumeReport = () => {
                         )}{" "}
                         {row.fillingAreaSqMtr}
                       </TableCell>
-                      <TableCell>{row.fillingPrevArea}</TableCell>
-                      <TableCell>
+                      <TableCell align="center">
+                        {row.fillingPrevArea}
+                      </TableCell>
+                      <TableCell align="center">
                         {calculationMode && (
                           <>
                             ({row.fillingAreaSqMtr} + {row.fillingPrevArea}) / 2
@@ -1290,7 +1291,7 @@ const VolumeReport = () => {
                         )}
                         {row.fillingAvgSqrMtr}
                       </TableCell>
-                      <TableCell>
+                      <TableCell align="center">
                         {calculationMode && (
                           <>
                             ({row.fillingAvgSqrMtr} * {row.difference}) =
@@ -1307,12 +1308,14 @@ const VolumeReport = () => {
             <TableRow>
               <TableCell colSpan={5}></TableCell>
 
-              <TableCell sx={{ fontWeight: "bold" }}>Total</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }} align="center">
+                Total
+              </TableCell>
 
               {showArea?.cutting && (
                 <>
                   <TableCell colSpan={2}></TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>
+                  <TableCell sx={{ fontWeight: "bold" }} align="center">
                     {Number(tableData?.totalCuttingVolume)?.toFixed(3)}
                   </TableCell>
                 </>
@@ -1322,7 +1325,7 @@ const VolumeReport = () => {
                 <>
                   <TableCell colSpan={showArea?.cutting ? 3 : 2}></TableCell>
 
-                  <TableCell sx={{ fontWeight: "bold" }}>
+                  <TableCell sx={{ fontWeight: "bold" }} align="center">
                     {Number(tableData?.totalFillingVolume)?.toFixed(3)}
                   </TableCell>
                 </>

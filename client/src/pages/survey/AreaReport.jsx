@@ -70,31 +70,22 @@ const initialDetails = {
   secondaryEntry: "",
 };
 
-const exportAreaReportPdf = ({ tableData, reportDetails }) => {
+const exportAreaReportPdf = ({ tableData, reportDetails, showArea }) => {
   const doc = new jsPDF("p", "mm", "a4");
-
-  // ===== TITLE =====
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
 
   // ===== BUILD BODY =====
   const body = [];
 
   tableData.forEach((section) => {
-    // Section title row
     body.push([
       {
         content: `Section: ${section.section}`,
         colSpan: 12,
-        styles: { fontStyle: "bold" },
-      },
-    ]);
-
-    // Spacer row
-    body.push([
-      {
-        content: "",
-        colSpan: 12,
+        styles: {
+          fontStyle: "bold",
+          halign: "left",
+          fillColor: [240, 240, 240],
+        },
       },
     ]);
 
@@ -118,18 +109,17 @@ const exportAreaReportPdf = ({ tableData, reportDetails }) => {
       ]);
     });
 
-    // Total row (exact UI alignment)
+    // Total row (Center aligned)
     body.push([
       { content: "", colSpan: 4 },
-
-      { content: "Total", styles: { fontStyle: "bold" } },
+      { content: "Total", styles: { fontStyle: "bold", halign: "center" } },
 
       ...(showArea?.cutting
         ? [
             { content: "", colSpan: 2 },
             {
               content: Number(section?.totalCuttingAreaSqMtr)?.toFixed(3),
-              styles: { fontStyle: "bold" },
+              styles: { fontStyle: "bold", halign: "center" },
             },
           ]
         : []),
@@ -139,14 +129,16 @@ const exportAreaReportPdf = ({ tableData, reportDetails }) => {
             { content: "", colSpan: showArea?.cutting ? 3 : 2 },
             {
               content: Number(section?.totalFillingAreaSqMtr)?.toFixed(3),
-              styles: { fontStyle: "bold" },
+              styles: { fontStyle: "bold", halign: "center" },
             },
           ]
         : []),
     ]);
+
+    // Optional: Add a small empty spacer row between sections
+    body.push([{ content: "", colSpan: 12, styles: { cellPadding: 0.5 } }]);
   });
 
-  // ===== EXACT 2-ROW HEADER =====
   autoTable(doc, {
     margin: { top: 20 },
     theme: "grid",
@@ -164,7 +156,6 @@ const exportAreaReportPdf = ({ tableData, reportDetails }) => {
         "Avg Meters",
         "Width Meters",
         "Area Sq. Mtrs",
-
         "Filling Meters",
         "Avg Meters",
         "Width Meters",
@@ -178,23 +169,23 @@ const exportAreaReportPdf = ({ tableData, reportDetails }) => {
       textColor: 0,
       lineWidth: 0.1,
       valign: "middle",
+      halign: "center", // <--- Centers all body cells
     },
     headStyles: {
       fontSize: 7.5,
       fontStyle: "bold",
-      halign: "center",
+      halign: "center", // <--- Centers all header cells
       valign: "middle",
-      fillColor: false,
+      fillColor: [240, 240, 240],
       textColor: 0,
       lineWidth: 0.1,
     },
     didDrawPage: () => {
-      // Optional repeating header text
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text(
-        `Area Report Between ${reportDetails.initialEntry} and ${reportDetails.secondaryEntry}`,
-        105,
+        `Area Report: ${reportDetails.initialEntry} to ${reportDetails.secondaryEntry}`,
+        doc.internal.pageSize.width / 2,
         15,
         { align: "center" },
       );
@@ -246,7 +237,11 @@ const AreaReport = () => {
     }
 
     if (item.value === "pdf download") {
-      exportAreaReportPdf({ tableData, reportDetails: reportDetails.current });
+      exportAreaReportPdf({
+        tableData,
+        reportDetails: reportDetails.current,
+        showArea,
+      });
     }
   };
 
@@ -445,7 +440,7 @@ const AreaReport = () => {
 
     // ===== Merge Header Cells =====
     sheet.mergeCells("E2:H2"); // Cutting Area
-     if (showArea?.cutting && showArea?.filling) {
+    if (showArea?.cutting && showArea?.filling) {
       sheet.mergeCells("I2:L2"); // Filling Area
     }
 
@@ -937,7 +932,7 @@ const AreaReport = () => {
           align="center"
           mb={2}
         >
-          Area Report Between {reportDetails.current.initialEntry} and{" "}
+          Area Report Between {reportDetails.current.initialEntry} and
           {reportDetails.current.secondaryEntry}
         </Typography>
 
@@ -956,16 +951,32 @@ const AreaReport = () => {
                 }}
               >
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                  <TableCell
+                    sx={{ fontWeight: 700 }}
+                    rowSpan={2}
+                    align="center"
+                  >
                     Sl.No.
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                  <TableCell
+                    sx={{ fontWeight: 700 }}
+                    rowSpan={2}
+                    align="center"
+                  >
                     Distance Meters
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                  <TableCell
+                    sx={{ fontWeight: 700 }}
+                    rowSpan={2}
+                    align="center"
+                  >
                     {reportDetails?.current?.initialEntry || ""} Meters
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} rowSpan={2}>
+                  <TableCell
+                    sx={{ fontWeight: 700 }}
+                    rowSpan={2}
+                    align="center"
+                  >
                     {reportDetails?.current?.secondaryEntry || ""} Meters
                   </TableCell>
                   {showArea?.cutting && (
@@ -990,14 +1001,16 @@ const AreaReport = () => {
                 <TableRow>
                   {showArea?.cutting && (
                     <>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
                         Cutting Meters
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Avg Meters</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
+                        Avg Meters
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
                         Width Meters
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
                         Area Sq. Mtrs
                       </TableCell>
                     </>
@@ -1005,14 +1018,16 @@ const AreaReport = () => {
 
                   {showArea?.filling && (
                     <>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
                         Filling Meters
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Avg Meters</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
+                        Avg Meters
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
                         Width Meters
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700 }} align="center">
                         Area Sq. Mtrs
                       </TableCell>
                     </>
@@ -1034,61 +1049,74 @@ const AreaReport = () => {
 
                     {row?.data?.map((entry, idx) => (
                       <TableRow key={`${index}-${idx}`}>
-                        <TableCell>{idx + 1}</TableCell>
-                        <TableCell>{entry.offset}</TableCell>
-                        <TableCell>{entry.initialEntryRL}</TableCell>
-                        <TableCell>{entry.secondaryEntryRL}</TableCell>
+                        <TableCell align="center">{idx + 1}</TableCell>
+                        <TableCell align="center">{entry.offset}</TableCell>
+                        <TableCell align="center">
+                          {entry.initialEntryRL}
+                        </TableCell>
+                        <TableCell align="center">
+                          {entry.secondaryEntryRL}
+                        </TableCell>
 
                         {showArea?.cutting && (
                           <>
-                            <TableCell>{entry.cuttingMtr}</TableCell>
-                            <TableCell>{entry.cuttingAvgMtr}</TableCell>
-                            <TableCell>{entry.cuttingWMtr}</TableCell>
-                            <TableCell>{entry.cuttingAreaSqMtr}</TableCell>
+                            <TableCell align="center">
+                              {entry.cuttingMtr}
+                            </TableCell>
+                            <TableCell align="center">
+                              {entry.cuttingAvgMtr}
+                            </TableCell>
+                            <TableCell align="center">
+                              {entry.cuttingWMtr}
+                            </TableCell>
+                            <TableCell align="center">
+                              {entry.cuttingAreaSqMtr}
+                            </TableCell>
                           </>
                         )}
 
                         {showArea?.filling && (
                           <>
-                            <TableCell>{entry.fillingMtr}</TableCell>
-                            <TableCell>{entry.fillingAvgMtr}</TableCell>
-                            <TableCell>{entry.fillingWMtr}</TableCell>
-                            <TableCell>{entry.fillingAreaSqMtr}</TableCell>
+                            <TableCell align="center">
+                              {entry.fillingMtr}
+                            </TableCell>
+                            <TableCell align="center">
+                              {entry.fillingAvgMtr}
+                            </TableCell>
+                            <TableCell align="center">
+                              {entry.fillingWMtr}
+                            </TableCell>
+                            <TableCell align="center">
+                              {entry.fillingAreaSqMtr}
+                            </TableCell>
                           </>
                         )}
                       </TableRow>
                     ))}
 
                     <TableRow>
-                      {" "}
-                      <TableCell colSpan={4}></TableCell>{" "}
-                      <TableCell sx={{ fontWeight: "bold" }}>Total</TableCell>{" "}
+                      <TableCell colSpan={4}></TableCell>
+                      <TableCell sx={{ fontWeight: "bold" }} align="center">
+                        Total
+                      </TableCell>
                       {showArea?.cutting && (
                         <>
-                          {" "}
-                          <TableCell colSpan={2}></TableCell>{" "}
-                          <TableCell sx={{ fontWeight: "bold" }}>
-                            {" "}
-                            {Number(row?.totalCuttingAreaSqMtr)?.toFixed(
-                              3,
-                            )}{" "}
-                          </TableCell>{" "}
+                          <TableCell colSpan={2}></TableCell>
+                          <TableCell sx={{ fontWeight: "bold" }} align="center">
+                            {Number(row?.totalCuttingAreaSqMtr)?.toFixed(3)}
+                          </TableCell>
                         </>
-                      )}{" "}
+                      )}
                       {showArea?.filling && (
                         <>
-                          {" "}
                           <TableCell
                             colSpan={showArea?.cutting ? 3 : 2}
-                          ></TableCell>{" "}
-                          <TableCell sx={{ fontWeight: "bold" }}>
-                            {" "}
-                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(
-                              3,
-                            )}{" "}
-                          </TableCell>{" "}
+                          ></TableCell>
+                          <TableCell sx={{ fontWeight: "bold" }} align="center">
+                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
+                          </TableCell>
                         </>
-                      )}{" "}
+                      )}
                     </TableRow>
                   </Fragment>
                 ))}
