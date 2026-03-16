@@ -1687,7 +1687,7 @@ const generateSurveyPurpose = async (req, res, next) => {
         },
       };
     });
-    return;
+
     if (bulkOps.length > 0) {
       await SurveyRow.bulkWrite(bulkOps, { session });
     } else {
