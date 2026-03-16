@@ -16,12 +16,6 @@ const editableFields = {
   TBM: ["IS", "remarks"],
 };
 
-/**
- * calculateTableData(purpose)
- * Returns rows with sanitized fields and also keeps:
- * - rowIndex: index in purpose.rows (so edits map back to original)
- * - index: nested index (for intermediateSight / offsets) if applicable
- */
 export function calculateTableData(survey) {
   if (!survey) return [];
 
@@ -35,12 +29,18 @@ export function calculateTableData(survey) {
   let branchCounter = 0;
 
   // Helper function to process a set of rows (main or branch)
-  const processRows = (purposeRows, surveyContext, isBranch = false, branchName = "") => {
+  const processRows = (
+    purposeRows,
+    surveyContext,
+    isBranch = false,
+    branchName = "",
+  ) => {
     if (!purposeRows) return;
 
     if (isBranch) {
       rows.push({
-        rowIndex: context.idx,
+        // non-editable header for branch
+        rowIndex: -1,
         rowType: "-",
         CH: "-",
         BS: "-",
@@ -53,7 +53,7 @@ export function calculateTableData(survey) {
       });
     }
 
-    purposeRows.forEach((row) => {
+    purposeRows.forEach((row, pIndex) => {
       if (!row) return;
 
       switch (row.type) {
@@ -63,7 +63,7 @@ export function calculateTableData(survey) {
             ? surveyContext?.reducedLevel || context.rl
             : context.rl;
           context.hi = Number(context.rl) + Number(row.backSight || 0);
-          rows.push(createRowObject(row, context, "BS"));
+          rows.push(createRowObject(row, context, "BS", isBranch, pIndex));
           break;
         }
 
@@ -73,7 +73,8 @@ export function calculateTableData(survey) {
           inter.forEach((isVal, i) => {
             const rlValue = (context.hi - Number(isVal || 0)).toFixed(3);
             rows.push({
-              rowIndex: context.idx,
+              // rowIndex must point to the source row index in the purpose.rows array
+              rowIndex: pIndex,
               rowType: row.type,
               index: i,
               CH:
@@ -85,6 +86,7 @@ export function calculateTableData(survey) {
               RL: rlValue,
               Offset: (row.offsets && row.offsets[i]) ?? "-",
               remarks: (row.remarks && row.remarks[i]) ?? "",
+              isBranch,
             });
           });
           break;
@@ -93,7 +95,7 @@ export function calculateTableData(survey) {
         case "CP": {
           context.rl = Number(context.hi) - Number(row.foreSight || 0);
           context.hi = context.rl + Number(row.backSight || 0);
-          rows.push(createRowObject(row, context, "CP"));
+          rows.push(createRowObject(row, context, "CP", isBranch, pIndex));
           break;
         }
       }
@@ -104,8 +106,13 @@ export function calculateTableData(survey) {
           const branch = survey.branches?.find((b) => b._id === branchId);
 
           if (branch && branch.purposes?.[0]) {
-            branchCounter ++;
-            processRows(branch.purposes[0].rows, branch.surveyId, true, branch.name);
+            branchCounter++;
+            processRows(
+              branch.purposes[0].rows,
+              branch.surveyId,
+              true,
+              branch.name,
+            );
           }
         });
       }
@@ -113,8 +120,9 @@ export function calculateTableData(survey) {
   };
 
   // Helper to keep the switch cleaner
-  const createRowObject = (row, ctx, type) => ({
-    rowIndex: ctx.idx,
+  const createRowObject = (row, ctx, type, isBranch, sourceIndex) => ({
+    // sourceIndex corresponds to purpose.rows index
+    rowIndex: sourceIndex,
     rowType: row.type,
     CH: "-",
     BS: row.backSight ?? "",
@@ -124,6 +132,7 @@ export function calculateTableData(survey) {
     RL: Number(ctx.rl).toFixed(3),
     Offset: "-",
     remarks: (row.remarks && row.remarks[0]) ?? "",
+    isBranch,
   });
 
   // Start the process with the main survey
@@ -137,7 +146,7 @@ export function calculateTableData(survey) {
     const diff = finalRl - Number(survey.reducedLevel || 0);
 
     rows.push({
-      rowIndex: context.idx,
+      rowIndex: -1,
       rowType: "Closure",
       FS: finalFS.toFixed(3),
       RL: finalRl.toFixed(3),
@@ -163,9 +172,9 @@ export default function FieldBookTable({
 }) {
   const head = ["CH", "BS", "IS", "FS", "HI", "RL", "Offset", "Remarks"];
 
-  const renderEditable = (row, key, value) => {
+  const renderEditable = (row, key, value, isBranch) => {
     const editableForRow = editableFields[row.rowType] || [];
-    if (!isEditing || !editableForRow.includes(key)) return value;
+    if (!isEditing || !editableForRow.includes(key) || isBranch) return value;
 
     // For nested array fields (IS, Offset, remarks), pass nested index
     const nestedIndex = row.index != null ? row.index : undefined;
@@ -202,22 +211,24 @@ export default function FieldBookTable({
       <TableBody>
         {tableData.map((row, idx) => (
           <TableRow key={idx}>
-            <TableCell>{renderEditable(row, "CH", row.CH)}</TableCell>
-            <TableCell align="right">
-              {renderEditable(row, "BS", row.BS)}
+            <TableCell>
+              {renderEditable(row, "CH", row.CH, row.isBranch)}
             </TableCell>
             <TableCell align="right">
-              {renderEditable(row, "IS", row.IS)}
+              {renderEditable(row, "BS", row.BS, row.isBranch)}
             </TableCell>
             <TableCell align="right">
-              {renderEditable(row, "FS", row.FS)}
+              {renderEditable(row, "IS", row.IS, row.isBranch)}
+            </TableCell>
+            <TableCell align="right">
+              {renderEditable(row, "FS", row.FS, row.isBranch)}
             </TableCell>
             <TableCell align="right">{row.HI}</TableCell>
             <TableCell align="right">
-              {renderEditable(row, "RL", row.RL)}
+              {renderEditable(row, "RL", row.RL, row.isBranch)}
             </TableCell>
             <TableCell align="right">
-              {renderEditable(row, "Offset", row.Offset)}
+              {renderEditable(row, "Offset", row.Offset, row.isBranch)}
             </TableCell>
             <TableCell
               align="right"
@@ -230,7 +241,7 @@ export default function FieldBookTable({
                     : "",
               }}
             >
-              {renderEditable(row, "remarks", row.remarks)}
+              {renderEditable(row, "remarks", row.remarks, row.isBranch)}
             </TableCell>
           </TableRow>
         ))}

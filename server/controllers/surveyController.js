@@ -1730,16 +1730,28 @@ const editSurveyPurpose = async (req, res, next) => {
       .sort({ createdAt: 1 })
       .session(session);
 
-    // 2. find which row changed
-    const changedIndex = updatedRows[0].index;
-    const changes = updatedRows[0].data;
+    // validate payload
+    if (!Array.isArray(updatedRows) || !updatedRows.length)
+      throw new Error("No updated rows provided");
 
-    // 3. apply user edits to the changed row only (in-memory)
-    Object.assign(rows[changedIndex], changes);
+    // collect changed indices and validate
+    const changedIndices = updatedRows.map((u) => Number(u.index));
+    const invalidIndex = changedIndices.find((idx) => idx < 0 || idx >= rows.length);
+    if (invalidIndex !== undefined)
+      throw new Error("One or more updated row indices are invalid");
 
-    // 4. get starting RL
-    const startRl = rows.find((r) => r.type === "Instrument setup")
-      ?.reducedLevels?.[0];
+    // apply all user edits in-memory to their respective rows
+    updatedRows.forEach((u) => {
+      const idx = Number(u.index);
+      const changes = u.data || {};
+      Object.assign(rows[idx], changes);
+    });
+
+    // determine recalculation starting point (earliest changed index)
+    const changedIndex = Math.min(...changedIndices);
+
+    // 4. get starting RL from (possibly updated) rows
+    const startRl = rows.find((r) => r.type === "Instrument setup")?.reducedLevels?.[0];
 
     if (!startRl) throw Error("Something went wrong!");
 

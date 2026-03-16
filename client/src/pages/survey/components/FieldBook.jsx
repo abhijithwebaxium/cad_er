@@ -117,6 +117,7 @@ export default function FieldBook() {
   const { global } = useSelector((s) => s.loading);
 
   const [purpose, setPurpose] = useState(null);
+  const [survey, setSurvey] = useState(null);
   const [updatedRows, setUpdatedRows] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -141,7 +142,10 @@ export default function FieldBook() {
         const { data } = await getFieldBook(id);
 
         if (data?.success) {
-          setPurpose(data.survey);
+          // backend now returns the full survey with purposes array
+          setSurvey(data.survey);
+          // keep the current purpose (first matching purpose) for edits
+          setPurpose(data.survey?.purposes?.[0] || null);
         } else {
           throw new Error("Failed to load purpose");
         }
@@ -155,26 +159,46 @@ export default function FieldBook() {
   }, [id]);
 
   // --- Derived table data (recomputes when `purpose` changes) ---
+  // table rendering expects the full survey object (with purposes & branches)
   const tableData = useMemo(() => {
-    if (!purpose) return [];
-    return calculateTableData(purpose);
-  }, [purpose]);
+    if (!survey) return [];
+    return calculateTableData(survey);
+  }, [survey]);
 
   const handleRLChange = (rowIndex, value) => {
-    setPurpose((prev) => ({
-      ...prev,
-      surveyId: { ...prev.surveyId, reducedLevel: value },
-      rows: prev.rows?.map((row) => {
-        if (row.type === "Instrument setup") {
-          return {
-            ...row,
-            reducedLevels: [value],
-          };
-        }
+    // update purpose rows and survey reduced level for table recompute
+    setPurpose((prev) => {
+      if (!prev) return prev;
+      const newRows = prev.rows?.map((row) =>
+        row.type === "Instrument setup"
+          ? { ...row, reducedLevels: [value] }
+          : row,
+      );
 
-        return row;
-      }),
-    }));
+      return {
+        ...prev,
+        surveyId: { ...prev.surveyId, reducedLevel: value },
+        rows: newRows,
+      };
+    });
+
+    setSurvey((s) => {
+      if (!s) return s;
+      const newSurvey = { ...s, reducedLevel: value };
+      newSurvey.purposes = newSurvey.purposes?.map((p) =>
+        String(p._id) === String(purpose?._id)
+          ? {
+              ...p,
+              rows: p.rows?.map((row) =>
+                row.type === "Instrument setup"
+                  ? { ...row, reducedLevels: [value] }
+                  : row,
+              ),
+            }
+          : p,
+      );
+      return newSurvey;
+    });
 
     setUpdatedRows((prev) => ({
       ...prev,
@@ -232,6 +256,16 @@ export default function FieldBook() {
           return updatedRow;
         });
 
+        // also reflect change inside survey.purposes for table rendering
+        setSurvey((s) => {
+          if (!s) return s;
+          const newSurvey = { ...s };
+          newSurvey.purposes = newSurvey.purposes?.map((p) =>
+            String(p._id) === String(prev._id) ? { ...p, rows: newRows } : p,
+          );
+          return newSurvey;
+        });
+
         return { ...prev, rows: newRows };
       });
 
@@ -269,7 +303,7 @@ export default function FieldBook() {
 
       // Example payload sent to API
       const payload = {
-        surveyId: purpose.surveyId._id,
+        surveyId: survey?._id || purpose?.surveyId?._id,
         purposeId: purpose._id,
         updatedRows: changed,
       };
@@ -297,7 +331,8 @@ export default function FieldBook() {
     // Title
     sheet.mergeCells("A1:H1");
     const title = sheet.getCell("A1");
-    title.value = purpose?.surveyId?.project || "";
+    // project is on the survey object returned by backend
+    title.value = survey?.project || purpose?.surveyId?.project || "";
     title.font = { size: 18, bold: true };
     title.alignment = { vertical: "middle", horizontal: "center" };
     sheet.getRow(1).height = 28;
@@ -368,9 +403,7 @@ export default function FieldBook() {
           <BasicButtons
             variant="outlined"
             sx={{ py: 1, px: 2, fontSize: 12, minWidth: "78px" }}
-            onClick={() =>
-              navigate(`/survey/road-survey/${purpose?._id}`)
-            }
+            onClick={() => navigate(`/survey/road-survey/${purpose?._id}`)}
             value={
               <Stack direction="row" gap={0.5} alignItems="center">
                 <IoIosAddCircleOutline fontSize={16} />
