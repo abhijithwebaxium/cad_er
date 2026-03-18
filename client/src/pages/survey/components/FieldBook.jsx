@@ -124,7 +124,7 @@ export default function FieldBook() {
 
   const handleMenuSelect = (item) => {
     if (item.value === "reports") {
-      navigate(`/survey/${purpose?._id}/report`);
+      navigate(`/survey/${purpose?.surveyId}/report`);
     }
     if (item.value === "excel download") {
       exportToExcel();
@@ -399,11 +399,10 @@ export default function FieldBook() {
             }
             loading={saving}
           />
-
           <BasicButtons
             variant="outlined"
             sx={{ py: 1, px: 2, fontSize: 12, minWidth: "78px" }}
-            onClick={() => navigate(`/survey/road-survey/${purpose?._id}`)}
+            onClick={() => navigate(`/survey/road-survey/${purpose?.surveyId}`)}
             value={
               <Stack direction="row" gap={0.5} alignItems="center">
                 <IoIosAddCircleOutline fontSize={16} />
