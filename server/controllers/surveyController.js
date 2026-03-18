@@ -1608,21 +1608,10 @@ const generateSurveyPurpose = async (req, res, next) => {
           initialLevelMap,
         );
 
-        // 1. Get the values from the object as an array
-        const values = Object.values(finalMap);
-
-        // 2. Sum the values (converting strings to numbers)
-        const sum = values.reduce((acc, val) => acc + parseFloat(val), 0);
-
-        // 3. Divide by the number of elements
-        const avg = sum / values.length;
-
-        const height = safeQuantity / (limit * roadWidth);
-
         let count = 0;
 
         for (const [offset, level] of Object.entries(finalMap)) {
-          let value = avg + height;
+          let value = Number(level);
 
           if (
             doHaveCamper &&
@@ -1736,7 +1725,9 @@ const editSurveyPurpose = async (req, res, next) => {
 
     // collect changed indices and validate
     const changedIndices = updatedRows.map((u) => Number(u.index));
-    const invalidIndex = changedIndices.find((idx) => idx < 0 || idx >= rows.length);
+    const invalidIndex = changedIndices.find(
+      (idx) => idx < 0 || idx >= rows.length,
+    );
     if (invalidIndex !== undefined)
       throw new Error("One or more updated row indices are invalid");
 
@@ -1751,7 +1742,8 @@ const editSurveyPurpose = async (req, res, next) => {
     const changedIndex = Math.min(...changedIndices);
 
     // 4. get starting RL from (possibly updated) rows
-    const startRl = rows.find((r) => r.type === "Instrument setup")?.reducedLevels?.[0];
+    const startRl = rows.find((r) => r.type === "Instrument setup")
+      ?.reducedLevels?.[0];
 
     if (!startRl) throw Error("Something went wrong!");
 
