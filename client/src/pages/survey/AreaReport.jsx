@@ -309,13 +309,15 @@ const AreaReport = () => {
 
     // Process only "Chainage" type rows
     initialRows
-      .filter((row) => row.type === "Chainage")
+      .filter((row) => row.type === "Chainage" || row.type === "Break")
       .forEach((row) => {
         const proposedRow = proposedRows?.find(
           (p) => p.chainage === row.chainage,
         );
-        const chainage =
-          row.chainage?.split(survey?.separator || "/")?.[1] ?? "";
+
+        const value = row.type === "Break" ? row?.from : row.chainage;
+
+        const chainage = value?.split(survey?.separator || "/")?.[1] ?? "";
 
         let prevReadings = [];
 
@@ -400,6 +402,7 @@ const AreaReport = () => {
 
         rows.push({
           section: Number(chainage),
+          type: row.type,
           data,
           totalCuttingAreaSqMtr,
           totalFillingAreaSqMtr,
@@ -1102,30 +1105,38 @@ const AreaReport = () => {
                       </TableRow>
                     ))}
 
-                    <TableRow>
-                      <TableCell colSpan={4}></TableCell>
-                      <TableCell sx={{ fontWeight: "bold" }} align="center">
-                        Total
-                      </TableCell>
-                      {showArea?.cutting && (
-                        <>
-                          <TableCell colSpan={2}></TableCell>
-                          <TableCell sx={{ fontWeight: "bold" }} align="center">
-                            {Number(row?.totalCuttingAreaSqMtr)?.toFixed(3)}
-                          </TableCell>
-                        </>
-                      )}
-                      {showArea?.filling && (
-                        <>
-                          <TableCell
-                            colSpan={showArea?.cutting ? 3 : 2}
-                          ></TableCell>
-                          <TableCell sx={{ fontWeight: "bold" }} align="center">
-                            {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
-                          </TableCell>
-                        </>
-                      )}
-                    </TableRow>
+                    {row.type !== "Break" && (
+                      <TableRow>
+                        <TableCell colSpan={4}></TableCell>
+                        <TableCell sx={{ fontWeight: "bold" }} align="center">
+                          Total
+                        </TableCell>
+                        {showArea?.cutting && (
+                          <>
+                            <TableCell colSpan={2}></TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold" }}
+                              align="center"
+                            >
+                              {Number(row?.totalCuttingAreaSqMtr)?.toFixed(3)}
+                            </TableCell>
+                          </>
+                        )}
+                        {showArea?.filling && (
+                          <>
+                            <TableCell
+                              colSpan={showArea?.cutting ? 3 : 2}
+                            ></TableCell>
+                            <TableCell
+                              sx={{ fontWeight: "bold" }}
+                              align="center"
+                            >
+                              {Number(row?.totalFillingAreaSqMtr)?.toFixed(3)}
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    )}
                   </Fragment>
                 ))}
               </TableBody>

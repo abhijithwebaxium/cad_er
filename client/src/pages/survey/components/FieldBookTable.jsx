@@ -98,6 +98,21 @@ export function calculateTableData(survey) {
           rows.push(createRowObject(row, context, "CP", isBranch, pIndex));
           break;
         }
+
+        case "Break": {
+          rows.push({
+            rowIndex: pIndex,
+            rowType: row.type,
+            CH: "-",
+            BS: "-",
+            IS: "-",
+            FS: "-",
+            HI: "-",
+            RL: "-",
+            Offset: "-",
+            remarks: `Break from - ${row?.from} to ${row?.to}`,
+          });
+        }
       }
 
       // RECURSION: Check for nested branches in THIS row

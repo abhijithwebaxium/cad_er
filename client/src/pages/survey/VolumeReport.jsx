@@ -330,14 +330,17 @@ const VolumeReport = () => {
 
     // Process only "Chainage" rows
     const filteredInitialRows = initialRows.filter(
-      (row) => row.type === "Chainage",
+      (row) => row.type === "Chainage" || row.type === "Break",
     );
 
     filteredInitialRows.forEach((row) => {
       const secondaryRow = secondaryRows?.find(
         (p) => p.chainage === row.chainage,
       );
-      const chainage = row.chainage?.split(survey?.separator || "/")?.[1] ?? "";
+
+      const value = row.type === "Break" ? row?.from : row.chainage;
+
+      const chainage = value?.split(survey?.separator || "/")?.[1] ?? "";
 
       let prevReadings = [];
 
@@ -451,8 +454,8 @@ const VolumeReport = () => {
             }
 
             difference = prevSection
-            ? (currentChainage - prevChainage).toFixed(3)
-            : "0.000";
+              ? (currentChainage - prevChainage).toFixed(3)
+              : "0.000";
           }
         } else {
           difference = prevSection
@@ -460,9 +463,12 @@ const VolumeReport = () => {
             : "0.000";
         }
       } else {
-        difference = prevSection
-          ? (currentChainage - prevChainage).toFixed(3)
-          : "0.000";
+        difference =
+          row?.type === "Break"
+            ? "0.000"
+            : prevSection
+              ? (currentChainage - prevChainage).toFixed(3)
+              : "0.000";
       }
 
       // --- Average areas ---
@@ -486,9 +492,14 @@ const VolumeReport = () => {
       // --- Push row ---
       rows.push({
         section: currentChainage.toFixed(3),
-        prevSection: prevSection ? prevChainage.toFixed(3) : "-",
+        prevSection:
+          row?.type === "Break"
+            ? "-"
+            : prevSection
+              ? prevChainage.toFixed(3)
+              : "-",
         difference,
-        width: row?.roadWidth ?? "-",
+        width: row?.roadWidth ?? "0.000",
         cuttingAreaSqMtr: cuttingAreaSqMtr.toFixed(3),
         data,
         cuttingPrevArea,
@@ -500,6 +511,8 @@ const VolumeReport = () => {
         fillingVolumeCubicMtr,
         deductionMessage,
         isDeductionRow: flag,
+        type: row.type,
+        message: row?.remarks[0],
       });
 
       if (!showArea.cutting && Number(totals.totalCuttingVolume) > 0) {
@@ -1212,6 +1225,12 @@ const VolumeReport = () => {
                 {row.isDeductionRow && (
                   <TableRow>
                     <TableCell colSpan={13}>{row.deductionMessage}</TableCell>
+                  </TableRow>
+                )}
+
+                {row.type === "Break" && (
+                  <TableRow>
+                    <TableCell colSpan={13}>{row.message}</TableCell>
                   </TableRow>
                 )}
 
