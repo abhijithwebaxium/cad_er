@@ -211,11 +211,21 @@ const LongitudinalSectionReport = () => {
     const initialEntry = tableData[0];
     if (!initialEntry?.rows?.length) return;
 
-    const row = initialEntry.rows.filter((r) => r.type === "Chainage");
+    const row = initialEntry.rows.filter(
+      (r) => r.type === "Chainage" || r.type === "Break",
+    );
     if (!row.length) return;
 
+    const filteredRow = row.filter((r) => r.type === "Chainage");
+
     const pls = Number(initialEntry.pls || 0);
-    const safeChainages = row.map((r) => getSafeChainage(r.chainage)) || [];
+    const safeChainages =
+      filteredRow.map((r) => getSafeChainage(r.chainage)) || [];
+
+    const breakIndexes = [];
+    row.forEach((r, i) => {
+      if (r.type === "Break") breakIndexes.push(i);
+    });
 
     // Helper to extract numeric RL
     const getRlValue = (r) => {
@@ -228,24 +238,24 @@ const LongitudinalSectionReport = () => {
     };
 
     // 1. Get clean numeric arrays for the data
-    const initialLevels = row.map(getRlValue);
+    const initialLevels = filteredRow.map(getRlValue);
 
     // 2. Updated makeSeries: Injects a break WITHOUT corrupting math
-    const makeSeries = (offsets, levels, type) => {
+    const makeSeries = (offsets, levels) => {
       const result = [];
       offsets.forEach((o, i) => {
         const yVal = levels[i];
+
+        // BREAK LOGIC: Lift the pen after index 1
+        if (breakIndexes?.length && breakIndexes.includes(i)) {
+          result.push({ x: Number(Number(o).toFixed(3)), y: null });
+        }
 
         // Add the actual point
         result.push({
           x: Number(Number(o).toFixed(3)),
           y: yVal !== null ? Number(yVal.toFixed(3)) : null,
         });
-
-        // BREAK LOGIC: Lift the pen after index 1
-        if (type === "Break") {
-          result.push({ x: Number(Number(o).toFixed(3)), y: null });
-        }
       });
       return result;
     };
@@ -254,7 +264,7 @@ const LongitudinalSectionReport = () => {
       id,
       type: "ls",
       series: [],
-      allRl: [],
+      allRl: [], // We will only store NUMBERS here
     };
 
     // Add Initial Series
@@ -282,7 +292,7 @@ const LongitudinalSectionReport = () => {
           name: table.type,
           color: getColor(table.type),
           connectgaps: false,
-          data: makeSeries(safeChainages, proposalLevels),
+          data: makeSeries(safeChainages, proposalLevels, breakIndexes),
         });
       }
     }
