@@ -288,6 +288,8 @@ const VolumeReport = () => {
   const tableData = useMemo(() => {
     let initialEntry = null;
     let secondaryEntry = null;
+    let isBreak = false;
+    let breakMessage = "";
     const deductions = (state && state?.rows) || [];
     const isDeduction = deductions.length;
 
@@ -334,13 +336,18 @@ const VolumeReport = () => {
     );
 
     filteredInitialRows.forEach((row) => {
+      if (row.type === "Break") {
+        isBreak = true;
+        breakMessage = row.remarks[0];
+        prevSection = null;
+        return;
+      }
+
       const secondaryRow = secondaryRows?.find(
         (p) => p.chainage === row.chainage,
       );
 
-      const value = row.type === "Break" ? row?.from : row.chainage;
-
-      const chainage = value?.split(survey?.separator || "/")?.[1] ?? "";
+      const chainage = row.chainage?.split(survey?.separator || "/")?.[1] ?? "";
 
       let prevReadings = [];
 
@@ -463,12 +470,11 @@ const VolumeReport = () => {
             : "0.000";
         }
       } else {
-        difference =
-          row?.type === "Break"
-            ? "0.000"
-            : prevSection
-              ? (currentChainage - prevChainage).toFixed(3)
-              : "0.000";
+        difference = isBreak
+          ? "0.000"
+          : prevSection
+            ? (currentChainage - prevChainage).toFixed(3)
+            : "0.000";
       }
 
       // --- Average areas ---
@@ -485,6 +491,7 @@ const VolumeReport = () => {
       const cuttingVolumeCubicMtr = (
         Number(difference) * Number(cuttingAvgSqrMtr)
       ).toFixed(3);
+
       const fillingVolumeCubicMtr = (
         Number(difference) * Number(fillingAvgSqrMtr)
       ).toFixed(3);
@@ -492,12 +499,7 @@ const VolumeReport = () => {
       // --- Push row ---
       rows.push({
         section: currentChainage.toFixed(3),
-        prevSection:
-          row?.type === "Break"
-            ? "-"
-            : prevSection
-              ? prevChainage.toFixed(3)
-              : "-",
+        prevSection: prevSection ? prevChainage.toFixed(3) : "-",
         difference,
         width: row?.roadWidth ?? "0.000",
         cuttingAreaSqMtr: cuttingAreaSqMtr.toFixed(3),
@@ -511,8 +513,8 @@ const VolumeReport = () => {
         fillingVolumeCubicMtr,
         deductionMessage,
         isDeductionRow: flag,
-        type: row.type,
-        message: row?.remarks[0],
+        isBreak,
+        message: breakMessage,
       });
 
       if (!showArea.cutting && Number(totals.totalCuttingVolume) > 0) {
@@ -529,6 +531,8 @@ const VolumeReport = () => {
       totals.totalCuttingVolume += Number(cuttingVolumeCubicMtr);
       totals.totalFillingVolume += Number(fillingVolumeCubicMtr);
       prevSection = chainage;
+      isBreak = false;
+      breakMessage = "";
     });
 
     return { ...totals, rows };
@@ -1228,7 +1232,7 @@ const VolumeReport = () => {
                   </TableRow>
                 )}
 
-                {row.type === "Break" && (
+                {row.isBreak && (
                   <TableRow>
                     <TableCell colSpan={13}>{row.message}</TableCell>
                   </TableRow>

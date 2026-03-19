@@ -180,7 +180,7 @@ const LongitudinalSectionReport = () => {
     if (state && state?.selectedPurposeIds?.length) {
       state.selectedPurposeIds.forEach((entry) => {
         const purpose = survey?.purposes?.find(
-          (p) => String(p._id) === String(entry)
+          (p) => String(p._id) === String(entry),
         );
 
         if (purpose) data.push(purpose);
@@ -191,7 +191,7 @@ const LongitudinalSectionReport = () => {
     }
 
     data.sort(
-      (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type)
+      (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type),
     );
 
     setTableData(data);
@@ -211,111 +211,111 @@ const LongitudinalSectionReport = () => {
     const initialEntry = tableData[0];
     if (!initialEntry?.rows?.length) return;
 
-    const row = initialEntry.rows.filter((row) => row.type === "Chainage");
+    const row = initialEntry.rows.filter((r) => r.type === "Chainage");
     if (!row.length) return;
 
     const pls = Number(initialEntry.pls || 0);
-
     const safeChainages = row.map((r) => getSafeChainage(r.chainage)) || [];
-    const safeInitial = row.map((r) => {
-      const offsetPointIndex = r.offsets?.findIndex((o) => Number(o) === pls);
 
-      const safeOffsetPointIndex =
-        offsetPointIndex === -1
-          ? Math.round(r.offsets.length / 2)
-          : offsetPointIndex;
+    // Helper to extract numeric RL
+    const getRlValue = (r) => {
+      const idx = r.offsets?.findIndex((o) => Number(o) === pls);
+      const safeIdx = idx === -1 ? Math.round(r.offsets.length / 2) : idx;
+      const val = r.reducedLevels[safeIdx];
+      return val !== null && val !== undefined && val !== ""
+        ? Number(val)
+        : null;
+    };
 
-      return r.reducedLevels[safeOffsetPointIndex];
-    });
+    // 1. Get clean numeric arrays for the data
+    const initialLevels = row.map(getRlValue);
+
+    // 2. Updated makeSeries: Injects a break WITHOUT corrupting math
+    const makeSeries = (offsets, levels, type) => {
+      const result = [];
+      offsets.forEach((o, i) => {
+        const yVal = levels[i];
+
+        // Add the actual point
+        result.push({
+          x: Number(Number(o).toFixed(3)),
+          y: yVal !== null ? Number(yVal.toFixed(3)) : null,
+        });
+
+        // BREAK LOGIC: Lift the pen after index 1
+        if (type === "Break") {
+          result.push({ x: Number(Number(o).toFixed(3)), y: null });
+        }
+      });
+      return result;
+    };
 
     const data = {
       id,
       type: "ls",
-      datum: 9.4,
-      chainages: safeChainages,
       series: [],
       allRl: [],
     };
 
-    const makeSeries = (offsets, levels) =>
-      offsets.map((o, i) => ({
-        x: Number(Number(o).toFixed(3)), // NUMERIC X (IMPORTANT)
-        y: Number(Number(levels?.[i] ?? 0).toFixed(3)),
-      }));
-
-    // Add the Initial Entry at the end
+    // Add Initial Series
     data.series.push({
       name: initialEntry.type,
       color: getColor(initialEntry.type),
-      data: makeSeries(safeChainages, safeInitial),
+      connectgaps: false,
+      data: makeSeries(safeChainages, initialLevels),
     });
 
-    // Add all additional tableData (Proposed, Level 2, etc.)
+    // Add initial levels to our math array (filter out nulls)
+    data.allRl.push(...initialLevels.filter((v) => v !== null));
+
+    // Add additional tables (Proposed, etc.)
     if (tableData.length > 1) {
       for (let i = 1; i < tableData.length; i++) {
         const table = tableData[i];
+        const newRows = table?.rows?.filter((r) => r.type === "Chainage") || [];
+        if (!newRows.length) continue;
 
-        const newRow = table?.rows?.filter((r) => r.type === "Chainage") || [];
-        if (!newRow.length) continue;
-
-        const safeProposal = newRow.map((r) => {
-          const offsetPointIndex = r.offsets?.findIndex(
-            (o) => Number(o) === pls
-          );
-          const safeOffsetPointIndex =
-            offsetPointIndex === -1
-              ? Math.round(r.offsets.length / 2)
-              : offsetPointIndex;
-
-          return r.reducedLevels[safeOffsetPointIndex];
-        });
-
-        data.allRl.push(...safeProposal);
+        const proposalLevels = newRows.map(getRlValue);
+        data.allRl.push(...proposalLevels.filter((v) => v !== null));
 
         data.series.push({
           name: table.type,
           color: getColor(table.type),
-          data: makeSeries(safeChainages, safeProposal),
+          connectgaps: false,
+          data: makeSeries(safeChainages, proposalLevels),
         });
       }
     }
 
-    data.allRl.push(...safeInitial);
+    // 3. Robust Bounds Calculation
+    const minY = data.allRl.length ? Math.min(...data.allRl) : 0;
+    const maxY = data.allRl.length ? Math.max(...data.allRl) : 10;
+    const pad = (maxY - minY) * 0.2 || 2;
 
-    // Compute bounds
-    const minY = Math.min(...data.allRl);
-    const maxY = Math.max(...data.allRl);
+    const minX = Math.min(...safeChainages);
+    const maxX = Math.max(...safeChainages);
 
-    const pad = (maxY - minY) * 0.1;
-
-    const minX = Math.min(...data.chainages);
-    const maxX = Math.max(...data.chainages);
-
-    const xaxis = {
-      autorange: false,
-      range: [minX, maxX],
-      tickformat: ".3f",
-      dtick: (maxX - minX) / 4,
-      zeroline: false,
-      showline: false,
-      mirror: true,
-    };
-
-    setChartOptions((_) => ({
+    setChartOptions((prev) => ({
       ...v1ChartOptions,
       layout: {
         ...v1ChartOptions.layout,
         yaxis: {
-          zeroline: false,
+          ...v1ChartOptions.layout?.yaxis,
           autorange: false,
-          range: [minY - 2, maxY + pad],
+          range: [minY - 1, maxY + pad],
         },
-
-        xaxis,
+        xaxis: {
+          ...v1ChartOptions.layout?.xaxis,
+          zeroline: false,
+          showline: false,
+          autorange: false,
+          range: [minX, maxX],
+          tickformat: ".3f",
+        },
       },
     }));
 
-    data.datum = Math.round(minY - 2);
+    data.datum = Math.round(minY - 1);
     setSelectedCs(data);
   };
 
