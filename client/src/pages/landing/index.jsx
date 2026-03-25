@@ -32,6 +32,7 @@ import { showAlert } from "../../redux/alertSlice";
 import LandingAppBar from "../../components/LandingAppBar";
 import LandingFooter from "../../components/LandingFooter";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
+import ScheduleDemoForm from "./components/ScheduleDemoForm";
 
 const MotionButton = motion.create(Button);
 const MotionStack = motion.create(Stack);
@@ -573,6 +574,8 @@ const Landing = () => {
 
   const navigate = useNavigate();
 
+  const [open, setOpen] = useState(false);
+
   const [openValidateCert, setOpenValidateCert] = useState(false);
   const [loading, setLoading] = useState(() => {
     const hasSeenPreloader = sessionStorage.getItem("hasSeenPreloader");
@@ -701,6 +704,8 @@ const Landing = () => {
             open={openValidateCert}
             onCancel={() => setOpenValidateCert(false)}
           />
+
+          <ScheduleDemoForm open={open} onClose={() => setOpen(false)} />
 
           <LandingAppBar />
 
@@ -856,6 +861,7 @@ const Landing = () => {
                               bgcolor: "rgba(99, 102, 241, 0.04)",
                             },
                           }}
+                          onClick={() => setOpen(true)}
                         >
                           Schedule Demo
                         </Button>
