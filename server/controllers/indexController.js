@@ -411,3 +411,56 @@ export const contactForm = async (req, res, next) => {
     next(err);
   }
 };
+
+export const scheduleDemoForm = async (req, res, next) => {
+  try {
+    const { contactPerson, organizationName, designation, email, phone } =
+      req.body;
+
+    if (
+      !contactPerson ||
+      !organizationName ||
+      !designation ||
+      !email ||
+      !phone
+    ) {
+      throw Object.assign(new Error("Missing required fields"), {
+        statusCode: 400,
+      });
+    }
+
+    const adminEmail = process.env.SUPPORT_EMAILS;
+
+    if (!adminEmail) {
+      throw Object.assign(new Error("Admin email not configured"), {
+        statusCode: 500,
+      });
+    }
+
+    const [adminMailSent, clientMailSent] = await Promise.all([
+      send_mail(
+        adminEmail,
+        "New Schedule Demo Form Submission",
+        EMAIL_TEMPLATES.SCHEDULE_DEMO_ADMIN(req.body),
+      ),
+      send_mail(
+        email,
+        "Thank you for scheduling a demo!",
+        EMAIL_TEMPLATES.SCHEDULE_DEMO_CLIENT(req.body),
+      ),
+    ]);
+
+    if (!adminMailSent || !clientMailSent) {
+      throw Object.assign(new Error("Failed to send emails"), {
+        statusCode: 500,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Demo scheduled successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};

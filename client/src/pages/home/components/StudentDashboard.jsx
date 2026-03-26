@@ -34,7 +34,7 @@ const StudentDashboard = ({ user }) => {
 
   const getPrice = () => {
     const priceDetails = qualificationOptions.find(
-      (q) => q.label === user.details.qualification
+      (q) => q.label === user.details.qualification,
     );
     if (priceDetails) {
       return priceDetails.fee - priceDetails.discount;
@@ -56,7 +56,7 @@ const StudentDashboard = ({ user }) => {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(${BackgroundImage})`,
+            // backgroundImage: `url(${BackgroundImage})`,
             backgroundSize: "200%",
             backgroundPosition: "center",
             opacity: 0.25,

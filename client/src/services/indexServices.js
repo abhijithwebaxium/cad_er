@@ -27,3 +27,7 @@ export const getDashboard = () => {
 export const contactForm = (formData) => {
   return axiosInstance.post("contact", formData);
 };
+
+export const scheduleDemoForm = (formData) => {
+  return axiosInstance.post("schedule-demo", formData);
+};

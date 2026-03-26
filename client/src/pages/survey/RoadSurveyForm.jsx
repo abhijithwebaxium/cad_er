@@ -1,5 +1,15 @@
 import * as Yup from "yup";
-import { Box, Grid, InputAdornment, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Grid,
+  InputAdornment,
+  Stack,
+  Typography,
+  Paper,
+  Container,
+  IconButton,
+} from "@mui/material";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { MdArrowBackIosNew } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
@@ -673,7 +683,7 @@ const RoadSurveyForm = () => {
   };
 
   const preSubmitCheck = () => {
-    if (entryType === "autoGenerate") {
+    if (type && entryType === "autoGenerate") {
       setOpen(true);
     } else {
       handleSubmit();
@@ -1006,66 +1016,108 @@ const RoadSurveyForm = () => {
   }, [id]);
 
   return (
-    <>
+    <Box sx={{ bgcolor: "#f8fafc", minHeight: "100vh", pb: { xs: 8, md: 12 } }}>
       <SmallHeader />
 
-      <Box p={2} className="overlapping-header">
-        <AlertDialogSlide
-          {...alertData}
-          description={`Are you sure you want to auto-generate the ${formValues?.proposal} for ${formValues.purpose} `}
-          open={open}
-          onCancel={handleClose}
-          onSubmit={handleSubmit}
-        />
+      {/* Internal Modals */}
+      <AlertDialogSlide
+        {...alertData}
+        description={`Are you sure you want to auto-generate the ${formValues?.proposal} for ${formValues.purpose} `}
+        open={open}
+        onCancel={handleClose}
+        onSubmit={handleSubmit}
+      />
 
-        <AlertDialogSlide
-          {...scheduleProjectAlertData}
-          description={`Are you sure you want to schedule the ${formValues?.project || "Project"} `}
-          open={scheduleProjectOpen}
-          onCancel={handleScheduleProjectClose}
-          onSubmit={handleScheduleProjectSubmit}
-        />
+      <AlertDialogSlide
+        {...scheduleProjectAlertData}
+        description={`Are you sure you want to schedule the ${formValues?.project || "Project"} `}
+        open={scheduleProjectOpen}
+        onCancel={handleScheduleProjectClose}
+        onSubmit={handleScheduleProjectSubmit}
+      />
 
-        <AlertDialogSlide
-          {...interpolationSetupAlertData}
-          open={openInterpolationSetup}
-          onCancel={handleCloseInterpolationSetup}
-          onSubmit={handleCloseInterpolationSetup}
-        />
+      <AlertDialogSlide
+        {...interpolationSetupAlertData}
+        open={openInterpolationSetup}
+        onCancel={handleCloseInterpolationSetup}
+        onSubmit={handleCloseInterpolationSetup}
+      />
 
-        <Box
+      {/* Main Form Layout Container */}
+      <Container maxWidth="md" sx={{ pt: { xs: 3, md: 5 } }}>
+        <Paper
+          elevation={0}
           sx={{
-            border: "1px solid #EFEFEF",
-            borderRadius: "9px",
-            width: "40px",
-            height: "40px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            cursor: "pointer",
+            p: { xs: 3, md: 5 },
+            borderRadius: "28px",
+            bgcolor: "#ffffff",
+            boxShadow: "0 20px 40px -15px rgba(0,0,0,0.05)",
+            border: "1px solid rgba(226, 232, 240, 0.8)",
+            position: "relative",
+            overflow: "hidden",
           }}
-          onClick={handleGoBack}
         >
-          <MdArrowBackIosNew />
-        </Box>
+          {/* Subtle Decorative Gradient Header */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "6px",
+              background: "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+            }}
+          />
 
-        <Stack alignItems={"center"} spacing={2}>
-          <Stack alignItems={"center"}>
-            <Typography
-              variant="h6"
-              fontSize={18}
-              fontWeight={700}
-              align="center"
+          <Stack direction="row" alignItems="center" mb={5} mt={1}>
+            <IconButton
+              onClick={handleGoBack}
+              sx={{
+                bgcolor: "#f1f5f9",
+                color: "#475569",
+                borderRadius: "16px",
+                width: 48,
+                height: 48,
+                mr: 3,
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  bgcolor: "#e2e8f0",
+                  color: "#1e293b",
+                  transform: "translateX(-2px)",
+                },
+              }}
             >
-              Create New {id ? "Survey" : "Project"}
-            </Typography>
+              <MdArrowBackIosNew size={22} />
+            </IconButton>
 
-            <Typography fontSize={13} fontWeight={400} color="#434343">
-              Please Enter The Following Values
-            </Typography>
+            <Box>
+              <Typography
+                variant="h4"
+                fontWeight={900}
+                color="#1e293b"
+                sx={{
+                  letterSpacing: "-0.02em",
+                  fontSize: { xs: "1.5rem", md: "2rem" },
+                }}
+              >
+                Create New {id ? "Survey" : "Project"}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                fontWeight={600}
+                mt={0.5}
+              >
+                Please fill in the required details accurately
+              </Typography>
+            </Box>
           </Stack>
 
-          <Stack width={"100%"} spacing={2} className="input-wrapper">
+          <Stack
+            width={"100% !important"}
+            spacing={4}
+            className="input-wrapper"
+          >
             {id && (
               <Box
                 display={"flex"}
@@ -1181,42 +1233,105 @@ const RoadSurveyForm = () => {
             </Grid>
           </Stack>
 
-          <Stack width={"100%"} gap={2} direction={{ md: "row" }}>
+          <Stack
+            width={"100%"}
+            gap={2}
+            direction={{ xs: "column", sm: "row" }}
+            pt={3}
+          >
             {!id && (
-              <BasicButtons
-                value={
-                  <Box display={"flex"} gap={1} alignItems={"center"}>
-                    <Typography fontSize={"16px"} fontWeight={600}>
-                      Schedule
-                    </Typography>
-                    <FaCalendarAlt fontSize={"20px"} />
-                  </Box>
-                }
-                sx={{ backgroundColor: "#ff9800", height: "45px" }}
-                fullWidth={true}
-                onClick={() => setScheduleProjectOpen(true)}
-                loading={btnLoading}
-              />
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ width: "100%" }}
+              >
+                <BasicButtons
+                  value={
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <Typography
+                        fontSize="1.05rem"
+                        fontWeight={800}
+                        letterSpacing="0.05em"
+                      >
+                        SCHEDULE
+                      </Typography>
+                      <FaCalendarAlt fontSize="20px" />
+                    </Stack>
+                  }
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                    color: "white",
+                    height: "60px",
+                    borderRadius: "16px",
+                    border: "none",
+                    boxShadow: "0 10px 25px -5px rgba(245, 158, 11, 0.4)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      background:
+                        "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+                      boxShadow: "0 15px 30px -5px rgba(245, 158, 11, 0.5)",
+                    },
+                  }}
+                  fullWidth={true}
+                  onClick={() => setScheduleProjectOpen(true)}
+                  loading={btnLoading}
+                />
+              </motion.div>
             )}
 
-            <BasicButtons
-              value={
-                <Box display={"flex"} gap={1} alignItems={"center"}>
-                  <Typography fontSize={"16px"} fontWeight={600}>
-                    Continue
-                  </Typography>
-                  <IoIosArrowForward fontSize={"20px"} />
-                </Box>
-              }
-              sx={{ backgroundColor: "rgba(24, 195, 127, 1)", height: "45px" }}
-              fullWidth={true}
-              onClick={preSubmitCheck}
-              loading={btnLoading}
-            />
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ width: "100%" }}
+            >
+              <BasicButtons
+                value={
+                  <Stack
+                    direction="row"
+                    spacing={1.5}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Typography
+                      fontSize="1.05rem"
+                      fontWeight={800}
+                      letterSpacing="0.05em"
+                    >
+                      CONTINUE
+                    </Typography>
+                    <IoIosArrowForward fontSize="22px" />
+                  </Stack>
+                }
+                sx={{
+                  background:
+                    "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                  color: "white",
+                  height: "60px",
+                  borderRadius: "16px",
+                  border: "none",
+                  boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
+                    boxShadow: "0 15px 30px -5px rgba(99, 102, 241, 0.5)",
+                  },
+                }}
+                fullWidth={true}
+                onClick={preSubmitCheck}
+                loading={btnLoading}
+              />
+            </motion.div>
           </Stack>
-        </Stack>
-      </Box>
-    </>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

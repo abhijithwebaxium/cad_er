@@ -5,7 +5,17 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { handleFormError } from "../../utils/handleFormError";
 import { startLoading, stopLoading } from "../../redux/loadingSlice";
-import { Box, Stack, Typography, Grid, Tooltip } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Typography,
+  Grid,
+  Tooltip,
+  Paper,
+  Container,
+  IconButton,
+} from "@mui/material";
+import { motion } from "framer-motion";
 import BasicButtons from "../../components/BasicButton";
 import { IoAdd } from "react-icons/io5";
 import { IoIosAddCircleOutline, IoIosArrowForward } from "react-icons/io";
@@ -1275,109 +1285,241 @@ const RoadSurveyRowsForm = () => {
   }, [id, location.state]);
 
   return (
-    <>
+    <Box sx={{ bgcolor: "#f8fafc", minHeight: "100vh", pb: { xs: 8, md: 12 } }}>
       <SmallHeader />
 
-      <Box p={2} className="overlapping-header">
-        <AlertDialogSlide {...alertData} open={open} onCancel={handleClose} />
+      {/* Internal Modals */}
+      <AlertDialogSlide {...alertData} open={open} onCancel={handleClose} />
 
-        <AddBranch
-          open={openAddBranch}
-          handleClose={handleCloseAddBranch}
-          surveyId={purpose?.surveyId?._id}
-          purposeId={purpose?._id}
-        />
+      <AddBranch
+        open={openAddBranch}
+        handleClose={handleCloseAddBranch}
+        surveyId={purpose?.surveyId?._id}
+        purposeId={purpose?._id}
+      />
 
-        <EnterBranch
-          phase={purpose?.phase}
-          open={openEnterBranch}
-          handleClose={handleCloseEnterBranch}
-          surveyId={purpose?.surveyId?._id}
-          purposeId={purpose?._id}
-          branches={upcomingBranches}
-        />
+      <EnterBranch
+        phase={purpose?.phase}
+        open={openEnterBranch}
+        handleClose={handleCloseEnterBranch}
+        surveyId={purpose?.surveyId?._id}
+        purposeId={purpose?._id}
+        branches={upcomingBranches}
+      />
 
-        <AddBreak
-          open={openAddBreak}
-          handleClose={handleCloseAddBreak}
-          purposeId={purpose?._id}
-          chainage={formValues.chainage}
-        />
+      <AddBreak
+        open={openAddBreak}
+        handleClose={handleCloseAddBreak}
+        purposeId={purpose?._id}
+        chainage={formValues.chainage}
+      />
 
-        {page === 1 && (
+      {/* Main Form Layout Container */}
+      <Container maxWidth="md" sx={{ pt: { xs: 3, md: 5 } }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 5 },
+            borderRadius: "28px",
+            bgcolor: "#ffffff",
+            boxShadow: "0 20px 40px -15px rgba(0,0,0,0.05)",
+            border: "1px solid rgba(226, 232, 240, 0.8)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Subtle Decorative Gradient Header */}
           <Box
             sx={{
-              border: "1px solid #EFEFEF",
-              borderRadius: "9px",
-              width: "40px",
-              height: "40px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              cursor: "pointer",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "6px",
+              background: "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
             }}
-            onClick={() => setPage(0)}
-          >
-            <MdArrowBackIosNew />
-          </Box>
-        )}
+          />
 
-        {rowType === "Chainage" &&
-          page === 1 &&
-          selectedCs &&
-          selectedCs?.series && (
-            <Box position={"sticky"} top={0} bgcolor={"white"} zIndex={2}>
-              <Activity
-                mode={purpose.type === "Initial Level" ? "hidden" : "visible"}
-              >
-                <Box display={"flex"} justifyContent={"end"}>
-                  <BasicSelect
-                    label="Compare"
-                    options={purpose.surveyId?.purposes
-                      ?.filter((p) => p.type !== purpose.type)
-                      .map((p) => ({ label: p.type, value: p.type }))}
-                    value={compareData?.type || ""}
-                    onChange={(e) => handleChangeCompare(e.target.value)}
-                    sx={{
-                      width: "62px",
-                      "& .MuiOutlinedInput-root": { padding: "4px 14px" },
-                    }}
-                  />
-                </Box>
-              </Activity>
+          {rowType === "Chainage" &&
+            page === 1 &&
+            selectedCs &&
+            selectedCs?.series && (
+              <Box position={"sticky"} top={0} bgcolor={"white"} zIndex={2}>
+                <Activity
+                  mode={purpose.type === "Initial Level" ? "hidden" : "visible"}
+                >
+                  <Box display={"flex"} justifyContent={"end"}>
+                    <BasicSelect
+                      label="Compare"
+                      options={purpose.surveyId?.purposes
+                        ?.filter((p) => p.type !== purpose.type)
+                        .map((p) => ({ label: p.type, value: p.type }))}
+                      value={compareData?.type || ""}
+                      onChange={(e) => handleChangeCompare(e.target.value)}
+                      sx={{
+                        width: "62px",
+                        "& .MuiOutlinedInput-root": { padding: "4px 14px" },
+                      }}
+                    />
+                  </Box>
+                </Activity>
 
-              <Plot
-                data={selectedCs?.series?.map((s) => ({
-                  x: s?.data?.map((p) => p.x),
-                  y: s?.data?.map((p) => p.y),
-                  type: "scatter",
-                  mode: "lines",
-                  name: s.name,
-                  line: { shape: "linear", width: 1, color: s.color },
-                }))}
-                config={chartOptions.config}
-                layout={chartOptions.layout}
-                style={{ width: "100%", height: 100 }}
-              />
-            </Box>
-          )}
+                <Plot
+                  data={selectedCs?.series?.map((s) => ({
+                    x: s?.data?.map((p) => p.x),
+                    y: s?.data?.map((p) => p.y),
+                    type: "scatter",
+                    mode: "lines",
+                    name: s.name,
+                    line: { shape: "linear", width: 1, color: s.color },
+                  }))}
+                  config={chartOptions.config}
+                  layout={chartOptions.layout}
+                  style={{ width: "100%", height: 100 }}
+                />
+              </Box>
+            )}
 
-        <Stack alignItems={"center"} spacing={2}>
-          <Stack width={"100%"}>
-            <Typography
-              variant="h6"
-              fontSize={18}
-              fontWeight={700}
-              align="center"
+          <Stack spacing={2} sx={{ position: "relative" }}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              mb={3}
+              mt={1}
+              spacing={2}
             >
-              {page === 1
-                ? `Please Enter Intermediate Sight`
-                : `Please Enter ${rowType} and Values`}
-              :
-            </Typography>
+              {page === 1 && (
+                <IconButton
+                  onClick={() => setPage(0)}
+                  sx={{
+                    bgcolor: "#f1f5f9",
+                    color: "#475569",
+                    borderRadius: "16px",
+                    width: 48,
+                    height: 48,
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      bgcolor: "#e2e8f0",
+                      color: "#1e293b",
+                      transform: "translateX(-2px)",
+                    },
+                  }}
+                >
+                  <MdArrowBackIosNew size={22} />
+                </IconButton>
+              )}
 
-            {upcomingBranches?.length > 0 &&
-              purpose?.surveyId?.parentBranch?.length > 0 && (
+              <Box>
+                <Typography
+                  variant="h4"
+                  fontWeight={900}
+                  color="#1e293b"
+                  sx={{
+                    letterSpacing: "-0.02em",
+                    fontSize: { xs: "1.4rem", md: "1.8rem" },
+                  }}
+                >
+                  {page === 1
+                    ? "Enter Intermediate Sight"
+                    : `Enter ${rowType} Details`}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={600}
+                  mt={0.5}
+                >
+                  {purpose?.type || "Survey"} Data Entry
+                </Typography>
+              </Box>
+            </Stack>
+
+            <Stack width={"100%"}>
+              {upcomingBranches?.length > 0 &&
+                purpose?.surveyId?.parentBranch?.length > 0 && (
+                  <Stack
+                    width="100%"
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Tooltip
+                      title={
+                        <Typography fontSize={12}>
+                          🚧 Upcoming Branch -{" "}
+                          {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
+                          {
+                            purpose?.surveyId?.parentBranch[0]
+                              ?.branchStartedFrom
+                          }
+                        </Typography>
+                      }
+                      arrow
+                      placement="top"
+                      enterTouchDelay={0}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          cursor: "help",
+                          transition: "all 0.3s ease",
+                          px: 2,
+                          py: 0.5,
+                          borderRadius: 10,
+                          border: "1px solid transparent",
+                          "&:hover": {
+                            bgcolor: "amber.50",
+                            borderColor: "amber.200",
+                            "& .location-text": { color: "warning.dark" },
+                            "& .location-chip": { display: "inline-block" },
+                          },
+                        }}
+                      >
+                        <IoGitBranchOutline />
+                        <Typography
+                          variant="h6"
+                          fontSize={13}
+                          className="location-text"
+                          sx={{
+                            color: "text.secondary",
+                            transition: "color 0.3s",
+                          }}
+                        >
+                          Upcoming Branch@{" "}
+                          {
+                            purpose?.surveyId?.parentBranch[0]
+                              ?.branchStartedFrom
+                          }
+                        </Typography>
+                        <Box
+                          component="span"
+                          className="location-chip"
+                          sx={{
+                            display: "none",
+                            ml: 1,
+                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            color: "warning.contrastText",
+                            bgcolor: "warning.light",
+                            px: 1,
+                            borderRadius: 1,
+                          }}
+                        >
+                          {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
+                          {
+                            purpose?.surveyId?.parentBranch[0]
+                              ?.branchStartedFrom
+                          }
+                        </Box>
+                      </Box>
+                    </Tooltip>
+                  </Stack>
+                )}
+
+              {page === 0 && purpose?.surveyId?.branchDetails?.isBranch && (
                 <Stack
                   width="100%"
                   direction="row"
@@ -1388,9 +1530,8 @@ const RoadSurveyRowsForm = () => {
                   <Tooltip
                     title={
                       <Typography fontSize={12}>
-                        🚧 Upcoming Branch -{" "}
-                        {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
-                        {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
+                        🚧 Current Survey Location -{" "}
+                        {purpose?.surveyId?.project}
                       </Typography>
                     }
                     arrow
@@ -1426,8 +1567,7 @@ const RoadSurveyRowsForm = () => {
                           transition: "color 0.3s",
                         }}
                       >
-                        Upcoming Branch@{" "}
-                        {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
+                        Branch Details
                       </Typography>
                       <Box
                         component="span"
@@ -1443,138 +1583,70 @@ const RoadSurveyRowsForm = () => {
                           borderRadius: 1,
                         }}
                       >
-                        {purpose?.surveyId?.parentBranch[0]?.name} @{" "}
-                        {purpose?.surveyId?.parentBranch[0]?.branchStartedFrom}
+                        {purpose?.surveyId?.project}
                       </Box>
                     </Box>
                   </Tooltip>
                 </Stack>
               )}
+            </Stack>
 
-            {page === 0 && purpose?.surveyId?.branchDetails?.isBranch && (
-              <Stack
-                width="100%"
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Tooltip
-                  title={
-                    <Typography fontSize={12}>
-                      🚧 Current Survey Location - {purpose?.surveyId?.project}
-                    </Typography>
-                  }
-                  arrow
-                  placement="top"
-                  enterTouchDelay={0}
-                >
-                  <Box
+            {page === 0 && (
+              <Stack direction={"row"} justifyContent={"end"} width={"100%"}>
+                <Box width={"40px"} zIndex={2}>
+                  <BasicSpeedDial
+                    actions={speedDialActions?.filter((a) => a.show)}
+                    direction={"down"}
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      cursor: "help",
-                      transition: "all 0.3s ease",
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 10,
-                      border: "1px solid transparent",
-                      "&:hover": {
-                        bgcolor: "amber.50",
-                        borderColor: "amber.200",
-                        "& .location-text": { color: "warning.dark" },
-                        "& .location-chip": { display: "inline-block" },
+                      top: "-8px",
+                      right: 0,
+                      "& button": {
+                        width: "40px",
+                        height: "40px",
                       },
                     }}
-                  >
-                    <IoGitBranchOutline />
-                    <Typography
-                      variant="h6"
-                      fontSize={13}
-                      className="location-text"
-                      sx={{ color: "text.secondary", transition: "color 0.3s" }}
-                    >
-                      Branch Details
-                    </Typography>
-                    <Box
-                      component="span"
-                      className="location-chip"
-                      sx={{
-                        display: "none",
-                        ml: 1,
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        color: "warning.contrastText",
-                        bgcolor: "warning.light",
-                        px: 1,
-                        borderRadius: 1,
-                      }}
-                    >
-                      {purpose?.surveyId?.project}
-                    </Box>
-                  </Box>
-                </Tooltip>
+                  />
+                </Box>
               </Stack>
             )}
-          </Stack>
 
-          {page === 0 && (
-            <Stack direction={"row"} justifyContent={"end"} width={"100%"}>
-              <Box width={"40px"} zIndex={2}>
-                <BasicSpeedDial
-                  actions={speedDialActions?.filter((a) => a.show)}
-                  direction={"down"}
-                  sx={{
-                    top: "-8px",
-                    right: 0,
-                    "& button": {
-                      width: "40px",
-                      height: "40px",
-                    },
-                  }}
-                />
-              </Box>
-            </Stack>
-          )}
-
-          <Box width={"100%"} maxWidth={"md"}>
-            <Grid container spacing={2} columns={12}>
-              {page === 0 &&
-                inputData.map(({ size, ...input }, index) => (
-                  <Grid
-                    size={{
-                      xs: size ? size : 12,
-                    }}
-                    key={index}
-                  >
-                    <Box
-                      sx={{
-                        "& .MuiOutlinedInput-root, & .MuiFilledInput-root": {
-                          borderRadius: "15px",
-                        },
-                        width: "100%",
+            <Box width={"100%"} maxWidth={"md"}>
+              <Grid container spacing={2} columns={12}>
+                {page === 0 &&
+                  inputData.map(({ size, ...input }, index) => (
+                    <Grid
+                      size={{
+                        xs: size ? size : 12,
                       }}
+                      key={index}
                     >
-                      <BasicInput
-                        {...input}
-                        value={formValues[input.name] || ""}
-                        error={(formErrors && formErrors[input.name]) || ""}
-                        warning={
-                          (formWarnings && formWarnings[input.name]) || ""
-                        }
-                        sx={{ width: "100%" }}
-                        onChange={(e) => handleInputChange(e)}
-                        disabled={input.disabled}
-                      />
-                    </Box>
-                  </Grid>
-                ))}
+                      <Box
+                        sx={{
+                          "& .MuiOutlinedInput-root, & .MuiFilledInput-root": {
+                            borderRadius: "15px",
+                          },
+                          width: "100%",
+                        }}
+                      >
+                        <BasicInput
+                          {...input}
+                          value={formValues[input.name] || ""}
+                          error={(formErrors && formErrors[input.name]) || ""}
+                          warning={
+                            (formWarnings && formWarnings[input.name]) || ""
+                          }
+                          sx={{ width: "100%" }}
+                          onChange={(e) => handleInputChange(e)}
+                          disabled={input.disabled}
+                        />
+                      </Box>
+                    </Grid>
+                  ))}
 
-              {/* ✅ Dynamic Intermediate + Offset Rows */}
-              {page === 1 && rowType === "Chainage" && (
-                <Grid size={{ xs: 12 }}>
-                  {/* <Stack direction={'row'} alignItems={'center'}>
+                {/* ✅ Dynamic Intermediate + Offset Rows */}
+                {page === 1 && rowType === "Chainage" && (
+                  <Grid size={{ xs: 12 }}>
+                    {/* <Stack direction={'row'} alignItems={'center'}>
                   <BasicCheckbox
                     checked={autoOffset}
                     onChange={(e) => handleChangeAutoOffset(e)}
@@ -1584,326 +1656,450 @@ const RoadSurveyRowsForm = () => {
                   </Typography>
                 </Stack> */}
 
+                    <Stack
+                      direction={"row"}
+                      justifyContent={"space-between"}
+                      alignItems={"center"}
+                    >
+                      <Typography
+                        fontSize={"16px"}
+                        fontWeight={600}
+                        color="black"
+                        mb={1}
+                      >
+                        Chainage: {formValues.chainage}
+                      </Typography>
+
+                      <Box sx={addButtonSx} onClick={handleAddRow}>
+                        <IoAdd size={18} />
+                        Add Row
+                      </Box>
+                    </Stack>
+
+                    <Stack spacing={2}>
+                      {formValues.intermediateOffsets.map((row, idx) => (
+                        <Stack key={idx} spacing={1}>
+                          <Stack
+                            key={idx}
+                            direction={"row"}
+                            alignItems={"end"}
+                            spacing={1}
+                            width={"100%"}
+                          >
+                            {purpose.phase === "Proposal" ? (
+                              <BasicInput
+                                label={idx === 0 ? "RL*" : ""}
+                                type="number"
+                                name="intermediateOffsets"
+                                value={row.reducedLevel || ""}
+                                error={
+                                  formErrors &&
+                                  formErrors[
+                                    `intermediateOffsets[${idx}].reducedLevel`
+                                  ]
+                                }
+                                sx={{ width: "100%" }}
+                                onChange={(e) =>
+                                  handleInputChange(e, idx, "reducedLevel")
+                                }
+                              />
+                            ) : (
+                              <BasicInput
+                                label={idx === 0 ? "IS*" : ""}
+                                type="number"
+                                name="intermediateOffsets"
+                                value={row.intermediateSight || ""}
+                                error={
+                                  formErrors &&
+                                  formErrors[
+                                    `intermediateOffsets[${idx}].intermediateSight`
+                                  ]
+                                }
+                                warning={
+                                  formWarnings &&
+                                  formWarnings[
+                                    `intermediateOffsets[${idx}].intermediateSight`
+                                  ] &&
+                                  "disable-label"
+                                }
+                                sx={{ width: "100%" }}
+                                onChange={(e) =>
+                                  handleInputChange(e, idx, "intermediateSight")
+                                }
+                              />
+                            )}
+
+                            <BasicInput
+                              label={idx === 0 ? "Offset*" : ""}
+                              type="number"
+                              name="intermediateOffsets"
+                              value={row.offset}
+                              onChange={(e) =>
+                                handleInputChange(e, idx, "offset")
+                              }
+                              error={
+                                formErrors &&
+                                formErrors[`intermediateOffsets[${idx}].offset`]
+                              }
+                            />
+                            <BasicInput
+                              label={idx === 0 ? "Remark*" : ""}
+                              type="text"
+                              name="intermediateOffsets"
+                              value={row.remark}
+                              onChange={(e) =>
+                                handleInputChange(e, idx, "remark")
+                              }
+                              error={
+                                formErrors &&
+                                formErrors[`intermediateOffsets[${idx}].remark`]
+                              }
+                            />
+                            <Box>
+                              {idx ===
+                              formValues.intermediateOffsets?.length - 1 ? (
+                                <Stack direction={"row"} spacing={1}>
+                                  {formValues.intermediateOffsets?.length >
+                                    1 && (
+                                    <Box
+                                      className="remove-new-sight"
+                                      onClick={() => handleRemoveRow(idx)}
+                                    >
+                                      <IoIosRemove
+                                        fontSize={"24px"}
+                                        color="rgb(231 0 0)"
+                                      />
+                                    </Box>
+                                  )}
+                                </Stack>
+                              ) : (
+                                <Box
+                                  className="remove-new-sight"
+                                  onClick={() => handleRemoveRow(idx)}
+                                >
+                                  <IoIosRemove
+                                    fontSize={"24px"}
+                                    color="rgb(231 0 0)"
+                                  />
+                                </Box>
+                              )}
+                            </Box>
+                          </Stack>
+                          {formWarnings &&
+                            formWarnings[
+                              `intermediateOffsets[${idx}].intermediateSight`
+                            ] && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  mb: 0.5,
+                                  color: "warning.main",
+                                }}
+                              >
+                                {
+                                  formWarnings[
+                                    `intermediateOffsets[${idx}].intermediateSight`
+                                  ]
+                                }
+                              </Typography>
+                            )}
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </Grid>
+                )}
+                {((page === 0 && rowType !== "Chainage") || page === 1) && (
+                  <Grid width={"100%"}>
+                    <ObservationNotes />
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent={"end"}
+              width={"100%"}
+              gap={2}
+              pt={3}
+            >
+              {purpose &&
+                purpose?.status === "Active" &&
+                purpose?.phase === "Actual" &&
+                page === 0 && (
+                  <>
+                    {rowType !== "Chainage" && (
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{ flex: 1 }}
+                      >
+                        <BasicButtons
+                          value={
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <IoIosAddCircleOutline fontSize={"22px"} />
+                              <Typography
+                                fontSize={"1.05rem"}
+                                fontWeight={800}
+                                letterSpacing="0.05em"
+                              >
+                                CHAINAGE
+                              </Typography>
+                            </Stack>
+                          }
+                          onClick={() => handleChangeRowType("Chainage")}
+                          sx={{
+                            background:
+                              "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                            color: "white",
+                            height: "60px",
+                            borderRadius: "16px",
+                            border: "none",
+                            boxShadow:
+                              "0 10px 25px -5px rgba(59, 130, 246, 0.4)",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                            },
+                          }}
+                          fullWidth={true}
+                        />
+                      </motion.div>
+                    )}
+                    {rowType !== "CP" && (
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{ flex: 1 }}
+                      >
+                        <BasicButtons
+                          value={
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <IoIosAddCircleOutline fontSize={"22px"} />
+                              <Typography
+                                fontSize={"1.05rem"}
+                                fontWeight={800}
+                                letterSpacing="0.05em"
+                              >
+                                CP
+                              </Typography>
+                            </Stack>
+                          }
+                          onClick={() => handleChangeRowType("CP")}
+                          sx={{
+                            background:
+                              "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                            color: "white",
+                            height: "60px",
+                            borderRadius: "16px",
+                            border: "none",
+                            boxShadow:
+                              "0 10px 25px -5px rgba(59, 130, 246, 0.4)",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                            },
+                          }}
+                          fullWidth={true}
+                        />
+                      </motion.div>
+                    )}
+                    {rowType !== "TBM" && (
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{ flex: 1 }}
+                      >
+                        <BasicButtons
+                          value={
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <IoIosAddCircleOutline fontSize={"22px"} />
+                              <Typography
+                                fontSize={"1.05rem"}
+                                fontWeight={800}
+                                letterSpacing="0.05em"
+                              >
+                                TBM
+                              </Typography>
+                            </Stack>
+                          }
+                          onClick={() => handleChangeRowType("TBM")}
+                          sx={{
+                            background:
+                              "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                            color: "white",
+                            height: "60px",
+                            borderRadius: "16px",
+                            border: "none",
+                            boxShadow:
+                              "0 10px 25px -5px rgba(59, 130, 246, 0.4)",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                            },
+                          }}
+                          fullWidth={true}
+                        />
+                      </motion.div>
+                    )}
+                  </>
+                )}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ flex: 1 }}
+              >
+                <BasicButtons
+                  value={
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      {(purpose?.phase === "Proposal" &&
+                        isLastProposalReading &&
+                        page === 1) ||
+                      (rowType !== "Chainage" && isLastProposalReading) ? (
+                        <>
+                          <Typography
+                            fontSize={"1.05rem"}
+                            fontWeight={800}
+                            letterSpacing="0.05em"
+                            textTransform="uppercase"
+                          >
+                            Finish {purpose?.type}
+                          </Typography>
+                          <MdDone fontSize={"24px"} />
+                        </>
+                      ) : (
+                        <>
+                          <Typography
+                            fontSize={"1.05rem"}
+                            fontWeight={800}
+                            letterSpacing="0.05em"
+                          >
+                            CONTINUE
+                          </Typography>
+                          <IoIosArrowForward fontSize={"24px"} />
+                        </>
+                      )}
+                    </Stack>
+                  }
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                    color: "white",
+                    height: "60px",
+                    borderRadius: "16px",
+                    border: "none",
+                    boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      background:
+                        "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
+                    },
+                  }}
+                  fullWidth={true}
+                  onClick={handleSubmit}
+                  loading={btnLoading}
+                />
+              </motion.div>
+            </Stack>
+          </Stack>
+
+          <Activity
+            mode={
+              page === 0 &&
+              purpose &&
+              purpose?.rows?.length &&
+              purpose?.rows[0]?.type === "CP" &&
+              purpose?.status !== "Paused"
+                ? "visible"
+                : "hidden"
+            }
+          >
+            <BasicDivider borderBottomWidth={0.5} color="#d9d9d9" />
+
+            <Stack spacing={2} mt={2}>
+              <Typography fontWeight={700} fontSize="16px">
+                Previously added reading
+              </Typography>
+
+              <BasicCard
+                sx={{
+                  boxShadow: 1,
+                }}
+                contentSx={{ p: "16px !important" }}
+                content={
                   <Stack
                     direction={"row"}
-                    justifyContent={"space-between"}
                     alignItems={"center"}
+                    justifyContent={"space-between"}
                   >
-                    <Typography
-                      fontSize={"16px"}
-                      fontWeight={600}
-                      color="black"
-                      mb={1}
-                    >
-                      Chainage: {formValues.chainage}
-                    </Typography>
-
-                    <Box sx={addButtonSx} onClick={handleAddRow}>
-                      <IoAdd size={18} />
-                      Add Row
-                    </Box>
-                  </Stack>
-
-                  <Stack spacing={2}>
-                    {formValues.intermediateOffsets.map((row, idx) => (
-                      <Stack key={idx} spacing={1}>
-                        <Stack
-                          key={idx}
-                          direction={"row"}
-                          alignItems={"end"}
-                          spacing={1}
-                          width={"100%"}
-                        >
-                          {purpose.phase === "Proposal" ? (
-                            <BasicInput
-                              label={idx === 0 ? "RL*" : ""}
-                              type="number"
-                              name="intermediateOffsets"
-                              value={row.reducedLevel || ""}
-                              error={
-                                formErrors &&
-                                formErrors[
-                                  `intermediateOffsets[${idx}].reducedLevel`
-                                ]
-                              }
-                              sx={{ width: "100%" }}
-                              onChange={(e) =>
-                                handleInputChange(e, idx, "reducedLevel")
-                              }
-                            />
-                          ) : (
-                            <BasicInput
-                              label={idx === 0 ? "IS*" : ""}
-                              type="number"
-                              name="intermediateOffsets"
-                              value={row.intermediateSight || ""}
-                              error={
-                                formErrors &&
-                                formErrors[
-                                  `intermediateOffsets[${idx}].intermediateSight`
-                                ]
-                              }
-                              warning={
-                                formWarnings &&
-                                formWarnings[
-                                  `intermediateOffsets[${idx}].intermediateSight`
-                                ] &&
-                                "disable-label"
-                              }
-                              sx={{ width: "100%" }}
-                              onChange={(e) =>
-                                handleInputChange(e, idx, "intermediateSight")
-                              }
-                            />
-                          )}
-
-                          <BasicInput
-                            label={idx === 0 ? "Offset*" : ""}
-                            type="number"
-                            name="intermediateOffsets"
-                            value={row.offset}
-                            onChange={(e) =>
-                              handleInputChange(e, idx, "offset")
-                            }
-                            error={
-                              formErrors &&
-                              formErrors[`intermediateOffsets[${idx}].offset`]
-                            }
-                          />
-                          <BasicInput
-                            label={idx === 0 ? "Remark*" : ""}
-                            type="text"
-                            name="intermediateOffsets"
-                            value={row.remark}
-                            onChange={(e) =>
-                              handleInputChange(e, idx, "remark")
-                            }
-                            error={
-                              formErrors &&
-                              formErrors[`intermediateOffsets[${idx}].remark`]
-                            }
-                          />
-                          <Box>
-                            {idx ===
-                            formValues.intermediateOffsets?.length - 1 ? (
-                              <Stack direction={"row"} spacing={1}>
-                                {formValues.intermediateOffsets?.length > 1 && (
-                                  <Box
-                                    className="remove-new-sight"
-                                    onClick={() => handleRemoveRow(idx)}
-                                  >
-                                    <IoIosRemove
-                                      fontSize={"24px"}
-                                      color="rgb(231 0 0)"
-                                    />
-                                  </Box>
-                                )}
-                              </Stack>
-                            ) : (
-                              <Box
-                                className="remove-new-sight"
-                                onClick={() => handleRemoveRow(idx)}
-                              >
-                                <IoIosRemove
-                                  fontSize={"24px"}
-                                  color="rgb(231 0 0)"
-                                />
-                              </Box>
-                            )}
-                          </Box>
-                        </Stack>
-                        {formWarnings &&
-                          formWarnings[
-                            `intermediateOffsets[${idx}].intermediateSight`
-                          ] && (
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                mb: 0.5,
-                                color: "warning.main",
-                              }}
-                            >
-                              {
-                                formWarnings[
-                                  `intermediateOffsets[${idx}].intermediateSight`
-                                ]
-                              }
-                            </Typography>
-                          )}
-                      </Stack>
-                    ))}
-                  </Stack>
-                </Grid>
-              )}
-              {((page === 0 && rowType !== "Chainage") || page === 1) && (
-                <Grid width={"100%"}>
-                  <ObservationNotes />
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-
-          <Stack
-            direction={"row"}
-            justifyContent={"end"}
-            width={"100%"}
-            gap={1}
-          >
-            {purpose &&
-              purpose?.status === "Active" &&
-              purpose?.phase === "Actual" &&
-              page === 0 && (
-                <>
-                  {rowType !== "Chainage" && (
-                    <BasicButtons
-                      value={
-                        <Box display={"flex"} gap={1} alignItems={"center"}>
-                          <IoIosAddCircleOutline fontSize={"20px"} />
-                          <Typography fontSize={"16px"} fontWeight={600}>
-                            Chainage
-                          </Typography>
-                        </Box>
-                      }
-                      onClick={() => handleChangeRowType("Chainage")}
-                      sx={{ backgroundColor: "#0059E7", flex: 1 }}
-                    />
-                  )}
-                  {rowType !== "CP" && (
-                    <BasicButtons
-                      value={
-                        <Box display={"flex"} gap={1} alignItems={"center"}>
-                          <IoIosAddCircleOutline fontSize={"20px"} />
-                          <Typography fontSize={"16px"} fontWeight={600}>
-                            CP
-                          </Typography>
-                        </Box>
-                      }
-                      onClick={() => handleChangeRowType("CP")}
-                      sx={{ backgroundColor: "#0059E7", flex: 1 }}
-                    />
-                  )}
-                  {rowType !== "TBM" && (
-                    <BasicButtons
-                      value={
-                        <Box display={"flex"} gap={1} alignItems={"center"}>
-                          <IoIosAddCircleOutline fontSize={"20px"} />
-                          <Typography fontSize={"16px"} fontWeight={600}>
-                            TBM
-                          </Typography>
-                        </Box>
-                      }
-                      onClick={() => handleChangeRowType("TBM")}
-                      sx={{ backgroundColor: "#0059E7", flex: 1 }}
-                    />
-                  )}
-                </>
-              )}
-
-            <BasicButtons
-              value={
-                <Box display={"flex"} gap={1} alignItems={"center"}>
-                  {(purpose?.phase === "Proposal" &&
-                    isLastProposalReading &&
-                    page === 1) ||
-                  (rowType !== "Chainage" && isLastProposalReading) ? (
-                    <>
-                      <Typography fontSize={"16px"} fontWeight={600}>
-                        Finish {purpose?.type}
+                    <Stack direction={"row"} spacing={1}>
+                      <Typography fontSize={14} color="text.secondary">
+                        Type of reading:
                       </Typography>
-                      <MdDone fontSize={"20px"} />
-                    </>
-                  ) : (
-                    <>
-                      <Typography fontSize={"16px"} fontWeight={600}>
-                        Continue
+                      <Typography fontWeight={700} fontSize="14px">
+                        {purpose?.rows?.at(-1)?.type === "Instrument setup"
+                          ? "TBM"
+                          : purpose?.rows?.at(-1)?.type}
                       </Typography>
-                      <IoIosArrowForward fontSize={"20px"} />
-                    </>
-                  )}
-                </Box>
-              }
-              sx={{
-                backgroundColor: "rgba(24, 195, 127, 1)",
-                height: "45px",
-                flex: 1,
-              }}
-              fullWidth={true}
-              onClick={handleSubmit}
-              loading={btnLoading}
-            />
-          </Stack>
-        </Stack>
+                    </Stack>
 
-        <Activity
-          mode={
-            page === 0 &&
-            purpose &&
-            purpose?.rows?.length &&
-            purpose?.rows[0]?.type === "CP" &&
-            purpose?.status !== "Paused"
-              ? "visible"
-              : "hidden"
-          }
-        >
-          <BasicDivider borderBottomWidth={0.5} color="#d9d9d9" />
+                    <Stack direction={"row"} alignItems={"center"} spacing={1}>
+                      <FaRegEdit
+                        color="#2897FF"
+                        onClick={handleClickOpenEdit}
+                      />
 
-          <Stack spacing={2} mt={2}>
-            <Typography fontWeight={700} fontSize="16px">
-              Previously added reading
-            </Typography>
+                      <Activity
+                        mode={purpose?.rows?.length > 1 ? "visible" : "hidden"}
+                      >
+                        <AiFillDelete
+                          color="#fd3636ff"
+                          fontSize={17}
+                          onClick={handleDeletePrevReading}
+                        />
+                      </Activity>
+                    </Stack>
 
-            <BasicCard
-              sx={{
-                boxShadow: 1,
-              }}
-              contentSx={{ p: "16px !important" }}
-              content={
-                <Stack
-                  direction={"row"}
-                  alignItems={"center"}
-                  justifyContent={"space-between"}
-                >
-                  <Stack direction={"row"} spacing={1}>
-                    <Typography fontSize={14} color="text.secondary">
-                      Type of reading:
-                    </Typography>
-                    <Typography fontWeight={700} fontSize="14px">
-                      {purpose?.rows?.at(-1)?.type === "Instrument setup"
-                        ? "TBM"
-                        : purpose?.rows?.at(-1)?.type}
-                    </Typography>
-                  </Stack>
-
-                  <Stack direction={"row"} alignItems={"center"} spacing={1}>
-                    <FaRegEdit color="#2897FF" onClick={handleClickOpenEdit} />
-
-                    <Activity
-                      mode={purpose?.rows?.length > 1 ? "visible" : "hidden"}
-                    >
-                      <AiFillDelete
-                        color="#fd3636ff"
-                        fontSize={17}
-                        onClick={handleDeletePrevReading}
+                    <Activity mode={isEdit ? "visible" : "hidden"}>
+                      <EditPreviousReading
+                        open={isEdit}
+                        doc={purpose?.rows?.at(-1) || {}}
+                        updateDoc={setPurpose}
+                        onCancel={handleClickCloseEdit}
+                        onSubmit={handleClickCloseEdit}
                       />
                     </Activity>
                   </Stack>
-
-                  <Activity mode={isEdit ? "visible" : "hidden"}>
-                    <EditPreviousReading
-                      open={isEdit}
-                      doc={purpose?.rows?.at(-1) || {}}
-                      updateDoc={setPurpose}
-                      onCancel={handleClickCloseEdit}
-                      onSubmit={handleClickCloseEdit}
-                    />
-                  </Activity>
-                </Stack>
-              }
-            />
-          </Stack>
-        </Activity>
-      </Box>
-    </>
+                }
+              />
+            </Stack>
+          </Activity>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

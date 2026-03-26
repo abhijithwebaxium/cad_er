@@ -1,171 +1,346 @@
-import { motion } from 'framer-motion';
-import { Box, Grid, Stack, Typography, useMediaQuery } from '@mui/material';
-import BasicCard from '../../components/BasicCard';
-import Lottie from 'lottie-react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { stopLoading } from '../../redux/loadingSlice';
-import { useEffect, useState } from 'react';
-import BasicButton from '../../components/BasicButton';
-import SimpleAlert from '../../components/SimpleAlert';
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Box,
+  Stack,
+  Typography,
+  useMediaQuery,
+  Paper,
+  Container,
+} from "@mui/material";
+import Lottie from "lottie-react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { stopLoading } from "../../redux/loadingSlice";
+import { useEffect, useState } from "react";
+import BasicButton from "../../components/BasicButton";
+import SimpleAlert from "../../components/SimpleAlert";
 
-import { GoAlert } from 'react-icons/go';
-import autoLevelIcon from '../../assets/icons/compass.json';
-import totalStationIcon from '../../assets/total-station.png';
-import DGPSIcon from '../../assets/icons/GPS Navigation.json';
-import DroneIcon from '../../assets/icons/Drone Camera.json';
-import BathymetryIcon from '../../assets/icons/Boat-Looking-For-Land.json';
-import { IoIosArrowForward } from 'react-icons/io';
-import SmallHeader from '../../components/SmallHeader';
+import { GoAlert } from "react-icons/go";
+import { IoCheckmarkCircle } from "react-icons/io5";
+import autoLevelIcon from "../../assets/icons/compass.json";
+import totalStationIcon from "../../assets/total-station.png";
+import DGPSIcon from "../../assets/icons/GPS Navigation.json";
+import DroneIcon from "../../assets/icons/Drone Camera.json";
+import BathymetryIcon from "../../assets/icons/Boat-Looking-For-Land.json";
+import { IoIosArrowForward } from "react-icons/io";
+import SmallHeader from "../../components/SmallHeader";
+import { showAlert } from "../../redux/alertSlice";
 
 const equipmentList = [
   {
-    label: 'Auto Level',
+    label: "Auto Level",
     icon: autoLevelIcon,
-    link: '#',
-    color: '#006FFD',
+    link: "#",
+    color: "#6366f1",
     size: 12,
   },
   {
-    label: 'Total Station',
+    label: "Total Station",
     icon: totalStationIcon,
-    link: '#',
-    color: '#006FFD',
+    link: "#",
+    color: "#0ea5e9",
   },
   {
-    label: 'DGPS',
+    label: "DGPS",
     icon: DGPSIcon,
-    link: '#',
-    color: '#D98500',
+    link: "#",
+    color: "#f59e0b",
   },
   {
-    label: 'Drone',
+    label: "Drone",
     icon: DroneIcon,
-    link: '#',
-    color: '#7A2EFF',
+    link: "#",
+    color: "#8b5cf6",
   },
   {
-    label: 'Bathymetry',
+    label: "Bathymetry",
     icon: BathymetryIcon,
-    link: '#',
-    color: '#00A79D',
+    link: "#",
+    color: "#14b8a6",
   },
-];
-
-const alertData = {
-  icon: <GoAlert fontSize="inherit" />,
-  severity: 'error',
-  message: 'Work in progress!',
-};
-
-const animations = [
-  { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 } },
-  { initial: { opacity: 0, x: 20 }, animate: { opacity: 1, x: 0 } },
 ];
 
 const SelectEquipment = () => {
   const dispatch = useDispatch();
-
   const navigate = useNavigate();
 
-  const { global } = useSelector((state) => state.loading);
+  const { global } = useSelector((state) => state.loading || { global: false });
 
   const [active, setActive] = useState(0);
 
-  const [showAlert, setShowAlert] = useState(false);
-
-  const above290 = useMediaQuery('(min-width:290px)');
+  const above290 = useMediaQuery("(min-width:290px)");
 
   const handleChangeActive = (value) => setActive(value);
 
   const handleSubmit = () => {
     if (active > 0) {
-      return setShowAlert(true);
+      dispatch(
+        showAlert({
+          type: "error",
+          message: "Work in progress!",
+        }),
+      );
+
+      return;
     }
 
-    if (showAlert) setShowAlert(false);
-    navigate('/survey/add-survey');
+    navigate("/survey/add-survey");
   };
 
   useEffect(() => {
     dispatch(stopLoading());
-  }, []);
+  }, [dispatch]);
 
   return (
-    <Box overflow={'hidden'}>
-      {showAlert && <SimpleAlert {...alertData} />}
+    <Box
+      sx={{ bgcolor: "#f8fafc", minHeight: "100vh", pb: { xs: 20, md: 24 } }}
+    >
       <SmallHeader />
-      <Box className="overlapping-header">
-        <Typography
-          variant="h6"
-          fontSize={18}
-          fontWeight={700}
-          align="center"
-          mb={2}
-        >
-          Select Your Equipment
-        </Typography>
 
-        <Grid container columns={12} spacing={2}>
-          {equipmentList.map((equipment, idx) => (
-            <Grid
-              key={idx}
-              size={{ xs: equipment.size ? equipment.size : above290 ? 6 : 12 }}
-              sx={{
-                '& .MuiCard-root': {
-                  height: '100%',
-                },
-              }}
-            >
-              <BasicCard
-                key={global}
-                component={motion.div}
-                {...animations[idx % 2]}
-                whileHover={{
-                  y: -5,
-                  boxShadow: '0px 8px 20px rgba(0,0,0,0.1)',
+      <Container maxWidth="sm" sx={{ pt: { xs: 4, md: 6 } }}>
+        <Box textAlign="center" mb={6}>
+          <Typography
+            variant="h4"
+            fontWeight={900}
+            color="#1e293b"
+            mb={1}
+            sx={{
+              letterSpacing: "-0.02em",
+              fontSize: { xs: "1.8rem", md: "2.25rem" },
+            }}
+          >
+            Select Equipment
+          </Typography>
+          <Typography variant="body1" color="text.secondary" fontWeight={600}>
+            Choose the primary instrument for your survey
+          </Typography>
+        </Box>
+
+        <Stack spacing={3}>
+          {equipmentList.map((equipment, idx) => {
+            const isActive = idx === active;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: idx * 0.1,
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 24,
                 }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                sx={{
-                  borderRadius: '16px',
-                  cursor: 'pointer',
-                  border: idx === active ? '2px solid blue' : '2px solid white',
-                }}
-                content={
-                  <Stack spacing={1}>
-                    <Box width={'70px'}>
-                      {equipment.label === 'Total Station' ? (
-                        <img width={60} src={equipment.icon} alt={equipment.label} />
-                      ) : (
-                        <Lottie animationData={equipment.icon} />
-                      )}
-                    </Box>
-                    <Typography fontWeight={700} fontSize="14px">
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Paper
+                  elevation={isActive ? 8 : 0}
+                  onClick={() => handleChangeActive(idx)}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    p: { xs: 2, md: 3 },
+                    borderRadius: "24px",
+                    cursor: "pointer",
+                    position: "relative",
+                    overflow: "hidden",
+                    transition:
+                      "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                    bgcolor: "#ffffff",
+                    border: isActive
+                      ? `2px solid ${equipment.color}`
+                      : "2px solid transparent",
+                    boxShadow: isActive
+                      ? `0 12px 30px -10px ${equipment.color}80`
+                      : "0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.04)",
+                    "&:hover": {
+                      borderColor: isActive ? equipment.color : "#cbd5e1",
+                      boxShadow: isActive
+                        ? `0 20px 40px -12px ${equipment.color}90`
+                        : "0 10px 15px -3px rgba(0,0,0,0.05)",
+                    },
+                  }}
+                >
+                  {/* Active Background Tint */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      bgcolor: isActive ? `${equipment.color}0A` : "#f8fafc",
+                      transition: "background-color 0.4s ease",
+                      zIndex: 0,
+                    }}
+                  />
+
+                  {/* Icon Box */}
+                  <Box
+                    sx={{
+                      width: { xs: 70, md: 80 },
+                      height: { xs: 70, md: 80 },
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: isActive ? `${equipment.color}15` : "#ffffff",
+                      borderRadius: "20px",
+                      p: 1.5,
+                      mr: { xs: 2.5, md: 3 },
+                      position: "relative",
+                      zIndex: 1,
+                      transition:
+                        "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                      transform: isActive ? "scale(1.05)" : "scale(1)",
+                      boxShadow: isActive
+                        ? `0 8px 20px -5px ${equipment.color}40`
+                        : "0 2px 10px rgba(0,0,0,0.03)",
+                    }}
+                  >
+                    {equipment.label === "Total Station" ? (
+                      <img
+                        width="100%"
+                        style={{ objectFit: "contain" }}
+                        src={equipment.icon}
+                        alt={equipment.label}
+                      />
+                    ) : (
+                      <Lottie
+                        animationData={equipment.icon}
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    )}
+                  </Box>
+
+                  {/* Text content */}
+                  <Box sx={{ flexGrow: 1, position: "relative", zIndex: 1 }}>
+                    <Typography
+                      fontWeight={900}
+                      fontSize={{ xs: "1.1rem", md: "1.25rem" }}
+                      color={isActive ? "#1e293b" : "#64748b"}
+                      sx={{
+                        transition: "color 0.3s ease",
+                        letterSpacing: "-0.02em",
+                        mb: 0.5,
+                      }}
+                    >
                       {equipment.label}
                     </Typography>
-                  </Stack>
-                }
-                onClick={() => handleChangeActive(idx)}
-              />
-            </Grid>
-          ))}
-        </Grid>
+                    <Typography
+                      variant="body2"
+                      color={isActive ? equipment.color : "text.secondary"}
+                      fontWeight={700}
+                      sx={{
+                        opacity: isActive ? 1 : 0.6,
+                        fontSize: { xs: "0.75rem", md: "0.85rem" },
+                      }}
+                    >
+                      {isActive ? "Selected Instrument" : "Tap to select"}
+                    </Typography>
+                  </Box>
 
-        <Box mt={2} className="landing-btn">
-          <BasicButton
-            value={
-              <Box display={'flex'} gap={1} alignItems={'center'}>
-                <Typography fontSize={'16px'} fontWeight={600}>
-                  Continue
-                </Typography>
-                <IoIosArrowForward fontSize={'20px'} />
-              </Box>
-            }
-            sx={{ backgroundColor: 'rgba(24, 195, 127, 1)', height: '45px' }}
-            fullWidth={true}
-            onClick={handleSubmit}
-          />
-        </Box>
+                  {/* Radio / Checkmark */}
+                  <Box
+                    sx={{
+                      position: "relative",
+                      zIndex: 1,
+                      ml: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {isActive ? (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 25,
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <IoCheckmarkCircle size={36} color={equipment.color} />
+                      </motion.div>
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: "50%",
+                          border: "2px solid #cbd5e1",
+                          mr: 0.5,
+                          transition: "all 0.3s ease",
+                        }}
+                      />
+                    )}
+                  </Box>
+                </Paper>
+              </motion.div>
+            );
+          })}
+        </Stack>
+      </Container>
+
+      {/* Floating Action Button purely hovering at the bottom */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: { xs: 24, md: 32 },
+          left: 0,
+          right: 0,
+          display: "flex",
+          justifyContent: "center",
+          pointerEvents: "none",
+          zIndex: 1000,
+        }}
+      >
+        <Container maxWidth="sm" sx={{ pointerEvents: "none" }}>
+          <motion.div
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            style={{ width: "100%", pointerEvents: "auto" }}
+          >
+            <BasicButton
+              value={
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Typography
+                    fontSize="1.1rem"
+                    fontWeight={900}
+                    letterSpacing="0.05em"
+                  >
+                    CONTINUE TO SURVEY
+                  </Typography>
+                  <IoIosArrowForward fontSize="22px" />
+                </Stack>
+              }
+              sx={{
+                background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                color: "white",
+                height: { xs: "64px", md: "72px" },
+                borderRadius: "100px",
+                border: "none",
+                boxShadow: "0 15px 35px -5px rgba(99, 102, 241, 0.5)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
+                  boxShadow: "0 20px 40px -5px rgba(99, 102, 241, 0.6)",
+                },
+              }}
+              fullWidth={true}
+              onClick={handleSubmit}
+            />
+          </motion.div>
+        </Container>
       </Box>
     </Box>
   );

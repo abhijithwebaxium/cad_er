@@ -1,42 +1,24 @@
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import AlertDialogSlide from "../../../components/AlertDialogSlide";
+import UniversalConverter from "../../../components/UniversalConverter";
+import CreateTicket from "../../tickets/components/CreateTicket";
+import AppHeader from "../../../components/AppHeader";
 import {
   Stack,
   Box,
   Typography,
   Grid,
   Paper,
-  Tooltip,
   Fab,
+  IconButton,
+  Chip,
+  Container,
+  Divider,
+  LinearProgress,
 } from "@mui/material";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useDispatch, useSelector } from "react-redux";
-import { stopLoading } from "../../../redux/loadingSlice";
-import { useNavigate } from "react-router-dom";
-import BasicInput from "../../../components/BasicInput";
-import BasicCard from "../../../components/BasicCard";
-
-import { MdOutlineSearch } from "react-icons/md";
-import { TbReport } from "react-icons/tb";
-import { TbReportSearch } from "react-icons/tb";
-
-import { TbRefresh } from "react-icons/tb";
-import { MdGpsFixed } from "react-icons/md";
-import { GoChecklist } from "react-icons/go";
-import { BiSupport } from "react-icons/bi";
-import { IoTime } from "react-icons/io5";
-
-import BackgroundImage from "../../../assets/background-img.png";
-import logo from "../../../assets/logo/CADer logo-main.png";
-import ImageAvatars from "../../../components/ImageAvatar";
-import BasicButton from "../../../components/BasicButton";
-import { IoIosAddCircleOutline } from "react-icons/io";
-import BasicDivider from "../../../components/BasicDevider";
-import AlertDialogSlide from "../../../components/AlertDialogSlide";
-import UniversalConverter from "../../../components/UniversalConverter";
-import StatusChip from "../../../components/StatusChip";
-import Sidebar from "../../../components/Sidebar";
-import CreateTicket from "../../tickets/components/CreateTicket";
 
 const unitConverterAlertData = {
   title: "Unit Converter",
@@ -45,100 +27,378 @@ const unitConverterAlertData = {
   submitButtonText: "Cancel",
 };
 
-const animations = [
-  { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 } },
-  { initial: { opacity: 0, x: 20 }, animate: { opacity: 1, x: 0 } },
-];
+const fUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+const PulseDot = () => (
+  <Box
+    component={motion.span}
+    sx={{
+      width: 8,
+      height: 8,
+      borderRadius: "50%",
+      bgcolor: "#10b981",
+      display: "inline-block",
+      mr: 1,
+    }}
+    animate={{
+      scale: [1, 1.5, 1],
+      opacity: [1, 0.5, 1],
+    }}
+    transition={{
+      duration: 1.2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  />
+);
+
+// Requested Palette
+const PRIMARY_BRAND = "#6366f1"; // The requested Indigo
+const HEADER_GRADIENT_START = "#4f46e5"; // Deep Indigo
+const HEADER_GRADIENT_END = "#6366f1"; // Mid Indigo
+const SUCCESS_COLOR = "#10b981";
+const BG_COLOR = "#f8fafc";
+const CARD_BORDER = "#e2e8f0";
+
+// Custom SVG Icons
+const Icons = {
+  Search: () => (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  ),
+  Chart: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="18" y1="20" x2="18" y2="10"></line>
+      <line x1="12" y1="20" x2="12" y2="4"></line>
+      <line x1="6" y1="20" x2="6" y2="14"></line>
+    </svg>
+  ),
+  Files: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+    </svg>
+  ),
+  Pending: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  Ongoing: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+      <polyline points="22 4 22 10 16 10" />
+    </svg>
+  ),
+  Completed: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  ),
+  Map: () => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+      <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+  ),
+  Notification: () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+  ),
+  Add: () => (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  ),
+  Options: () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="1"></circle>
+      <circle cx="12" cy="5" r="1"></circle>
+      <circle cx="12" cy="19" r="1"></circle>
+    </svg>
+  ),
+  Support: () => (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+  ),
+};
 
 const taskData = [
-  {
-    title: "Auto Level",
-    description: "create level and accurate road profiles",
-    status: "Pending",
-    createdAt: "12:00 PM",
-  },
-  {
-    title: "Soil Testing",
-    description: "analyze soil composition and moisture content",
-    status: "Pending",
-    createdAt: "09:30 AM",
-  },
-  {
-    title: "Site Inspection",
-    description: "inspect construction site for quality assurance",
-    status: "In Progress",
-    createdAt: "03:45 PM",
-  },
-  {
-    title: "Material Check",
-    description: "verify material delivery and measurements",
-    status: "Pending",
-    createdAt: "08:15 AM",
-  },
-  {
-    title: "Excavation Leveling",
-    description: "ensure excavation is done at correct levels",
-    status: "In Progress",
-    createdAt: "11:20 AM",
-  },
-  {
-    title: "Boundary Marking",
-    description: "mark boundaries as per the approved layout plan",
-    status: "In Progress",
-    createdAt: "10:05 AM",
-  },
-  {
-    title: "Concrete Mix Test",
-    description: "test the workability and strength of concrete mix",
-    status: "Pending",
-    createdAt: "04:10 PM",
-  },
-  {
-    title: "Equipment Calibration",
-    description: "calibrate surveying instruments and tools",
-    status: "Pending",
-    createdAt: "01:40 PM",
-  },
+  // {
+  //   title: "Auto Level Verification",
+  //   description: "create level and accurate road profiles",
+  //   status: "Pending",
+  //   time: "12:00 PM",
+  //   category: "Surveying",
+  //   assignee: "M. Rivera",
+  // },
+  // {
+  //   title: "Soil Sample Analysis",
+  //   description: "analyze soil composition and moisture content",
+  //   status: "Pending",
+  //   time: "09:30 AM",
+  //   category: "Laboratory",
+  //   assignee: "S. Chen",
+  // },
+  // {
+  //   title: "Site Inspection",
+  //   description: "inspect construction site for quality assurance",
+  //   status: "In Progress",
+  //   time: "03:45 PM",
+  //   category: "Inspection",
+  //   assignee: "J. Doe",
+  // },
+  // {
+  //   title: "Material Check",
+  //   description: "verify material delivery and measurements",
+  //   status: "Pending",
+  //   time: "08:15 AM",
+  //   category: "Quality",
+  //   assignee: "T. Hardy",
+  // },
+  // {
+  //   title: "Excavation Leveling",
+  //   description: "ensure excavation is done at correct levels",
+  //   status: "In Progress",
+  //   time: "11:20 AM",
+  //   category: "Surveying",
+  //   assignee: "Safety Dept",
+  // },
 ];
 
-const ProfessionalDashboard = () => {
-  const dispatch = useDispatch();
+const TaskCard = ({ task, index }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.1 }}
+  >
+    <Paper
+      elevation={0}
+      sx={{
+        p: 2.5,
+        borderRadius: "20px",
+        border: `1px solid ${CARD_BORDER}`,
+        mb: 2,
+        background: "#fff",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 12px 24px -10px rgba(99, 102, 241, 0.15)",
+          borderColor: PRIMARY_BRAND,
+        },
+      }}
+    >
+      <Stack direction="row" spacing={3} alignItems="center">
+        <Box
+          sx={{
+            minWidth: 65,
+            textAlign: "center",
+            bgcolor: `${PRIMARY_BRAND}08`,
+            p: 1,
+            borderRadius: "12px",
+          }}
+        >
+          <Typography
+            variant="h6"
+            fontWeight={800}
+            color={HEADER_GRADIENT_START}
+          >
+            {task.time.split(" ")[0]}
+          </Typography>
+          <Typography variant="caption" fontWeight={700} color={PRIMARY_BRAND}>
+            {task.time.split(" ")[1]}
+          </Typography>
+        </Box>
+        <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography
+              variant="caption"
+              fontWeight={800}
+              sx={{ color: "#94a3b8", letterSpacing: "0.05em" }}
+            >
+              {task.category.toUpperCase()}
+            </Typography>
+            <Box
+              sx={{
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                bgcolor: "#cbd5e1",
+              }}
+            />
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+            >
+              By {task.assignee}
+            </Typography>
+          </Stack>
+          <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+            {task.title}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              display: "-webkit-box",
+              WebkitLineClamp: 1,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {task.description}
+          </Typography>
+        </Stack>
+        <Chip
+          label={task.status}
+          size="small"
+          sx={{
+            fontWeight: 800,
+            fontSize: "10px",
+            borderRadius: "8px",
+            bgcolor:
+              task.status === "Pending"
+                ? "#fff1f2"
+                : task.status === "In Progress"
+                  ? "#f5f3ff"
+                  : task.status === "Done"
+                    ? "#f0fdf4"
+                    : "#f8fafc",
+            color:
+              task.status === "Pending"
+                ? "#e11d48"
+                : task.status === "In Progress"
+                  ? PRIMARY_BRAND
+                  : task.status === "Done"
+                    ? "#16a34a"
+                    : "#64748b",
+            border: "1px solid currentColor",
+          }}
+        />
+      </Stack>
+    </Paper>
+  </motion.div>
+);
 
+export default function ProfDash() {
+  const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
 
-  const { user } = useSelector((state) => state.user);
-
-  const { global } = useSelector((state) => state.loading);
-
-  const [open, setOpen] = useState();
-
-  const [openUnitConverter, setOpenUnitConverter] = useState();
-
-  const above385 = useMediaQuery("(min-width:386px)");
-  const above400 = useMediaQuery("(min-width:400px)");
-
-  const actions = [
-    {
-      label: "Projects",
-      icon: <TbReport fontSize={above400 ? 32 : 28} />,
-      link: "/survey",
-    },
-    {
-      label: "Reports",
-      icon: <TbReportSearch fontSize={above400 ? 32 : 28} />,
-      link: "/survey/report",
-    },
-    {
-      label: "Unit Con.",
-      icon: <TbRefresh fontSize={above400 ? 32 : 28} />,
-      type: "unit",
-    },
-    {
-      label: "Camera",
-      icon: <MdGpsFixed fontSize={above400 ? 32 : 28} />,
-      link: "/camera",
-    },
-  ];
+  const [open, setOpen] = useState(false);
+  const [openUnitConverter, setOpenUnitConverter] = useState(false);
 
   const handleOpen = (action) => {
     setOpen(action === "help & support");
@@ -150,15 +410,6 @@ const ProfessionalDashboard = () => {
     setOpenUnitConverter(false);
   };
 
-  const handleSubmitSearch = (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    const value = formData.get("search");
-
-    navigate("/survey", { state: { search: value } });
-  };
-
   const alertData = {
     title: "Help & Support",
     description: `If you have any questions or need assistance, we're here to help.
@@ -166,10 +417,6 @@ const ProfessionalDashboard = () => {
             to you as soon as possible.`,
     content: <CreateTicket onClose={handleClose} />,
   };
-
-  useEffect(() => {
-    dispatch(stopLoading());
-  }, []);
 
   return (
     <>
@@ -181,384 +428,586 @@ const ProfessionalDashboard = () => {
         open={openUnitConverter}
         onSubmit={handleClose}
       />
-
-      {!open && !openUnitConverter && (
-        <Tooltip title="Help" placement="left">
-          <Fab
-            onClick={() => handleOpen("help & support")}
-            aria-label="help"
-            sx={{
-              position: "fixed",
-              bottom: 24,
-              right: 24,
-              borderRadius: 8,
-              textTransform: "none",
-              zIndex: 2000,
-              width: 56,
-              height: 56,
-              backgroundColor: "#006FFD",
-              color: "white",
-              ":hover": { backgroundColor: "#006FFD" },
-            }}
-          >
-            <BiSupport size={24} />
-          </Fab>
-        </Tooltip>
-      )}
-
-      <Stack spacing={2} sx={{ userSelect: "none" }} overflow={"hidden"}>
-        {/* 🌈 HEADER */}
-        <Stack
-          p={2}
-          height={"228px"}
+      <AppHeader />
+      <Box sx={{ bgcolor: BG_COLOR, minHeight: "100vh", pb: 5 }}>
+        {/* Indigo Themed Professional Header */}
+        <Box
           sx={{
-            position: "relative",
-            // backgroundColor: 'rgba(40, 151, 255, 1)',
-            background:
-              "linear-gradient(217.64deg, #0A3BAF -5.84%, #0025A0 106.73%)",
+            background: `linear-gradient(135deg, ${HEADER_GRADIENT_START} 0%, ${HEADER_GRADIENT_END} 100%)`,
+            // Adjusted padding top to cleanly sit right below the AppHeader
+            pt: 4,
+            pb: 10,
+            color: "white",
+            borderRadius: "0 0 40px 40px",
+            boxShadow: "0 10px 40px -10px rgba(79, 70, 229, 0.3)",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: `url(${BackgroundImage})`,
-              backgroundSize: "200%",
-              backgroundPosition: "center",
-              opacity: 0.25,
-              zIndex: 0,
-              height: "60dvh",
-              minHeight: "260px",
-              width: "100%",
-            }}
-          ></div>
-          <Box
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-            color="white"
-            zIndex={2}
-          >
-            <img src={logo} alt="CADer" style={{ width: "65px" }} />
-
-            <Sidebar />
-          </Box>
-
-          <Stack
-            direction={"row"}
-            alignItems={"center"}
-            justifyContent={"space-between"}
-            mt={2}
-          >
-            <Stack direction={"row"} alignItems={"center"} spacing={1}>
-              <ImageAvatars
-                sx={{
-                  width: "48px",
-                  height: "48px",
-                  backgroundColor: "#fff",
-                  color: "rgba(40, 151, 255, 1)",
-                  "& .css-1mo2pzk-MuiSvgIcon-root-MuiAvatar-fallback": {
-                    width: "60%",
-                    height: "60%",
-                  },
-                }}
-              />
-
-              <Box color="white">
-                <Typography fontWeight={700} fontSize="14px">
-                  Hello,
-                </Typography>
-                <Typography fontWeight={700} fontSize="14px">
-                  {user.name}
-                </Typography>
-              </Box>
-            </Stack>
-
-            <Box minWidth={"123px"}>
-              <BasicButton
-                value={
+          <Container maxWidth="lg">
+            {/* Header Hero Content */}
+            <Grid container spacing={3} alignItems="flex-end">
+              <Grid size={{ xs: 12, md: 7 }}>
+                <motion.div variants={fUp}>
                   <Box
-                    display={"flex"}
-                    gap={1}
-                    alignItems={"center"}
-                    color={"rgba(0, 111, 253, 1)"}
+                    sx={{
+                      display: "inline-flex",
+                      px: 2,
+                      py: 0.5,
+                      mb: 3,
+                      borderRadius: 10,
+                      // Change: Use a white semi-transparent background for "Glass" effect
+                      bgcolor: "rgba(255, 255, 255, 0.15)",
+                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                      backdropFilter: "blur(4px)", // Optional: adds a nice premium frosted feel
+                    }}
                   >
-                    <IoIosAddCircleOutline
-                      fontSize={"20px"}
-                      fontWeight={"900"}
-                      strokeWidth={"10px"}
-                    />
-                    <Typography fontSize={"13px"} fontWeight={700}>
-                      Add Project
+                    <Box display="flex" alignItems="center">
+                      <PulseDot />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          // Change: Pure white or very light indigo for readability
+                          color: "#ffffff",
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                        }}
+                      >
+                        v0.1.0 is live
+                      </Typography>
+                    </Box>
+                  </Box>
+                </motion.div>
+                <Typography
+                  variant="h3"
+                  fontWeight={900}
+                  sx={{
+                    mb: 1,
+                    letterSpacing: "-0.02em",
+                    fontSize: { xs: "2rem", md: "2.5rem" },
+                  }}
+                >
+                  CADER Project <span style={{ color: "#c7d2fe" }}>Hub</span>
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{ opacity: 0.8, maxWidth: 500, fontWeight: 500 }}
+                >
+                  Streamline your surveying workflow. Access your projects,
+                  field reports, and camera tools all in one place.
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Stack
+                  direction="row"
+                  spacing={3}
+                  justifyContent={{ xs: "flex-start", md: "flex-end" }}
+                >
+                  <Box>
+                    <Typography variant="h5" fontWeight={900}>
+                      12
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        opacity: 0.7,
+                        fontWeight: 800,
+                        letterSpacing: "0.1em",
+                      }}
+                    >
+                      TOTAL PROJECTS
                     </Typography>
                   </Box>
-                }
-                onClick={() => navigate("/survey/select-equipment")}
-                sx={{
-                  backgroundColor: "#ffffff",
-                  height: "45px",
-                  "&:hover": {
-                    backgroundColor: "#ffffff",
-                  },
-                }}
-              />
-            </Box>
-          </Stack>
-
-          <BasicDivider
-            borderBottomWidth={0.5}
-            color="rgba(222, 222, 222, 1)"
-          />
-
-          <Box position={"relative"}>
-            <Box
-              position={"absolute"}
-              zIndex={1}
-              sx={{ top: "10px", left: "10px" }}
-              color={"rgba(145, 145, 145, 1)"}
-            >
-              <MdOutlineSearch fontSize={"24px"} />
-            </Box>
-            <form onSubmit={(e) => handleSubmitSearch(e)}>
-              <BasicInput
-                name="search"
-                placeholder="Search"
-                sx={{
-                  paddingLeft: "40px",
-                  borderRadius: "14px",
-                }}
-              />
-            </form>
-          </Box>
-        </Stack>
-
-        <Box px={2} className="overlapping-header">
-          {/* ⚡ Quick Actions */}
-          <Stack spacing={2}>
-            <Typography fontWeight={700} fontSize="16px">
-              Quick Actions
-            </Typography>
-            <Box display={"flex"} justifyContent={"space-between"}>
-              {actions.map((item, idx) => (
-                <Box key={idx}>
-                  <Stack alignItems={"center"} height={"100%"} spacing={0.5}>
-                    <Paper
-                      elevation={3}
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ borderColor: "rgba(255,255,255,0.2)" }}
+                  />
+                  <Box>
+                    <Typography variant="h5" fontWeight={900}>
+                      0
+                    </Typography>
+                    <Typography
+                      variant="caption"
                       sx={{
-                        px: 2,
-                        py: 1.5,
-                        borderRadius: "14px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                        width: `${above400 ? "55px" : "46px"}`,
-                        height: "100%",
-                        backgroundColor: "white",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                        },
-                      }}
-                      onClick={() => {
-                        item.type === "unit"
-                          ? handleOpen("unit converter")
-                          : navigate(item.link);
+                        opacity: 0.7,
+                        fontWeight: 800,
+                        letterSpacing: "0.1em",
                       }}
                     >
-                      <Stack
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={0.5}
-                        sx={{ color: "rgba(0, 111, 253, 1)" }}
-                      >
-                        {item.icon}
-                        <Typography
-                          fontSize={above400 ? "12px" : "10px"}
-                          fontWeight={600}
-                          color="black"
-                          align="center"
-                        >
-                          {item.label}
-                        </Typography>
-                      </Stack>
-                    </Paper>
-                  </Stack>
-                </Box>
-              ))}
-            </Box>
-
-            {/* Overview */}
-            <Typography fontWeight={700} fontSize="16px">
-              Overview
-            </Typography>
-
-            <Grid container columns={12} spacing={2}>
-              <Grid size={{ xs: above385 ? 6 : 12 }}>
-                <BasicCard
-                  key={global}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{
-                    y: -5,
-                    boxShadow: "0px 8px 20px rgba(0,0,0,0.1)",
-                  }}
-                  transition={{ duration: 0.4, delay: 0.6 }}
-                  sx={{
-                    borderBottom: "2px solid #006FFD",
-                    borderRadius: "16px",
-                    cursor: "pointer",
-                  }}
-                  content={
-                    <Stack spacing={1}>
-                      <Box
-                        display={"flex"}
-                        justifyContent={"space-between"}
-                        alignItems={"center"}
-                        gap={1.5}
-                      >
-                        <Typography fontWeight={600} fontSize="14px">
-                          Total Projects
-                        </Typography>
-
-                        <Box
-                          bgcolor={"rgba(234, 242, 255, 1)"}
-                          borderRadius={"6px"}
-                          padding={"8px 8px 6px"}
-                        >
-                          <TbReport
-                            size={20}
-                            style={{
-                              color: "rgba(0, 111, 253, 1)",
-                            }}
-                          />
-                        </Box>
-                      </Box>
-                      <Typography fontWeight={700} fontSize="24px">
-                        12
-                      </Typography>
-
-                      <Typography
-                        fontWeight={600}
-                        fontSize="14px"
-                        color="rgba(40, 151, 255, 1)"
-                      >
-                        Today +2
-                      </Typography>
-                    </Stack>
-                  }
-                />
-              </Grid>
-              <Grid size={{ xs: above385 ? 6 : 12 }}>
-                <BasicCard
-                  key={global}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{
-                    y: -5,
-                    boxShadow: "0px 8px 20px rgba(0,0,0,0.1)",
-                  }}
-                  transition={{ duration: 0.4, delay: 0.8 }}
-                  sx={{
-                    borderBottom: "2px solid rgba(57, 104, 58, 1)",
-                    borderRadius: "16px",
-                    cursor: "pointer",
-                    height: "100%",
-                  }}
-                  content={
-                    <Stack spacing={1}>
-                      <Box
-                        display={"flex"}
-                        justifyContent={"space-between"}
-                        alignItems={"center"}
-                        gap={1.5}
-                      >
-                        <Typography fontWeight={600} fontSize="14px">
-                          Total Tasks
-                        </Typography>
-
-                        <Box
-                          bgcolor={"rgba(57, 104, 58, 0.22)"}
-                          borderRadius={"6px"}
-                          padding={"8px 8px 6px"}
-                        >
-                          <GoChecklist
-                            size={20}
-                            style={{
-                              color: "rgba(57, 104, 58, 1)",
-                            }}
-                          />
-                        </Box>
-                      </Box>
-                      <Typography fontWeight={700} fontSize="24px">
-                        0
-                      </Typography>
-
-                      <Typography
-                        fontWeight={600}
-                        fontSize="14px"
-                        color="rgba(57, 104, 58, 1)"
-                      >
-                        Today 0
-                      </Typography>
-                    </Stack>
-                  }
-                />
+                      PENDING TASKS
+                    </Typography>
+                  </Box>
+                  {/* <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ borderColor: "rgba(255,255,255,0.2)" }}
+                  />
+                  <Box>
+                    <Typography
+                      variant="h5"
+                      fontWeight={900}
+                      color={SUCCESS_COLOR}
+                    >
+                      Active
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        opacity: 0.7,
+                        fontWeight: 800,
+                        letterSpacing: "0.1em",
+                      }}
+                    >
+                      SYSTEM STATUS
+                    </Typography>
+                  </Box> */}
+                </Stack>
               </Grid>
             </Grid>
+          </Container>
+        </Box>
 
-            <Typography fontWeight={700} fontSize="16px">
-              Tasks
-            </Typography>
-            {taskData.map((task, idx) => (
-              <BasicCard
-                key={idx}
-                sx={{
-                  borderRadius: 4,
-                  boxShadow: 1,
-                }}
-                component={motion.div}
-                {...animations[idx % 2]}
-                transition={{ duration: 0.4, delay: 0.6 + idx * 0.1 }}
-                contentSx={{ p: "16px !important" }}
-                content={
-                  <Box position={"relative"}>
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      className="task-card-inner"
+        {/* Navigation & Action Bar */}
+        <Box sx={{ mt: -4, mb: 4 }}>
+          <Container maxWidth="lg">
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: "24px",
+                bgcolor: "white",
+                boxShadow: "0 20px 25px -5px rgba(99, 102, 241, 0.1)",
+                border: `1px solid ${CARD_BORDER}`,
+                display: "flex",
+                gap: 2,
+                overflowX: "auto",
+                "&::-webkit-scrollbar": { display: "none" },
+              }}
+            >
+              {[
+                {
+                  label: "Projects",
+                  icon: <Icons.Files />,
+                  count: "12 Total",
+                  link: "/survey",
+                },
+                {
+                  label: "Pending",
+                  icon: <Icons.Pending />,
+                  count: "View All",
+                  link: "/survey/report",
+                },
+                {
+                  label: "Ongoing",
+                  icon: <Icons.Ongoing />,
+                  count: "View All",
+                  link: "/survey/report",
+                },
+                {
+                  label: "Completed",
+                  icon: <Icons.Completed />,
+                  count: "View All",
+                  link: "/survey/report",
+                },
+                // {
+                //   label: "Reports",
+                //   icon: <Icons.Chart />,
+                //   count: "View All",
+                //   link: "/survey/report",
+                // },
+                // {
+                //   label: "Unit Converter",
+                //   icon: <Icons.Options />,
+                //   count: "Tool",
+                //   type: "unit",
+                // },
+                // {
+                //   label: "Camera",
+                //   icon: <Icons.Map />,
+                //   count: "Ready",
+                //   link: "/camera",
+                // },
+              ].map((action, i) => (
+                <Box
+                  key={i}
+                  onClick={() => {
+                    if (action.type === "unit") {
+                      handleOpen("unit converter");
+                    } else if (action.link) {
+                      navigate(action.link);
+                    }
+                  }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                    px: 2,
+                    py: 1,
+                    borderRadius: "16px",
+                    cursor: "pointer",
+                    bgcolor: i === 0 ? PRIMARY_BRAND : "transparent",
+                    color: i === 0 ? "white" : "#64748b",
+                    border: i === 0 ? "none" : "1px solid #f1f5f9",
+                    whiteSpace: "nowrap",
+                    transition: "0.2s",
+                    "&:hover": {
+                      bgcolor: i === 0 ? HEADER_GRADIENT_START : "#f8fafc",
+                    },
+                  }}
+                >
+                  <Box sx={{ color: i === 0 ? "white" : PRIMARY_BRAND }}>
+                    {action.icon}
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" fontWeight={800}>
+                      {action.label}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ opacity: 0.7, fontWeight: 600 }}
                     >
-                      {/* Left Side - Time + Title + Description */}
-                      <Stack spacing={1}>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <IoTime fontSize={18} color="#2897FF" />
-                          <Typography fontSize={14} color="#2897FF">
-                            {task.createdAt}
-                          </Typography>
-                        </Stack>
+                      {action.count}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Paper>
+          </Container>
+        </Box>
 
-                        <Typography fontWeight={700} fontSize="14px">
-                          {task.title}
+        {/* Dashboard Main Grid */}
+        <Container maxWidth="lg">
+          <Grid container spacing={4}>
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 3 }}
+              >
+                <Box>
+                  <Typography variant="h6" fontWeight={800} color="#334155">
+                    Operational Timeline
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={600}
+                  >
+                    Daily tasks and verification queue
+                  </Typography>
+                </Box>
+                <Chip
+                  label={new Date().toDateString()}
+                  size="small"
+                  sx={{
+                    fontWeight: 800,
+                    bgcolor: "#f1f5f9",
+                    color: "#64748b",
+                    borderRadius: "8px",
+                    px: 1,
+                  }}
+                />
+              </Stack>
+
+              <Box>
+                <AnimatePresence>
+                  {taskData.length ? (
+                    taskData.map((task, idx) => (
+                      <TaskCard key={idx} task={task} index={idx} />
+                    ))
+                  ) : (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        borderRadius: "24px",
+                        border: `1px solid ${CARD_BORDER}`,
+                        background: `linear-gradient(45deg, ${PRIMARY_BRAND}05, white)`,
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={900}
+                        color={HEADER_GRADIENT_START}
+                      >
+                        No Tasks Found
+                      </Typography>
+                    </Paper>
+                  )}
+                </AnimatePresence>
+              </Box>
+            </Grid>
+
+            {/* Modern Sidebar with Richer Content */}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography
+                variant="h6"
+                fontWeight={800}
+                color="#334155"
+                sx={{ mb: 3 }}
+              >
+                Site Intelligence
+              </Typography>
+              <Stack spacing={3}>
+                {/* Broadcasts */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: "24px",
+                    border: `1px solid ${CARD_BORDER}`,
+                    background: `linear-gradient(45deg, ${PRIMARY_BRAND}05, white)`,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={900}
+                    color={HEADER_GRADIENT_START}
+                    sx={{ mb: 2 }}
+                  >
+                    System Updates
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={800}
+                        color="#1e293b"
+                      >
+                        New Features Available
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.5, lineHeight: 1.5 }}
+                      >
+                        Check out the new calibration calculator and enhanced
+                        plotting tools in the latest CADER release.
+                      </Typography>
+                    </Box>
+                    <Divider />
+                    <Box>
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={800}
+                        color="#1e293b"
+                      >
+                        Maintenance Notice
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.5, lineHeight: 1.5 }}
+                      >
+                        Scheduled server maintenance this weekend. v0.2.0 will
+                        be released next week.
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+
+                {/* Project Progress */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: "24px",
+                    border: `1px solid ${CARD_BORDER}`,
+                    bgcolor: "white",
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={900}
+                    color="#1e293b"
+                    sx={{ mb: 2 }}
+                  >
+                    Project Milestones
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Box>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        sx={{ mb: 1 }}
+                      >
+                        <Typography
+                          variant="caption"
+                          fontWeight={800}
+                          color="#64748b"
+                        >
+                          SURVEY COMPLETION
                         </Typography>
-
-                        <Typography fontSize={14} color="text.secondary">
-                          {task.description}
+                        <Typography
+                          variant="caption"
+                          fontWeight={800}
+                          color={PRIMARY_BRAND}
+                        >
+                          88%
                         </Typography>
                       </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={88}
+                        sx={{
+                          height: 6,
+                          borderRadius: 3,
+                          bgcolor: "#f1f5f9",
+                          "& .MuiLinearProgress-bar": {
+                            bgcolor: PRIMARY_BRAND,
+                          },
+                        }}
+                      />
+                    </Box>
+                    <Box>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        sx={{ mb: 1 }}
+                      >
+                        <Typography
+                          variant="caption"
+                          fontWeight={800}
+                          color="#64748b"
+                        >
+                          PROPOSAL GENERATION
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          fontWeight={800}
+                          color={PRIMARY_BRAND}
+                        >
+                          42%
+                        </Typography>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={42}
+                        sx={{
+                          height: 6,
+                          borderRadius: 3,
+                          bgcolor: "#f1f5f9",
+                          "& .MuiLinearProgress-bar": {
+                            bgcolor: PRIMARY_BRAND,
+                          },
+                        }}
+                      />
+                    </Box>
+                  </Stack>
+                </Paper>
 
-                      {/* Status */}
-
-                      <StatusChip status={task.status} />
-                    </Stack>
+                {/* Equipment Calibration Card */}
+                <Paper
+                  elevation={0}
+                  component={motion.div}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate("/survey/select-equipment")}
+                  sx={{
+                    p: 3,
+                    borderRadius: "24px",
+                    bgcolor: PRIMARY_BRAND,
+                    color: "white",
+                    textAlign: "left",
+                    boxShadow: "0 10px 20px -5px rgba(99, 102, 241, 0.3)",
+                    position: "relative",
+                    overflow: "hidden",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Box sx={{ position: "relative", zIndex: 1 }}>
+                    <Typography
+                      variant="caption"
+                      fontWeight={700}
+                      sx={{ opacity: 0.8, letterSpacing: "0.1em" }}
+                    >
+                      CALIBRATION ALERT
+                    </Typography>
+                    <Typography variant="h5" fontWeight={900} sx={{ mt: 1 }}>
+                      Two-Peg Test Due
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ opacity: 0.9, mt: 0.5, fontWeight: 500 }}
+                    >
+                      Auto Level (Sokkia B40)
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", mt: 2, opacity: 0.7 }}
+                    >
+                      Click to start validation
+                    </Typography>
                   </Box>
-                }
-              />
-            ))}
-          </Stack>
-        </Box>
-      </Stack>
+                  {/* Decorative circle */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      bottom: -20,
+                      right: -20,
+                      width: 100,
+                      height: 100,
+                      borderRadius: "50%",
+                      bgcolor: "rgba(255,255,255,0.1)",
+                    }}
+                  />
+                  {/* Second Decorative circle */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: -10,
+                      right: 40,
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      bgcolor: "rgba(255,255,255,0.05)",
+                    }}
+                  />
+                </Paper>
+              </Stack>
+            </Grid>
+          </Grid>
+        </Container>
+
+        {/* Floating Action Button */}
+        <Fab
+          sx={{
+            position: "fixed",
+            bottom: 30,
+            right: 30,
+            bgcolor: PRIMARY_BRAND,
+            color: "white",
+            width: 60,
+            height: 60,
+            "&:hover": {
+              bgcolor: HEADER_GRADIENT_START,
+              transform: "scale(1.1)",
+            },
+            transition: "all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+          }}
+          onClick={() => navigate("/survey/select-equipment")}
+        >
+          <Icons.Add />
+        </Fab>
+
+        {/* Support Action Button */}
+        <IconButton
+          onClick={() => handleOpen("help & support")}
+          sx={{
+            position: "fixed",
+            bottom: 30,
+            left: 30,
+            bgcolor: "white",
+            border: `1px solid ${CARD_BORDER}`,
+            color: PRIMARY_BRAND,
+            p: 1.5,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+            "&:hover": { bgcolor: "#f8fafc" },
+          }}
+        >
+          <Icons.Support />
+        </IconButton>
+      </Box>
     </>
   );
-};
-
-export default ProfessionalDashboard;
+}

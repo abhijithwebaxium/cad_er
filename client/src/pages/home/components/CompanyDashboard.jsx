@@ -92,7 +92,7 @@ const CompanyDashboard = ({ user, data }) => {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(${BackgroundImage})`,
+            // backgroundImage: `url(${BackgroundImage})`,
             backgroundSize: "200%",
             backgroundPosition: "center",
             opacity: 0.25,

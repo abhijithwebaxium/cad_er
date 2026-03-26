@@ -216,12 +216,12 @@ body {
 
 /* Nav overlapping headers */
 .overlapping-header {
-  margin-top: -60px !important;
+  /* margin-top: -60px !important;
   border-radius: 20px 20px 0 0;
   background-color: white;
   position: relative;
   z-index: 2;
-  padding: 16px;
+  padding: 16px; */
 }
 
 .task-card-inner::before {
@@ -256,7 +256,9 @@ body {
 
 .logo {
   height: 60px; /* default for small screens */
-  transition: transform 1.5s ease-in-out, opacity 1.5s ease-in-out;
+  transition:
+    transform 1.5s ease-in-out,
+    opacity 1.5s ease-in-out;
   font-weight: 900;
   font-size: 3rem;
   letter-spacing: 3px;
@@ -269,11 +271,15 @@ body {
   -webkit-text-fill-color: transparent;
 
   /* ✨ Inner glow + depth */
-  text-shadow: 0 0 10px rgba(107, 78, 255, 0.3),
-    0 0 20px rgba(158, 123, 255, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+  text-shadow:
+    0 0 10px rgba(107, 78, 255, 0.3),
+    0 0 20px rgba(158, 123, 255, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.25);
 
   /* ✨ Gradient shimmer animation */
-  animation: fadeIn 2s ease forwards, glowPulse 2.5s ease-in-out infinite,
+  animation:
+    fadeIn 2s ease forwards,
+    glowPulse 2.5s ease-in-out infinite,
     gradientShift 4s ease-in-out infinite;
 }
 

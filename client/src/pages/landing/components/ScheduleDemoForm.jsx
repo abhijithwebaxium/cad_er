@@ -19,10 +19,12 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  Checkbox,
-  FormGroup,
   FormLabel,
 } from "@mui/material";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { handleFormError } from "../../../utils/handleFormError";
+import { scheduleDemoForm } from "../../../services/indexServices";
 
 // --- Icons (Existing and New) ---
 const IconWrapper = ({ children, size = 20, color = "currentColor" }) => (
@@ -164,6 +166,9 @@ const ScheduleDemoForm = ({ open, onClose }) => {
     projectedParticipants: "",
   });
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -181,17 +186,22 @@ const ScheduleDemoForm = ({ open, onClose }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
+
+    try {
+      await scheduleDemoForm(formData);
+    } catch (error) {
+      handleFormError(error, dispatch, navigate);
+    } finally {
       setIsSubmitting(false);
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);
         onClose();
       }, 2500);
-    }, 1500);
+    }
   };
 
   return (
@@ -232,7 +242,10 @@ const ScheduleDemoForm = ({ open, onClose }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: { xs: 2, sm: 4 }, bgcolor: "#fafafa" }} data-lenis-prevent>
+      <DialogContent
+        sx={{ p: { xs: 2, sm: 4 }, bgcolor: "#fafafa" }}
+        data-lenis-prevent
+      >
         {isSuccess ? (
           <Fade in={isSuccess}>
             <Box textAlign="center" py={10}>

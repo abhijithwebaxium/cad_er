@@ -716,7 +716,7 @@ const Landing = () => {
               pt: { xs: 6, md: 12 },
               pb: { xs: 8, md: 12 },
               overflow: "hidden",
-              backgroundImage: `url("${GRID_PATTERN}")`,
+              // backgroundImage: `url("${GRID_PATTERN}")`,
             }}
           >
             <Container maxWidth="lg">
