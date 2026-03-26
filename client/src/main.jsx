@@ -10,10 +10,13 @@ import { registerSW } from "virtual:pwa-register";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-registerSW({
+const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    window.location.reload();
+    // Automatically triggers the new service worker to take control and reloads the page
+    if (updateSW) {
+      updateSW(true);
+    }
   },
   onOfflineReady() {
     console.log("Offline ready");
