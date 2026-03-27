@@ -594,19 +594,19 @@ export default function ProfDash() {
                   label: "Pending",
                   icon: <Icons.Pending />,
                   count: "View All",
-                  link: "/survey/report",
+                  link: "/survey",
                 },
                 {
                   label: "Ongoing",
                   icon: <Icons.Ongoing />,
                   count: "View All",
-                  link: "/survey/report",
+                  link: "/survey",
                 },
                 {
                   label: "Completed",
                   icon: <Icons.Completed />,
                   count: "View All",
-                  link: "/survey/report",
+                  link: "/survey",
                 },
                 // {
                 //   label: "Reports",
