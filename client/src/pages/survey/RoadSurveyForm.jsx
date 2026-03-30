@@ -635,7 +635,7 @@ const RoadSurveyForm = () => {
       await schema.validate(formValues, { abortEarly: false });
 
       const { data } = id
-        ? entryType === "manualEntry"
+        ? entryType === "autoGenerate" && type === false
           ? await createSurveyPurpose(id, formValues)
           : await generateSurveyPurpose(id, {
               ...formValues,
@@ -655,7 +655,7 @@ const RoadSurveyForm = () => {
         const link =
           surveyStatus === "Scheduled"
             ? "/survey"
-            : id && entryType === "autoGenerate"
+            : id && entryType === "autoGenerate" && type === true
               ? `/survey/${id}/report`
               : `/survey/road-survey/${purposeId}/rows`;
 
