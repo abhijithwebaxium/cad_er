@@ -928,7 +928,7 @@ const RoadSurveyRowsForm = () => {
       const inpPLS = document.getElementById("pls");
       const inpAutoCalculate = document.getElementById("autoCalculate");
 
-      if (purpose.type === "Initial Level") {
+      if (purpose.phase === "Actual") {
         if (!inpFinalForesight?.value?.trim()) {
           inpFinalForesight.parentElement.parentElement.classList.add(
             "inp-err",
