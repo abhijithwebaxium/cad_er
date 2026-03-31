@@ -308,7 +308,7 @@ const getSurvey = async (req, res, next) => {
   }
 };
 
-const updateSurvey = () => {};
+const updateSurvey = () => { };
 const deleteSurvey = async (req, res, next) => {
   try {
     const {
@@ -932,9 +932,8 @@ const getAllSurveyPurpose = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: purposes.length,
-      message: `${purposes.length} survey purpose${
-        purposes.length > 1 ? "s" : ""
-      } found`,
+      message: `${purposes.length} survey purpose${purposes.length > 1 ? "s" : ""
+        } found`,
       purposes,
     });
   } catch (err) {
@@ -1188,8 +1187,8 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.reducedLevels = isProposal
         ? (reducedLevels || []).map((n) => Number(n).toFixed(3))
         : (intermediateSight || [])?.map((n) =>
-            (Number(prevRowHI) - Number(n || 0)).toFixed(3),
-          );
+          (Number(prevRowHI) - Number(n || 0)).toFixed(3),
+        );
 
       isRowExist.intermediateSight = (intermediateSight || []).map((n) =>
         Number(n).toFixed(3),
@@ -1617,7 +1616,7 @@ const generateSurveyPurpose = async (req, res, next) => {
             doHaveCamper &&
             (count === 0 || count === reading.reducedLevels.length - 1)
           ) {
-            value -= (roadWidth / 2) * doHaveCamper;
+            value -= (roadWidth / 2) * (doHaveCamper / 100);
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
@@ -1645,7 +1644,7 @@ const generateSurveyPurpose = async (req, res, next) => {
             doHaveCamper &&
             (idx === 0 || idx === reading.reducedLevels.length - 1)
           ) {
-            value -= (roadWidth / 2) * doHaveCamper;
+            value -= (roadWidth / 2) * (doHaveCamper / 100);
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
@@ -1752,7 +1751,7 @@ const editSurveyPurpose = async (req, res, next) => {
       if (survey.purposes.length > 1)
         throw new Error(
           "Cannot update the survey reduced level because this survey has multiple purposes. " +
-            "Reduced level can only be updated when the survey has a single purpose.",
+          "Reduced level can only be updated when the survey has a single purpose.",
         );
 
       survey.reducedLevel = Number(startRl);

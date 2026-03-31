@@ -15,13 +15,11 @@ import { handleFormError } from "../../utils/handleFormError";
 import { deleteSurvey, getAllSurvey } from "../../services/surveyServices";
 import { motion, AnimatePresence } from "framer-motion";
 import BasicAccordion from "../../components/BasicAccordion";
-import LetterAvatar from "../../components/LetterAvatar";
-import BasicDivider from "../../components/BasicDevider";
 import { MdOutlineExpandMore, MdOutlineSearch } from "react-icons/md";
 import { MdSort } from "react-icons/md";
 import BasicCard from "../../components/BasicCard";
 import StatusChip from "../../components/StatusChip";
-import { TiEye } from "react-icons/ti";
+import { IoIosArrowForward } from "react-icons/io";
 import { ProjectListCardSkeleton } from "./components/ProjectListCardSkeleton";
 import { highlightText } from "../../internals";
 import AlertDialogSlide from "../../components/AlertDialogSlide";
@@ -29,6 +27,7 @@ import { showAlert } from "../../redux/alertSlice";
 import BasicButton from "../../components/BasicButton";
 import { MdDelete } from "react-icons/md";
 import SmallHeader from "../../components/SmallHeader";
+import BasicDivider from "../../components/BasicDevider";
 
 const alertDetails = {
   title: "Field Book",
@@ -51,6 +50,12 @@ const colors = {
   Proposed: "blue",
   Final: "red",
 };
+
+const PRIMARY_BRAND = "#6366f1";
+const HEADER_GRADIENT_START = "#4f46e5";
+const HEADER_GRADIENT_END = "#6366f1";
+const BG_COLOR = "#f8fafc";
+const CARD_BORDER = "#e2e8f0";
 
 const Item = styled(Box)(({ theme }) => ({
   ...theme.typography.body2,
@@ -87,12 +92,12 @@ const fieldsToMap = [
     type: "Date",
   },
   {
-    key: <TiEye fontSize={20} color="rgba(0, 111, 253, 1)" />,
+    key: <IoIosArrowForward fontSize={20} color="rgba(0, 111, 253, 1)" />,
     value: "Field Book",
     type: "Icon",
   },
   {
-    key: <TiEye fontSize={20} color="rgba(0, 111, 253, 1)" />,
+    key: <IoIosArrowForward fontSize={20} color="rgba(0, 111, 253, 1)" />,
     value: "Reports",
     type: "Icon",
   },
@@ -399,30 +404,47 @@ export default function ProjectsList() {
                   <Box>
                     <BasicAccordion
                       summary={
-                        <Stack
-                          direction={"row"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <LetterAvatar
-                            letter={survey.project.slice(0, 1)}
-                            bgcolor={"rgba(0, 111, 253, 1)"}
-                            onClick={() => handleContinueSurvey(survey._id)}
-                          />
+                        <Stack direction="row" spacing={2} alignItems="center" width="100%" pr={1}>
+                          {/* Modern Avatar */}
+                          <Box
+                            onClick={(e) => { e.stopPropagation(); handleContinueSurvey(survey._id); }}
+                            sx={{
+                              minWidth: 50,
+                              height: 50,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: `${PRIMARY_BRAND}15`,
+                              borderRadius: "14px",
+                              color: PRIMARY_BRAND,
+                              fontWeight: 800,
+                              fontSize: "1.2rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {survey.project.slice(0, 1).toUpperCase()}
+                          </Box>
 
-                          <Box>
-                            <Typography fontWeight={600} fontSize="14px">
+                          {/* Main Info */}
+                          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Typography variant="caption" fontWeight={800} sx={{ color: PRIMARY_BRAND, letterSpacing: "0.05em" }}>
+                                {survey.type?.toUpperCase() || "SURVEY"}
+                              </Typography>
+                              <Box sx={{ width: 4, height: 4, borderRadius: "50%", bgcolor: "#cbd5e1" }} />
+                              <Typography variant="caption" fontWeight={700} color="#94a3b8">
+                                {new Date(survey.createdAt)?.toLocaleDateString("en-IN")}
+                              </Typography>
+                            </Stack>
+
+                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {highlightText(survey.project, search)}
                             </Typography>
-                            <Typography
-                              fontWeight={500}
-                              color="rgba(161, 161, 170, 1)"
-                              fontSize="14px"
-                            >
-                              {new Date(survey.createdAt)?.toLocaleDateString(
-                                "en-IN",
-                              )}
-                            </Typography>
+                          </Stack>
+
+                          {/* Status */}
+                          <Box onClick={(e) => e.stopPropagation()}>
+                            <StatusChip status={survey.status} />
                           </Box>
                         </Stack>
                       }
@@ -457,12 +479,12 @@ export default function ProjectsList() {
                                     color={
                                       key === "lastPurpose"
                                         ? colors[
-                                            survey[key]?.includes("Initial")
-                                              ? "Initial"
-                                              : survey[key]?.includes("Final")
-                                                ? "Final"
-                                                : ""
-                                          ]
+                                        survey[key]?.includes("Initial")
+                                          ? "Initial"
+                                          : survey[key]?.includes("Final")
+                                            ? "Final"
+                                            : ""
+                                        ]
                                         : ""
                                     }
                                     fontSize={14}
@@ -470,8 +492,8 @@ export default function ProjectsList() {
                                   >
                                     {type === "Date"
                                       ? new Date(
-                                          survey[key],
-                                        )?.toLocaleDateString("en-IN")
+                                        survey[key],
+                                      )?.toLocaleDateString("en-IN")
                                       : type === "constant"
                                         ? key
                                         : survey[key]}
@@ -490,28 +512,19 @@ export default function ProjectsList() {
                       sx={{ boxShadow: "none" }}
                     />
 
-                    <BasicDivider borderBottomWidth={0.5} color="#d9d9d9" />
-
-                    <Stack
-                      direction={"row"}
-                      justifyContent={"space-between"}
-                      alignItems={"center"}
-                    >
-                      <Typography
-                        fontWeight={600}
-                        fontSize="14px"
-                        color="rgba(0, 0, 0, 0.74)"
-                      >
-                        Status
-                      </Typography>
-
-                      <StatusChip status={survey.status} />
-                    </Stack>
+                    {/* Bottom row removed for modern look */}
                   </Box>
                 }
                 sx={{
-                  borderRadius: "12px",
-                  boxShadow: "0px 4px 8px 0px #1c252c2a",
+                  borderRadius: "20px",
+                  border: `1px solid ${CARD_BORDER}`,
+                  background: "#fff",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 12px 24px -10px rgba(99, 102, 241, 0.15)",
+                    borderColor: PRIMARY_BRAND,
+                  },
                 }}
               />
             ))}
@@ -539,31 +552,40 @@ export default function ProjectsList() {
                   <Box>
                     <BasicAccordion
                       summary={
-                        <Stack
-                          direction={"row"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <LetterAvatar
-                            letter={survey.project.slice(0, 1)}
-                            bgcolor={"rgba(0, 111, 253, 1)"}
-                            onClick={() => handleContinueSurvey(survey._id)}
-                          />
-
-                          <Box>
-                            <Typography fontWeight={600} fontSize="14px">
+                        <Stack direction="row" spacing={2} alignItems="center" width="100%" pr={1}>
+                          <Box
+                            onClick={(e) => { e.stopPropagation(); handleContinueSurvey(survey._id); }}
+                            sx={{
+                              minWidth: 50,
+                              height: 50,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: `${PRIMARY_BRAND}15`,
+                              borderRadius: "14px",
+                              color: PRIMARY_BRAND,
+                              fontWeight: 800,
+                              fontSize: "1.2rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {survey.project.slice(0, 1).toUpperCase()}
+                          </Box>
+                          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Typography variant="caption" fontWeight={800} sx={{ color: PRIMARY_BRAND, letterSpacing: "0.05em" }}>
+                                {survey.type?.toUpperCase() || "SURVEY"}
+                              </Typography>
+                              <Box sx={{ width: 4, height: 4, borderRadius: "50%", bgcolor: "#cbd5e1" }} />
+                              <Typography variant="caption" fontWeight={700} color="#94a3b8">
+                                {new Date(survey.createdAt)?.toLocaleDateString("en-IN")}
+                              </Typography>
+                            </Stack>
+                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {highlightText(survey.project, search)}
                             </Typography>
-                            <Typography
-                              fontWeight={500}
-                              color="rgba(161, 161, 170, 1)"
-                              fontSize="14px"
-                            >
-                              {new Date(survey.createdAt)?.toLocaleDateString(
-                                "en-IN",
-                              )}
-                            </Typography>
-                          </Box>
+                          </Stack>
+
                         </Stack>
                       }
                       details={
@@ -593,12 +615,12 @@ export default function ProjectsList() {
                                     color={
                                       key === "lastPurpose"
                                         ? colors[
-                                            survey[key]?.includes("Initial")
-                                              ? "Initial"
-                                              : survey[key]?.includes("Final")
-                                                ? "Final"
-                                                : ""
-                                          ]
+                                        survey[key]?.includes("Initial")
+                                          ? "Initial"
+                                          : survey[key]?.includes("Final")
+                                            ? "Final"
+                                            : ""
+                                        ]
                                         : ""
                                     }
                                     fontSize={14}
@@ -606,8 +628,8 @@ export default function ProjectsList() {
                                   >
                                     {type === "Date"
                                       ? new Date(
-                                          survey[key],
-                                        )?.toLocaleDateString("en-IN")
+                                        survey[key],
+                                      )?.toLocaleDateString("en-IN")
                                       : type === "constant"
                                         ? key
                                         : survey[key]}
@@ -620,7 +642,7 @@ export default function ProjectsList() {
                             <Item>
                               Branch Reports
                               <Typography fontSize={14} fontWeight={700}>
-                                <TiEye
+                                <IoIosArrowForward
                                   fontSize={20}
                                   color="rgba(0, 111, 253, 1)"
                                   onClick={() =>
@@ -667,6 +689,7 @@ export default function ProjectsList() {
                       direction={"row"}
                       justifyContent={"space-between"}
                       alignItems={"center"}
+                      px={1}
                     >
                       <Typography
                         fontWeight={600}
@@ -710,31 +733,40 @@ export default function ProjectsList() {
                   <Box>
                     <BasicAccordion
                       summary={
-                        <Stack
-                          direction={"row"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <LetterAvatar
-                            letter={survey.project.slice(0, 1)}
-                            bgcolor={"rgba(0, 111, 253, 1)"}
-                            onClick={() => handleContinueSurvey(survey._id)}
-                          />
-
-                          <Box>
-                            <Typography fontWeight={600} fontSize="14px">
+                        <Stack direction="row" spacing={2} alignItems="center" width="100%" pr={1}>
+                          <Box
+                            onClick={(e) => { e.stopPropagation(); handleContinueSurvey(survey._id); }}
+                            sx={{
+                              minWidth: 50,
+                              height: 50,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: `${PRIMARY_BRAND}15`,
+                              borderRadius: "14px",
+                              color: PRIMARY_BRAND,
+                              fontWeight: 800,
+                              fontSize: "1.2rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {survey.project.slice(0, 1).toUpperCase()}
+                          </Box>
+                          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Typography variant="caption" fontWeight={800} sx={{ color: PRIMARY_BRAND, letterSpacing: "0.05em" }}>
+                                {survey.type?.toUpperCase() || "SURVEY"}
+                              </Typography>
+                              <Box sx={{ width: 4, height: 4, borderRadius: "50%", bgcolor: "#cbd5e1" }} />
+                              <Typography variant="caption" fontWeight={700} color="#94a3b8">
+                                {new Date(survey.createdAt)?.toLocaleDateString("en-IN")}
+                              </Typography>
+                            </Stack>
+                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {highlightText(survey.project, search)}
                             </Typography>
-                            <Typography
-                              fontWeight={500}
-                              color="rgba(161, 161, 170, 1)"
-                              fontSize="14px"
-                            >
-                              {new Date(survey.createdAt)?.toLocaleDateString(
-                                "en-IN",
-                              )}
-                            </Typography>
-                          </Box>
+                          </Stack>
+
                         </Stack>
                       }
                       details={
@@ -764,12 +796,12 @@ export default function ProjectsList() {
                                     color={
                                       key === "lastPurpose"
                                         ? colors[
-                                            survey[key]?.includes("Initial")
-                                              ? "Initial"
-                                              : survey[key]?.includes("Final")
-                                                ? "Final"
-                                                : ""
-                                          ]
+                                        survey[key]?.includes("Initial")
+                                          ? "Initial"
+                                          : survey[key]?.includes("Final")
+                                            ? "Final"
+                                            : ""
+                                        ]
                                         : ""
                                     }
                                     fontSize={14}
@@ -777,8 +809,8 @@ export default function ProjectsList() {
                                   >
                                     {type === "Date"
                                       ? new Date(
-                                          survey[key],
-                                        )?.toLocaleDateString("en-IN")
+                                        survey[key],
+                                      )?.toLocaleDateString("en-IN")
                                       : type === "constant"
                                         ? key
                                         : survey[key]}
@@ -791,7 +823,7 @@ export default function ProjectsList() {
                             <Item>
                               Branch Reports
                               <Typography fontSize={14} fontWeight={700}>
-                                <TiEye
+                                <IoIosArrowForward
                                   fontSize={20}
                                   color="rgba(0, 111, 253, 1)"
                                   onClick={() =>
@@ -823,6 +855,7 @@ export default function ProjectsList() {
                       direction={"row"}
                       justifyContent={"space-between"}
                       alignItems={"center"}
+                      px={1}
                     >
                       <Typography
                         fontWeight={600}
@@ -858,7 +891,7 @@ export default function ProjectsList() {
   };
 
   return (
-    <Box overflow={"hidden"}>
+    <Box overflow={"hidden"} sx={{ bgcolor: BG_COLOR, minHeight: "100vh", pb: 5 }}>
       <SmallHeader />
 
       <AlertDialogSlide
@@ -880,8 +913,13 @@ export default function ProjectsList() {
         position={"sticky"}
         p={2}
         top={0}
-        bgcolor={"white"}
-        zIndex={1}
+        zIndex={10}
+        sx={{
+          background: `linear-gradient(135deg, ${HEADER_GRADIENT_START} 0%, ${HEADER_GRADIENT_END} 100%)`,
+          color: "white",
+          borderRadius: "0 0 20px 20px",
+          boxShadow: "0 10px 40px -10px rgba(79, 70, 229, 0.3)",
+        }}
       >
         {/* Header */}
         <Box
@@ -893,7 +931,7 @@ export default function ProjectsList() {
           }}
         >
           {/* 🔍 Left Icon */}
-          <IconButton onClick={() => setSearchMode(true)}>
+          <IconButton onClick={() => setSearchMode(true)} sx={{ color: "white" }}>
             <MdOutlineSearch size={26} />
           </IconButton>
 
@@ -909,7 +947,7 @@ export default function ProjectsList() {
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <Typography fontWeight={700} fontSize="20px">
+                  <Typography fontWeight={900} fontSize="24px" letterSpacing="-0.5px">
                     Projects
                   </Typography>
                 </motion.div>
@@ -954,7 +992,7 @@ export default function ProjectsList() {
           </Box>
 
           {/* ↕ Sort Icon */}
-          <IconButton>
+          <IconButton sx={{ color: "white" }}>
             <MdSort size={26} />
           </IconButton>
         </Box>
@@ -974,7 +1012,7 @@ export default function ProjectsList() {
       </Box>
 
       {/* Animate tab content */}
-      <Box px={2} mb={"82px"}>
+      <Box px={2} pt={3} mb={"82px"}>
         {loading ? (
           <Stack spacing={2}>
             {Array.from({ length: 7 }).map((_, idx) => (

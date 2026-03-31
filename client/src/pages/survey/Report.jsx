@@ -80,6 +80,10 @@ const Report = () => {
 
   const [open, setOpen] = useState(null);
 
+  const [deletePurpose, setDeletePurpose] = useState(null);
+
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
+
   const handleInputChange = (e, newValue) => {
     const surveyId = newValue.value;
 
@@ -93,8 +97,8 @@ const Report = () => {
       const { data } = id
         ? await getSurvey(id)
         : await getAllSurvey(
-            state?.getBranchReport ? { rootBranch: state?.surveyId } : {},
-          );
+          state?.getBranchReport ? { rootBranch: state?.surveyId } : {},
+        );
 
       id ? setSurvey(data.survey) : setSurveys(data.surveys);
     } catch (error) {
@@ -241,6 +245,25 @@ const Report = () => {
     onCancel: handleClose,
   };
 
+  const handleClickDelete = (p) => {
+    setDeletePurpose(p);
+    setDeleteAlertOpen(true);
+  }
+
+  const handleCloseDelete = () => {
+    setDeleteAlertOpen(false);
+    setDeletePurpose(null);
+  }
+
+  const deleteAlertData = {
+    title: "Delete Purpose",
+    description: `Are you sure you want to delete "${deletePurpose?.type}" purpose?`,
+    onCancel: handleCloseDelete,
+    onSubmit: () => handleDeletePurpose(deletePurpose._id),
+    cancelButtonText: "Cancel",
+    submitButtonText: "Delete",
+  };
+
   const handleDeletePurpose = async (id) => {
     try {
       await deleteSurveyPurpose(id);
@@ -251,12 +274,15 @@ const Report = () => {
       }));
     } catch (error) {
       handleFormError(error, null, dispatch, navigate);
+    } finally {
+      handleCloseDelete()
     }
   };
 
   return (
     <>
       <SmallHeader />
+      <AlertDialogSlide {...deleteAlertData} open={deleteAlertOpen} />
 
       <Stack
         p={2}
@@ -466,7 +492,7 @@ const Report = () => {
                       <Chip
                         key={p._id}
                         label={p.type}
-                        onDelete={() => handleDeletePurpose(p._id)}
+                        onDelete={() => handleClickDelete(p)}
                         deleteIcon={<MdDelete />}
                         sx={{
                           fontSize: { xs: 10, sm: 12 },

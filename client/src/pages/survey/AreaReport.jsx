@@ -26,6 +26,26 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { TbArrowsExchange } from "react-icons/tb";
 
+const LEVEL_ORDER = [
+  "Final Level",
+  "Proposed Tile Top",
+  "Final Tile Top",
+  "Proposed BC",
+  "Final BC",
+  "Proposed BM",
+  "Final BM",
+  "Proposed WMM",
+  "Final WMM",
+  "Proposed GSB",
+  "Final GSB",
+  "Proposed Quarry Muck",
+  "Final Quarry Muck",
+  "Proposed Earth Work",
+  "Final Earth Work",
+  "Proposed Level",
+  "Initial Level",
+];
+
 const menuItems = [
   {
     label: (
@@ -99,20 +119,20 @@ const exportAreaReportPdf = ({ tableData, reportDetails, showArea }) => {
 
         ...(showArea?.cutting
           ? [
-              row.cuttingMtr,
-              row.cuttingAvgMtr,
-              row.cuttingWMtr,
-              row.cuttingAreaSqMtr,
-            ]
+            row.cuttingMtr,
+            row.cuttingAvgMtr,
+            row.cuttingWMtr,
+            row.cuttingAreaSqMtr,
+          ]
           : []),
 
         ...(showArea?.filling
           ? [
-              row.fillingMtr,
-              row.fillingAvgMtr,
-              row.fillingWMtr,
-              row.fillingAreaSqMtr,
-            ]
+            row.fillingMtr,
+            row.fillingAvgMtr,
+            row.fillingWMtr,
+            row.fillingAreaSqMtr,
+          ]
           : []),
       ]);
     });
@@ -124,22 +144,22 @@ const exportAreaReportPdf = ({ tableData, reportDetails, showArea }) => {
 
       ...(showArea?.cutting
         ? [
-            { content: "", colSpan: 2 },
-            {
-              content: Number(section?.totalCuttingAreaSqMtr)?.toFixed(3),
-              styles: { fontStyle: "bold", halign: "center" },
-            },
-          ]
+          { content: "", colSpan: 2 },
+          {
+            content: Number(section?.totalCuttingAreaSqMtr)?.toFixed(3),
+            styles: { fontStyle: "bold", halign: "center" },
+          },
+        ]
         : []),
 
       ...(showArea?.filling
         ? [
-            { content: "", colSpan: showArea?.cutting ? 3 : 2 },
-            {
-              content: Number(section?.totalFillingAreaSqMtr)?.toFixed(3),
-              styles: { fontStyle: "bold", halign: "center" },
-            },
-          ]
+          { content: "", colSpan: showArea?.cutting ? 3 : 2 },
+          {
+            content: Number(section?.totalFillingAreaSqMtr)?.toFixed(3),
+            styles: { fontStyle: "bold", halign: "center" },
+          },
+        ]
         : []),
     ]);
 
@@ -279,22 +299,34 @@ const AreaReport = () => {
   };
 
   const tableData = useMemo(() => {
+    const sortedEntries = [];
     let initialEntry = null;
     let secondaryEntry = null;
 
     if (state && state?.selectedPurposeIds?.length) {
-      initialEntry = survey?.purposes?.find(
+      const initial = survey?.purposes?.find(
         (p) => String(p._id) === String(state.selectedPurposeIds[0]),
       );
-      secondaryEntry = survey?.purposes?.find(
+      const secondary = survey?.purposes?.find(
         (p) => String(p._id) === String(state.selectedPurposeIds[1]),
       );
+
+      sortedEntries.push(initial, secondary);
     } else {
-      initialEntry = survey?.purposes?.find((p) => p.type === "Initial Level");
-      secondaryEntry = survey?.purposes?.find(
+      const initial = survey?.purposes?.find((p) => p.type === "Initial Level");
+      const secondary = survey?.purposes?.find(
         (p) => p.type === "Proposed Level",
       );
+
+      sortedEntries.push(initial, secondary);
     }
+
+    sortedEntries.sort(
+      (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type),
+    );
+
+    initialEntry = sortedEntries[0];
+    secondaryEntry = sortedEntries[1];
 
     if (!survey || !initialEntry || !secondaryEntry) return [];
 
@@ -343,10 +375,10 @@ const AreaReport = () => {
             !isCutting || idx === 0
               ? "0.000"
               : (
-                  (Number(cuttingMtr) +
-                    Number(prevReadings[idx - 1]?.cuttingMtr || 0)) /
-                  2
-                ).toFixed(3);
+                (Number(cuttingMtr) +
+                  Number(prevReadings[idx - 1]?.cuttingMtr || 0)) /
+                2
+              ).toFixed(3);
 
           const fillingMtr = isCutting ? "0.000" : (propRL - initRL).toFixed(3);
 
@@ -354,10 +386,10 @@ const AreaReport = () => {
             isCutting || idx === 0
               ? "0.000"
               : (
-                  (Number(fillingMtr) +
-                    Number(prevReadings[idx - 1]?.fillingMtr || 0)) /
-                  2
-                ).toFixed(3);
+                (Number(fillingMtr) +
+                  Number(prevReadings[idx - 1]?.fillingMtr || 0)) /
+                2
+              ).toFixed(3);
 
           const cuttingAreaSqMtr = Number(cuttingAvgMtr) * Number(widthMtr);
 
@@ -509,19 +541,19 @@ const AreaReport = () => {
 
           ...(showArea?.cutting
             ? [
-                entry.cuttingMtr,
-                entry.cuttingAvgMtr,
-                entry.cuttingWMtr,
-                entry.cuttingAreaSqMtr,
-              ]
+              entry.cuttingMtr,
+              entry.cuttingAvgMtr,
+              entry.cuttingWMtr,
+              entry.cuttingAreaSqMtr,
+            ]
             : []),
           ...(showArea?.filling
             ? [
-                entry.fillingMtr,
-                entry.fillingAvgMtr,
-                entry.fillingWMtr,
-                entry.fillingAreaSqMtr,
-              ]
+              entry.fillingMtr,
+              entry.fillingAvgMtr,
+              entry.fillingWMtr,
+              entry.fillingAreaSqMtr,
+            ]
             : []),
         ]);
 
@@ -550,17 +582,17 @@ const AreaReport = () => {
 
         ...(showArea?.cutting
           ? [
-              "",
-              "", // colSpan={2}
-              Number(section.totalCuttingAreaSqMtr)?.toFixed(3),
-            ]
+            "",
+            "", // colSpan={2}
+            Number(section.totalCuttingAreaSqMtr)?.toFixed(3),
+          ]
           : []),
 
         ...(showArea?.filling
           ? [
-              ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
-              Number(section.totalFillingAreaSqMtr)?.toFixed(3),
-            ]
+            ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
+            Number(section.totalFillingAreaSqMtr)?.toFixed(3),
+          ]
           : []),
       ]);
       totalRow.eachCell((cell) => {
@@ -943,8 +975,8 @@ const AreaReport = () => {
           align="center"
           mb={2}
         >
-          Area Report Between {reportDetails.current.initialEntry} and
-          {reportDetails.current.secondaryEntry}
+          Area Report Between {reportDetails.current.secondaryEntry} and
+          {reportDetails.current.initialEntry}
         </Typography>
 
         {tableData?.length > 0 ? (

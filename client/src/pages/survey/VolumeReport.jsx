@@ -26,6 +26,26 @@ import BasicMenu from "../../components/BasicMenu";
 import { BsThreeDots } from "react-icons/bs";
 import { TbArrowsExchange } from "react-icons/tb";
 
+const LEVEL_ORDER = [
+  "Final Level",
+  "Proposed Tile Top",
+  "Final Tile Top",
+  "Proposed BC",
+  "Final BC",
+  "Proposed BM",
+  "Final BM",
+  "Proposed WMM",
+  "Final WMM",
+  "Proposed GSB",
+  "Final GSB",
+  "Proposed Quarry Muck",
+  "Final Quarry Muck",
+  "Proposed Earth Work",
+  "Final Earth Work",
+  "Proposed Level",
+  "Initial Level",
+];
+
 const menuItems = [
   {
     label: (
@@ -102,20 +122,20 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
 
       ...(showArea?.cutting
         ? [
-            row.cuttingAreaSqMtr,
-            row.cuttingPrevArea,
-            row.cuttingAvgSqrMtr,
-            row.cuttingVolumeCubicMtr,
-          ]
+          row.cuttingAreaSqMtr,
+          row.cuttingPrevArea,
+          row.cuttingAvgSqrMtr,
+          row.cuttingVolumeCubicMtr,
+        ]
         : []),
 
       ...(showArea?.filling
         ? [
-            row.fillingAreaSqMtr,
-            row.fillingPrevArea,
-            row.fillingAvgSqrMtr,
-            row.fillingVolumeCubicMtr,
-          ]
+          row.fillingAreaSqMtr,
+          row.fillingPrevArea,
+          row.fillingAvgSqrMtr,
+          row.fillingVolumeCubicMtr,
+        ]
         : []),
     ]);
   });
@@ -131,22 +151,22 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
 
     ...(showArea?.cutting
       ? [
-          { content: "", colSpan: 2 },
-          {
-            content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
-            styles: { fontStyle: "bold", halign: "center" },
-          },
-        ]
+        { content: "", colSpan: 2 },
+        {
+          content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
+          styles: { fontStyle: "bold", halign: "center" },
+        },
+      ]
       : []),
 
     ...(showArea?.filling
       ? [
-          { content: "", colSpan: showArea?.cutting ? 3 : 2 },
-          {
-            content: Number(tableData?.totalFillingVolume)?.toFixed(3),
-            styles: { fontStyle: "bold", halign: "center" },
-          },
-        ]
+        { content: "", colSpan: showArea?.cutting ? 3 : 2 },
+        {
+          content: Number(tableData?.totalFillingVolume)?.toFixed(3),
+          styles: { fontStyle: "bold", halign: "center" },
+        },
+      ]
       : []),
   ]);
 
@@ -286,6 +306,7 @@ const VolumeReport = () => {
   };
 
   const tableData = useMemo(() => {
+    const sortedEntries = [];
     let initialEntry = null;
     let secondaryEntry = null;
     let isBreak = false;
@@ -294,18 +315,29 @@ const VolumeReport = () => {
     const isDeduction = deductions.length;
 
     if (state && state?.selectedPurposeIds?.length) {
-      initialEntry = survey?.purposes?.find(
+      const initial = survey?.purposes?.find(
         (p) => String(p._id) === String(state.selectedPurposeIds[0]),
       );
-      secondaryEntry = survey?.purposes?.find(
+      const secondary = survey?.purposes?.find(
         (p) => String(p._id) === String(state.selectedPurposeIds[1]),
       );
+
+      sortedEntries.push(initial, secondary);
     } else {
-      initialEntry = survey?.purposes?.find((p) => p.type === "Initial Level");
-      secondaryEntry = survey?.purposes?.find(
+      const initial = survey?.purposes?.find((p) => p.type === "Initial Level");
+      const secondary = survey?.purposes?.find(
         (p) => p.type === "Proposed Level",
       );
+
+      sortedEntries.push(initial, secondary);
     }
+
+    sortedEntries.sort(
+      (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type),
+    );
+
+    initialEntry = sortedEntries[0];
+    secondaryEntry = sortedEntries[1];
 
     if (!survey || !initialEntry || !secondaryEntry) return [];
 
@@ -373,10 +405,10 @@ const VolumeReport = () => {
           !isCutting || idx === 0
             ? "0.000"
             : (
-                (Number(cuttingMtr) +
-                  Number(prevReadings[idx - 1]?.cuttingMtr || 0)) /
-                2
-              ).toFixed(3);
+              (Number(cuttingMtr) +
+                Number(prevReadings[idx - 1]?.cuttingMtr || 0)) /
+              2
+            ).toFixed(3);
 
         const fillingMtr = isCutting ? "0.000" : (propRL - initRL).toFixed(3);
 
@@ -384,10 +416,10 @@ const VolumeReport = () => {
           isCutting || idx === 0
             ? "0.000"
             : (
-                (Number(fillingMtr) +
-                  Number(prevReadings[idx - 1]?.fillingMtr || 0)) /
-                2
-              ).toFixed(3);
+              (Number(fillingMtr) +
+                Number(prevReadings[idx - 1]?.fillingMtr || 0)) /
+              2
+            ).toFixed(3);
 
         const dataDoc = {
           offset: entry,
@@ -573,19 +605,19 @@ const VolumeReport = () => {
       "",
       ...(showArea?.cutting
         ? [
-            "Area Sq. Mtrs",
-            "Previous Area",
-            "Average Sq. Mtrs",
-            "Volume Cubic Meters",
-          ]
+          "Area Sq. Mtrs",
+          "Previous Area",
+          "Average Sq. Mtrs",
+          "Volume Cubic Meters",
+        ]
         : []),
       ...(showArea?.filling
         ? [
-            "Area Sq. Mtrs",
-            "Previous Area",
-            "Average Sq. Mtrs",
-            "Volume Cubic Meters",
-          ]
+          "Area Sq. Mtrs",
+          "Previous Area",
+          "Average Sq. Mtrs",
+          "Volume Cubic Meters",
+        ]
         : []),
     ]);
 
@@ -659,19 +691,19 @@ const VolumeReport = () => {
 
         ...(showArea?.cutting
           ? [
-              entry.cuttingAreaSqMtr,
-              entry.cuttingPrevArea,
-              entry.cuttingAvgSqrMtr,
-              entry.cuttingVolumeCubicMtr,
-            ]
+            entry.cuttingAreaSqMtr,
+            entry.cuttingPrevArea,
+            entry.cuttingAvgSqrMtr,
+            entry.cuttingVolumeCubicMtr,
+          ]
           : []),
         ...(showArea?.filling
           ? [
-              entry.fillingAreaSqMtr,
-              entry.fillingPrevArea,
-              entry.fillingAvgSqrMtr,
-              entry.fillingVolumeCubicMtr,
-            ]
+            entry.fillingAreaSqMtr,
+            entry.fillingPrevArea,
+            entry.fillingAvgSqrMtr,
+            entry.fillingVolumeCubicMtr,
+          ]
           : []),
       ]);
 
@@ -701,17 +733,17 @@ const VolumeReport = () => {
 
       ...(showArea?.cutting
         ? [
-            "",
-            "", // colSpan={2}
-            Number(tableData?.totalCuttingVolume)?.toFixed(3),
-          ]
+          "",
+          "", // colSpan={2}
+          Number(tableData?.totalCuttingVolume)?.toFixed(3),
+        ]
         : []),
 
       ...(showArea?.filling
         ? [
-            ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
-            Number(tableData?.totalFillingVolume)?.toFixed(3),
-          ]
+          ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
+          Number(tableData?.totalFillingVolume)?.toFixed(3),
+        ]
         : []),
     ]);
     totalRow.eachCell((cell) => {
@@ -798,19 +830,19 @@ const VolumeReport = () => {
       "",
       ...(showCutting
         ? [
-            "Area Sq. Mtrs",
-            "Previous Area",
-            "Average Sq. Mtrs",
-            "Volume Cubic Meters",
-          ]
+          "Area Sq. Mtrs",
+          "Previous Area",
+          "Average Sq. Mtrs",
+          "Volume Cubic Meters",
+        ]
         : []),
       ...(showFilling
         ? [
-            "Area Sq. Mtrs",
-            "Previous Area",
-            "Average Sq. Mtrs",
-            "Volume Cubic Meters",
-          ]
+          "Area Sq. Mtrs",
+          "Previous Area",
+          "Average Sq. Mtrs",
+          "Volume Cubic Meters",
+        ]
         : []),
     ]);
 
@@ -847,35 +879,35 @@ const VolumeReport = () => {
         row.width,
         ...(showCutting
           ? [
-              formatArea(row.cuttingAreaSqMtr, "cutting"),
+            formatArea(row.cuttingAreaSqMtr, "cutting"),
+            row.cuttingPrevArea,
+            formatAvg(
+              row.cuttingAvgSqrMtr,
+              row.cuttingAreaSqMtr,
               row.cuttingPrevArea,
-              formatAvg(
-                row.cuttingAvgSqrMtr,
-                row.cuttingAreaSqMtr,
-                row.cuttingPrevArea,
-              ),
-              formatVol(
-                row.cuttingVolumeCubicMtr,
-                row.cuttingAvgSqrMtr,
-                row.difference,
-              ),
-            ]
+            ),
+            formatVol(
+              row.cuttingVolumeCubicMtr,
+              row.cuttingAvgSqrMtr,
+              row.difference,
+            ),
+          ]
           : []),
         ...(showFilling
           ? [
-              formatArea(row.fillingAreaSqMtr, "filling"),
+            formatArea(row.fillingAreaSqMtr, "filling"),
+            row.fillingPrevArea,
+            formatAvg(
+              row.fillingAvgSqrMtr,
+              row.fillingAreaSqMtr,
               row.fillingPrevArea,
-              formatAvg(
-                row.fillingAvgSqrMtr,
-                row.fillingAreaSqMtr,
-                row.fillingPrevArea,
-              ),
-              formatVol(
-                row.fillingVolumeCubicMtr,
-                row.fillingAvgSqrMtr,
-                row.difference,
-              ),
-            ]
+            ),
+            formatVol(
+              row.fillingVolumeCubicMtr,
+              row.fillingAvgSqrMtr,
+              row.difference,
+            ),
+          ]
           : []),
       ]);
     });
@@ -1140,8 +1172,8 @@ const VolumeReport = () => {
         align="center"
         mb={2}
       >
-        Volume Report {reportDetails.current.initialEntry} and{" "}
-        {reportDetails.current.secondaryEntry}
+        Volume Report Between {reportDetails.current.secondaryEntry} and{" "}
+        {reportDetails.current.initialEntry}
       </Typography>
 
       <TableContainer component={Paper} sx={{ maxHeight: "90vh" }}>

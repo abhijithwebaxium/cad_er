@@ -28,7 +28,8 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { logoutUser } from "../services/indexServices";
-import BasicDivider from "./BasicDevider";
+import { IoSettingsOutline } from "react-icons/io5";
+
 import { BiSupport } from "react-icons/bi";
 
 const menuListDetails = [
@@ -66,6 +67,11 @@ const menuListDetails = [
     icon: <BiSupport />,
     path: "/tickets",
     required: ["Professional"],
+  },
+  {
+    label: "Settings",
+    icon: <IoSettingsOutline />,
+    path: "/settings",
   },
 ];
 
@@ -117,8 +123,8 @@ const DrawerList = ({ toggleDrawer }) => {
       const filteredMenu = menuListDetails.filter((menu) =>
         menu.required
           ? menu.required.includes(
-              menu.label === "Tickets" ? user.type : user.role,
-            )
+            menu.label === "Tickets" ? user.type : user.role,
+          )
           : true,
       );
 
@@ -137,7 +143,7 @@ const DrawerList = ({ toggleDrawer }) => {
           bgcolor: "#ffffff",
         }}
         role="presentation"
-        onClick={toggleDrawer(false)}
+      // onClick={toggleDrawer(false)}
       >
         {/* 👤 Premium User Profile Header */}
         <Box
@@ -149,7 +155,7 @@ const DrawerList = ({ toggleDrawer }) => {
             overflow: "hidden",
             borderRadius: "0 0 28px 28px",
             boxShadow: "0 12px 30px -10px rgba(99, 102, 241, 0.5)",
-            mb: 3,
+            mb: 2,
           }}
         >
           <Stack
@@ -215,38 +221,39 @@ const DrawerList = ({ toggleDrawer }) => {
         {/* 📱 Mobile Search Bar */}
         <Box sx={{ px: 2, mb: 1, display: { xs: 'block', sm: 'none' } }}>
           <TextField
-             size="small"
-             placeholder="Search here..."
-             value={search}
-             onChange={(e) => setSearch(e.target.value)}
-             onKeyDown={(e) => {
-               if (e.key === "Enter") {
-                 toggleDrawer(false)(); // Force close Drawer
-                 navigate("/survey", { state: { search: search } });
-               }
-             }}
-             fullWidth
-             sx={{
-               "& .MuiOutlinedInput-root": {
-                 bgcolor: "#f1f5f9",
-                 borderRadius: "14px",
-                 fontSize: "0.95rem",
-                 color: "#334155",
-                 "& fieldset": { borderColor: "transparent" },
-                 "&:hover fieldset": { borderColor: "#e2e8f0" },
-                 "&.Mui-focused fieldset": { borderColor: "#6366f1", borderWidth: "1px" }
-               },
-             }}
-             InputProps={{
-               startAdornment: (
-                 <Box sx={{ color: "#94a3b8", mr: 1, display: 'flex', alignItems: 'center' }}>
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                     <circle cx="11" cy="11" r="8"></circle>
-                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                   </svg>
-                 </Box>
-               ),
-             }}
+            size="small"
+            placeholder="Search here..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                toggleDrawer(false)(); // Force close Drawer
+                navigate("/survey", { state: { search: search } });
+              }
+            }}
+            fullWidth
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                bgcolor: "#f1f5f9",
+                borderRadius: "14px",
+                fontSize: "0.95rem",
+                color: "#334155",
+                "& fieldset": { borderColor: "transparent" },
+                "&:hover fieldset": { borderColor: "#e2e8f0" },
+                "&.Mui-focused fieldset": { borderColor: "#6366f1", borderWidth: "1px" }
+              },
+              mb: 1
+            }}
+            slotProps={{
+              startAdornment: (
+                <Box sx={{ color: "#94a3b8", mr: 1, display: 'flex', alignItems: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </Box>
+              ),
+            }}
           />
         </Box>
 
