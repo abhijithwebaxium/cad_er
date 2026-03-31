@@ -438,7 +438,7 @@ export default function ProfDash() {
             pt: 4,
             pb: 10,
             color: "white",
-            borderRadius: "0 0 40px 40px",
+            borderRadius: "0 0 20px 20px",
             boxShadow: "0 10px 40px -10px rgba(79, 70, 229, 0.3)",
           }}
         >
@@ -568,7 +568,7 @@ export default function ProfDash() {
 
         {/* Navigation & Action Bar */}
         <Box sx={{ mt: -4, mb: 4 }}>
-          <Container maxWidth="lg">
+          <Container maxWidth="lg" sx={{ paddingLeft: '20px', paddingRight: '20px' }}>
             <Paper
               elevation={0}
               sx={{
@@ -581,6 +581,7 @@ export default function ProfDash() {
                 gap: 2,
                 overflowX: "auto",
                 "&::-webkit-scrollbar": { display: "none" },
+                padding: '8px'
               }}
             >
               {[
