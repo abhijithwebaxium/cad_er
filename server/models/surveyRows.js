@@ -31,6 +31,7 @@ const SurveyRowSchema = new Schema(
     roadWidth: { type: String, trim: true },
     spacing: { type: String, trim: true },
     offsets: [{ type: String, trim: true }],
+    interpolatedReducedLevels: [{ type: String, trim: true }],
     remarks: [{ type: String, trim: true }],
     deleted: { type: Boolean, default: false },
   },

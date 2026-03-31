@@ -27,23 +27,23 @@ import autoTable from "jspdf-autotable";
 import { TbArrowsExchange } from "react-icons/tb";
 
 const LEVEL_ORDER = [
-  "Final Level",
-  "Proposed Tile Top",
-  "Final Tile Top",
-  "Proposed BC",
-  "Final BC",
-  "Proposed BM",
-  "Final BM",
-  "Proposed WMM",
-  "Final WMM",
-  "Proposed GSB",
-  "Final GSB",
-  "Proposed Quarry Muck",
-  "Final Quarry Muck",
-  "Proposed Earth Work",
-  "Final Earth Work",
-  "Proposed Level",
   "Initial Level",
+  "Proposed Level",
+  "Final Earth Work",
+  "Proposed Earth Work",
+  "Final Quarry Muck",
+  "Proposed Quarry Muck",
+  "Final GSB",
+  "Proposed GSB",
+  "Final WMM",
+  "Proposed WMM",
+  "Final BM",
+  "Proposed BM",
+  "Final BC",
+  "Proposed BC",
+  "Final Tile Top",
+  "Proposed Tile Top",
+  "Final Level",
 ];
 
 const menuItems = [
@@ -353,7 +353,7 @@ const AreaReport = () => {
 
         let prevReadings = [];
 
-        const data = (row?.offsets ?? []).map((entry, idx) => {
+        const data = (proposedRow?.offsets ?? []).map((entry, idx) => {
           const initialEntryRL = row?.reducedLevels?.[idx] ?? 0;
           const secondaryEntryRL = proposedRow?.reducedLevels?.[idx] ?? 0;
 
@@ -975,8 +975,8 @@ const AreaReport = () => {
           align="center"
           mb={2}
         >
-          Area Report Between {reportDetails.current.secondaryEntry} and
-          {reportDetails.current.initialEntry}
+          Area Report Between {reportDetails.current.initialEntry} and
+          {reportDetails.current.secondaryEntry}
         </Typography>
 
         {tableData?.length > 0 ? (

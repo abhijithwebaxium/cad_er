@@ -27,23 +27,23 @@ import { BsThreeDots } from "react-icons/bs";
 import { TbArrowsExchange } from "react-icons/tb";
 
 const LEVEL_ORDER = [
-  "Final Level",
-  "Proposed Tile Top",
-  "Final Tile Top",
-  "Proposed BC",
-  "Final BC",
-  "Proposed BM",
-  "Final BM",
-  "Proposed WMM",
-  "Final WMM",
-  "Proposed GSB",
-  "Final GSB",
-  "Proposed Quarry Muck",
-  "Final Quarry Muck",
-  "Proposed Earth Work",
-  "Final Earth Work",
-  "Proposed Level",
   "Initial Level",
+  "Proposed Level",
+  "Final Earth Work",
+  "Proposed Earth Work",
+  "Final Quarry Muck",
+  "Proposed Quarry Muck",
+  "Final GSB",
+  "Proposed GSB",
+  "Final WMM",
+  "Proposed WMM",
+  "Final BM",
+  "Proposed BM",
+  "Final BC",
+  "Proposed BC",
+  "Final Tile Top",
+  "Proposed Tile Top",
+  "Final Level",
 ];
 
 const menuItems = [
@@ -248,7 +248,7 @@ const VolumeReport = () => {
 
   const [survey, setSurvey] = useState([]);
 
-  const [showArea, setShowArea] = useState({ cutting: false, filling: false });
+  const [showArea, setShowArea] = useState({ cutting: true, filling: true });
 
   const [calculationMode, setCalculationMode] = useState(false);
 
@@ -383,7 +383,7 @@ const VolumeReport = () => {
 
       let prevReadings = [];
 
-      const data = (row?.offsets ?? []).map((entry, idx) => {
+      const data = (secondaryRow?.offsets ?? []).map((entry, idx) => {
         const initialEntryRL = row?.reducedLevels?.[idx] ?? 0;
         const secondaryEntryRL = secondaryRow?.reducedLevels?.[idx] ?? 0;
 
@@ -528,12 +528,16 @@ const VolumeReport = () => {
         Number(difference) * Number(fillingAvgSqrMtr)
       ).toFixed(3);
 
+      const roadWidth =
+        Math.abs(Number(row?.offsets[0])) +
+        Number(row?.offsets[row?.offsets?.length - 1]);
+
       // --- Push row ---
       rows.push({
         section: currentChainage.toFixed(3),
         prevSection: prevSection ? prevChainage.toFixed(3) : "-",
         difference,
-        width: row?.roadWidth ?? "0.000",
+        width: Number(roadWidth).toFixed(3),
         cuttingAreaSqMtr: cuttingAreaSqMtr.toFixed(3),
         data,
         cuttingPrevArea,
@@ -549,13 +553,13 @@ const VolumeReport = () => {
         message: breakMessage,
       });
 
-      if (!showArea.cutting && Number(totals.totalCuttingVolume) > 0) {
-        setShowArea((prev) => ({ ...prev, cutting: true }));
-      }
+      // if (!showArea.cutting && Number(totals.totalCuttingVolume) > 0) {
+      //   setShowArea((prev) => ({ ...prev, cutting: true }));
+      // }
 
-      if (!showArea.filling && Number(totals.totalFillingVolume) > 0) {
-        setShowArea((prev) => ({ ...prev, filling: true }));
-      }
+      // if (!showArea.filling && Number(totals.totalFillingVolume) > 0) {
+      //   setShowArea((prev) => ({ ...prev, filling: true }));
+      // }
 
       // --- Prepare for next iteration ---
       cuttingPrevArea = Number(cuttingAreaSqMtr)?.toFixed(3);
@@ -1172,8 +1176,8 @@ const VolumeReport = () => {
         align="center"
         mb={2}
       >
-        Volume Report Between {reportDetails.current.secondaryEntry} and{" "}
-        {reportDetails.current.initialEntry}
+        Volume Report Between {reportDetails.current.initialEntry} and{" "}
+        {reportDetails.current.secondaryEntry}
       </Typography>
 
       <TableContainer component={Paper} sx={{ maxHeight: "90vh" }}>

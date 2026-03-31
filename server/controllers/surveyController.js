@@ -1462,6 +1462,10 @@ const generateSurveyPurpose = async (req, res, next) => {
     }, []);
 
     const totalWidth = readingsToCreate.reduce((acc, curr) => {
+      return acc + (Number(curr.roadWidth) || 0);
+    }, 0);
+
+    const proposalTotalWidth = readingsToCreate.reduce((acc, curr) => {
       if (interpolation?.length) {
         const matchedItem = interpolationChainage.find(
           (item) => item.chainage === curr.chainage,
@@ -1475,6 +1479,8 @@ const generateSurveyPurpose = async (req, res, next) => {
     }, 0);
 
     const width = Number((totalWidth / readingsToCreate.length).toFixed(3));
+    const avgProposalTotalWidth = Number((proposalTotalWidth / readingsToCreate.length));
+
 
     // 🔹 Create new proposal purpose
     const [purposeDoc] = await SurveyPurpose.create(
@@ -1515,6 +1521,7 @@ const generateSurveyPurpose = async (req, res, next) => {
     const bulkOps = readingsToCreate.map((reading) => {
       const reducedLevels = [];
       const offsets = [];
+      const interpolatedReducedLevels = [];
 
       let isInterpolate = null;
 
@@ -1607,25 +1614,53 @@ const generateSurveyPurpose = async (req, res, next) => {
           initialLevelMap,
         );
 
-        let count = 0;
-
         for (const [offset, level] of Object.entries(finalMap)) {
-          let value = Number(level);
+          interpolatedReducedLevels.push(Number(level));
+          offsets.push(offset);
+        }
+
+        const totalReadingReducedLevel = interpolatedReducedLevels.reduce(
+          (acc, curr) => acc + Number(curr),
+          0,
+        );
+
+        const avgReadingReducedLevel =
+          totalReadingReducedLevel / interpolatedReducedLevels.length;
+
+        const height = safeQuantity / (limit * avgProposalTotalWidth);
+
+        interpolatedReducedLevels.forEach((_, idx) => {
+          let value = avgReadingReducedLevel + height;
 
           if (
             doHaveCamper &&
-            (count === 0 || count === reading.reducedLevels.length - 1)
+            (idx === 0 || idx === interpolatedReducedLevels.length - 1)
           ) {
-            value -= (roadWidth / 2) * (doHaveCamper / 100);
+            value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
 
           reducedLevels.push(rounded.toFixed(3));
-          offsets.push(offset);
+        });
 
-          count++;
-        }
+        // for (const [offset, level] of Object.entries(finalMap)) {
+        //   let value = Number(level);
+
+        //   if (
+        //     doHaveCamper &&
+        //     (count === 0 || count === reading.reducedLevels.length - 1)
+        //   ) {
+        //     value -= (roadWidth / 2) * (doHaveCamper / 100);
+        //   }
+
+        //   const rounded = Math.round(value / 0.005) * 0.005;
+
+        //   reducedLevels.push(rounded.toFixed(3));
+        //   offsets.push(offset);
+
+        //   count++;
+        // }
       } else {
         const totalReadingReducedLevel = reading.reducedLevels.reduce(
           (acc, curr) => acc + Number(curr),
@@ -1644,7 +1679,7 @@ const generateSurveyPurpose = async (req, res, next) => {
             doHaveCamper &&
             (idx === 0 || idx === reading.reducedLevels.length - 1)
           ) {
-            value -= (roadWidth / 2) * (doHaveCamper / 100);
+            value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
@@ -1669,6 +1704,7 @@ const generateSurveyPurpose = async (req, res, next) => {
               : reading.roadWidth,
             reducedLevels,
             heightOfInstrument: reading.heightOfInstrument,
+            interpolatedReducedLevels,
             offsets,
             remarks: reading.remarks,
           },

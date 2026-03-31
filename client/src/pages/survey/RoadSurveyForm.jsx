@@ -485,8 +485,8 @@ const RoadSurveyForm = () => {
     quantity:
       type && entryType === "autoGenerate"
         ? Yup.number()
-            .typeError("Quantity is required")
-            .required("Quantity is required")
+          .typeError("Quantity is required")
+          .required("Quantity is required")
         : Yup.string().nullable(),
 
     width:
@@ -507,8 +507,8 @@ const RoadSurveyForm = () => {
     proposedLevel:
       type && entryType === "manualEntry"
         ? Yup.number()
-            .typeError("Proposed Level is required")
-            .required("Proposed Level is required")
+          .typeError("Proposed Level is required")
+          .required("Proposed Level is required")
         : Yup.string().nullable(),
 
     instrumentNo: !id
@@ -518,8 +518,8 @@ const RoadSurveyForm = () => {
     backSight:
       !id || (id && !type)
         ? Yup.number()
-            .typeError("Backsight is required")
-            .required("Backsight is required")
+          .typeError("Backsight is required")
+          .required("Backsight is required")
         : Yup.string().nullable(),
 
     remark: !id
@@ -529,19 +529,19 @@ const RoadSurveyForm = () => {
     reducedLevel:
       !id || (id && !type)
         ? Yup.number()
-            .typeError("Reduced level is required")
-            .required("Reduced level is required")
+          .typeError("Reduced level is required")
+          .required("Reduced level is required")
         : Yup.string().nullable(),
     chainageMultiple: !id
       ? Yup.number()
-          .typeError("Chainage multiple must be a number")
-          .required("Chainage multiple is required")
-          .moreThan(0, "Chainage multiple must be greater than 0")
+        .typeError("Chainage multiple must be a number")
+        .required("Chainage multiple is required")
+        .moreThan(0, "Chainage multiple must be greater than 0")
       : Yup.string().nullable(),
     separator: !id
       ? Yup.string()
-          .required("Separator is required")
-          .matches(/^[/+,]$/, "Only '/', '+', ',' are allowed")
+        .required("Separator is required")
+        .matches(/^[/+,]$/, "Only '/', '+', ',' are allowed")
       : Yup.string().nullable(),
 
     lSection: Yup.string().nullable(),
@@ -560,15 +560,15 @@ const RoadSurveyForm = () => {
     cSection:
       type && crossSection === "slop"
         ? Yup.number()
-            .typeError("Cross section slop is required")
-            .required("Cross section slop is required")
+          .typeError("Cross section slop is required")
+          .required("Cross section slop is required")
         : Yup.string().nullable(),
 
     csSlop:
       type && crossSection === "slop"
         ? Yup.number()
-            .typeError("Cross section slop is required")
-            .required("Cross section slop is required")
+          .typeError("Cross section slop is required")
+          .required("Cross section slop is required")
         : Yup.string().nullable(),
     csCamper:
       type && crossSection === "camper"
@@ -638,9 +638,9 @@ const RoadSurveyForm = () => {
         ? entryType === "autoGenerate" && type === false
           ? await createSurveyPurpose(id, formValues)
           : await generateSurveyPurpose(id, {
-              ...formValues,
-              interpolation: rows,
-            })
+            ...formValues,
+            interpolation: rows,
+          })
         : await createSurvey(formValues);
 
       if (data.success) {
@@ -742,13 +742,13 @@ const RoadSurveyForm = () => {
                 hidden: false,
                 options: type
                   ? [
-                      completedPurposes.length
-                        ? completedPurposes?.at(-1)
-                        : "Initial Level",
-                    ].map((p) => ({ label: p, value: p }))
+                    completedPurposes.length
+                      ? completedPurposes?.at(-1)
+                      : "Initial Level",
+                  ].map((p) => ({ label: p, value: p }))
                   : purposeLevels
-                      ?.filter((p) => !completedLevels.includes(p))
-                      .map((p) => ({ label: p, value: p })),
+                    ?.filter((p) => !completedLevels.includes(p))
+                    .map((p) => ({ label: p, value: p })),
                 size: type ? 6 : null,
               };
             }
@@ -1100,7 +1100,9 @@ const RoadSurveyForm = () => {
                   fontSize: { xs: "1.5rem", md: "2rem" },
                 }}
               >
-                Create New {id ? "Survey" : "Project"}
+                {
+                  id ? 'Continue Your Survey' : 'Create New Project'
+                }
               </Typography>
               <Typography
                 variant="body2"
@@ -1152,20 +1154,20 @@ const RoadSurveyForm = () => {
                       {((type && input.name === "purpose") ||
                         input.name === "lSection" ||
                         input.name === "cSection") && (
-                        <Typography
-                          variant="body2"
-                          fontSize={"16px"}
-                          fontWeight={600}
-                          color="black"
-                        >
-                          {input.name === "purpose"
-                            ? "Proposal Between"
-                            : input.name === "lSection"
-                              ? "Longitudinal section slop"
-                              : "Cross section slop"}
-                          :
-                        </Typography>
-                      )}
+                          <Typography
+                            variant="body2"
+                            fontSize={"16px"}
+                            fontWeight={600}
+                            color="black"
+                          >
+                            {input.name === "purpose"
+                              ? "Proposal Between"
+                              : input.name === "lSection"
+                                ? "Longitudinal section slop"
+                                : "Cross section slop"}
+                            :
+                          </Typography>
+                        )}
 
                       {mode === "select" ? (
                         <BasicSelect
