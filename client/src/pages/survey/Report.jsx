@@ -97,8 +97,8 @@ const Report = () => {
       const { data } = id
         ? await getSurvey(id)
         : await getAllSurvey(
-          state?.getBranchReport ? { rootBranch: state?.surveyId } : {},
-        );
+            state?.getBranchReport ? { rootBranch: state?.surveyId } : {},
+          );
 
       id ? setSurvey(data.survey) : setSurveys(data.surveys);
     } catch (error) {
@@ -248,12 +248,12 @@ const Report = () => {
   const handleClickDelete = (p) => {
     setDeletePurpose(p);
     setDeleteAlertOpen(true);
-  }
+  };
 
   const handleCloseDelete = () => {
     setDeleteAlertOpen(false);
     setDeletePurpose(null);
-  }
+  };
 
   const deleteAlertData = {
     title: "Delete Purpose",
@@ -275,7 +275,7 @@ const Report = () => {
     } catch (error) {
       handleFormError(error, null, dispatch, navigate);
     } finally {
-      handleCloseDelete()
+      handleCloseDelete();
     }
   };
 
@@ -290,13 +290,8 @@ const Report = () => {
         className="overlapping-header"
         sx={{ mx: "auto" }}
       >
-        <Typography
-          variant="h6"
-          fontSize={18}
-          fontWeight={700}
-          align="center"
-        >
-          Generate Survey Report
+        <Typography variant="h6" fontSize={18} fontWeight={700} align="center">
+          Your Reports Are Here!
         </Typography>
 
         {/* Report Type Selector */}

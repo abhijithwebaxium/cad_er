@@ -29,7 +29,7 @@ import {
 import { useEffect, useState } from "react";
 import { logoutUser } from "../services/indexServices";
 import { IoSettingsOutline } from "react-icons/io5";
-
+import { AiOutlineDelete } from "react-icons/ai";
 import { BiSupport } from "react-icons/bi";
 
 const menuListDetails = [
@@ -72,6 +72,11 @@ const menuListDetails = [
     label: "Settings",
     icon: <IoSettingsOutline />,
     path: "/settings",
+  },
+  {
+    label: "Trash",
+    icon: <AiOutlineDelete />,
+    path: "/trash",
   },
 ];
 

@@ -39,7 +39,7 @@ const PulseDot = () => (
       width: 8,
       height: 8,
       borderRadius: "50%",
-      bgcolor: "#10b981",
+      bgcolor: "#F2F2F2",
       display: "inline-block",
       mr: 1,
     }}
@@ -436,7 +436,7 @@ export default function ProfDash() {
             background: `linear-gradient(135deg, ${HEADER_GRADIENT_START} 0%, ${HEADER_GRADIENT_END} 100%)`,
             // Adjusted padding top to cleanly sit right below the AppHeader
             pt: 4,
-            pb: 10,
+            pb: { xs: 4, md: 0 },
             color: "white",
             borderRadius: "0 0 20px 20px",
             boxShadow: "0 10px 40px -10px rgba(79, 70, 229, 0.3)",
@@ -444,49 +444,76 @@ export default function ProfDash() {
         >
           <Container maxWidth="lg">
             {/* Header Hero Content */}
-            <Grid container spacing={3} alignItems="flex-end">
-              <Grid size={{ xs: 12, md: 7 }}>
-                <motion.div variants={fUp}>
-                  <Box
+            <Grid
+              container
+              spacing={3}
+              alignItems="flex-end"
+              height={{ xs: "100%", md: "160px" }}
+              pb={{ xs: 1, md: 0 }}
+            >
+              <Grid
+                size={{ xs: 12, md: 7 }}
+                display={"flex"}
+                flexDirection={"column"}
+                alignItems={"start"}
+                justifyContent={"start"}
+                height={"100%"}
+              >
+                <Stack
+                  direction={"row"}
+                  justifyContent={"space-between"}
+                  alignItems={"center"}
+                  width={"stretch"}
+                  gap={2}
+                >
+                  <Typography
+                    variant="h3"
+                    fontWeight={900}
                     sx={{
-                      display: "inline-flex",
-                      px: 2,
-                      py: 0.5,
-                      mb: 3,
-                      borderRadius: 10,
-                      // Change: Use a white semi-transparent background for "Glass" effect
-                      bgcolor: "rgba(255, 255, 255, 0.15)",
-                      border: "1px solid rgba(255, 255, 255, 0.3)",
-                      backdropFilter: "blur(4px)", // Optional: adds a nice premium frosted feel
+                      mb: 1,
+                      letterSpacing: "-0.02em",
+                      fontSize: { xs: "2rem", md: "2.5rem" },
                     }}
                   >
-                    <Box display="flex" alignItems="center">
-                      <PulseDot />
-                      <Typography
-                        variant="caption"
+                    CADER Project <span style={{ color: "#c7d2fe" }}>Hub</span>
+                  </Typography>
+                  <Box>
+                    <motion.div variants={fUp}>
+                      <Box
                         sx={{
-                          // Change: Pure white or very light indigo for readability
-                          color: "#ffffff",
-                          fontWeight: 700,
-                          letterSpacing: 1,
+                          display: "inline-flex",
+                          px: 2,
+                          py: 0.5,
+                          borderRadius: 10,
+                          // Change: Use a white semi-transparent background for "Glass" effect
+                          bgcolor: "rgba(255, 255, 255, 0.15)",
+                          border: "1px solid rgba(255, 255, 255, 0.3)",
+                          backdropFilter: "blur(4px)",
+                          display: { xs: "flex", md: "none" },
                         }}
                       >
-                        v0.1.0 is live
-                      </Typography>
-                    </Box>
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          width={"max-content"}
+                        >
+                          <PulseDot />
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              // Change: Pure white or very light indigo for readability
+                              color: "#ffffff",
+                              fontWeight: 700,
+                              letterSpacing: 1,
+                            }}
+                          >
+                            v0.1.0 is live
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </motion.div>
                   </Box>
-                </motion.div>
-                <Typography
-                  variant="h3"
-                  fontWeight={900}
-                  sx={{
-                    mb: 1,
-                    letterSpacing: "-0.02em",
-                    fontSize: { xs: "2rem", md: "2.5rem" },
-                  }}
-                >
-                  CADER Project <span style={{ color: "#c7d2fe" }}>Hub</span>
-                </Typography>
+                </Stack>
                 <Typography
                   variant="body1"
                   sx={{ opacity: 0.8, maxWidth: 500, fontWeight: 500 }}
@@ -495,71 +522,117 @@ export default function ProfDash() {
                   field reports, and camera tools all in one place.
                 </Typography>
               </Grid>
-              <Grid size={{ xs: 12, md: 5 }}>
+              <Grid size={{ xs: 12, md: 5 }} height={"100%"}>
                 <Stack
-                  direction="row"
-                  spacing={3}
-                  justifyContent={{ xs: "flex-start", md: "flex-end" }}
+                  alignItems={{ xs: "end", md: "end" }}
+                  justifyContent={"space-between"}
                 >
-                  <Box>
-                    <Typography variant="h5" fontWeight={900}>
-                      12
-                    </Typography>
-                    <Typography
-                      variant="caption"
+                  <motion.div variants={fUp}>
+                    <Box
                       sx={{
-                        opacity: 0.7,
-                        fontWeight: 800,
-                        letterSpacing: "0.1em",
+                        display: "inline-flex",
+                        px: 2,
+                        py: 0.5,
+                        mb: 3,
+                        borderRadius: 10,
+                        // Change: Use a white semi-transparent background for "Glass" effect
+                        bgcolor: "rgba(255, 255, 255, 0.15)",
+                        border: "1px solid rgba(255, 255, 255, 0.3)",
+                        backdropFilter: "blur(4px)",
+                        display: { xs: "none", md: "flex" },
                       }}
                     >
-                      TOTAL PROJECTS
-                    </Typography>
-                  </Box>
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{ borderColor: "rgba(255,255,255,0.2)" }}
-                  />
-                  <Box>
-                    <Typography variant="h5" fontWeight={900}>
-                      0
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        opacity: 0.7,
-                        fontWeight: 800,
-                        letterSpacing: "0.1em",
-                      }}
-                    >
-                      PENDING TASKS
-                    </Typography>
-                  </Box>
-                  {/* <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{ borderColor: "rgba(255,255,255,0.2)" }}
-                  />
-                  <Box>
-                    <Typography
-                      variant="h5"
-                      fontWeight={900}
-                      color={SUCCESS_COLOR}
-                    >
-                      Active
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        opacity: 0.7,
-                        fontWeight: 800,
-                        letterSpacing: "0.1em",
-                      }}
-                    >
-                      SYSTEM STATUS
-                    </Typography>
-                  </Box> */}
+                      <Box display="flex" alignItems="center">
+                        <PulseDot />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            // Change: Pure white or very light indigo for readability
+                            color: "#ffffff",
+                            fontWeight: 700,
+                            letterSpacing: 1,
+                          }}
+                        >
+                          v0.1.0 is live
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </motion.div>
+                  <Stack
+                    direction="row"
+                    spacing={3}
+                    justifyContent={{ xs: "flex-end", md: "flex-end" }}
+                    width={"100%"}
+                  >
+                    <Box mt={6}>
+                      <Typography
+                        variant="h5"
+                        fontWeight={900}
+                        textAlign={"end"}
+                      >
+                        12
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          opacity: 0.7,
+                          fontWeight: 800,
+                          letterSpacing: "0.1em",
+                        }}
+                      >
+                        PROJECTS
+                      </Typography>
+                    </Box>
+                    <Divider
+                      orientation="vertical"
+                      flexItem
+                      sx={{ borderColor: "rgba(255,255,255,0.2)" }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        fontWeight={900}
+                        textAlign={"end"}
+                      >
+                        0
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          opacity: 0.7,
+                          fontWeight: 800,
+                          letterSpacing: "0.1em",
+                        }}
+                      >
+                        PENDING
+                      </Typography>
+                    </Box>
+                    <Divider
+                      orientation="vertical"
+                      flexItem
+                      sx={{ borderColor: "rgba(255,255,255,0.2)" }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        fontWeight={900}
+                        color={SUCCESS_COLOR}
+                        textAlign={"end"}
+                      >
+                        0
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          opacity: 0.7,
+                          fontWeight: 800,
+                          letterSpacing: "0.1em",
+                        }}
+                      >
+                        WRAPPED
+                      </Typography>
+                    </Box>
+                  </Stack>
                 </Stack>
               </Grid>
             </Grid>
@@ -567,113 +640,110 @@ export default function ProfDash() {
         </Box>
 
         {/* Navigation & Action Bar */}
-        <Box sx={{ mt: -4, mb: 4 }}>
-          <Container maxWidth="lg" sx={{ paddingLeft: '20px', paddingRight: '20px' }}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                borderRadius: "24px",
-                bgcolor: "white",
-                boxShadow: "0 20px 25px -5px rgba(99, 102, 241, 0.1)",
-                border: `1px solid ${CARD_BORDER}`,
-                display: "flex",
-                gap: 2,
-                overflowX: "auto",
-                "&::-webkit-scrollbar": { display: "none" },
-                padding: '8px'
-              }}
-            >
-              {[
-                {
-                  label: "Projects",
-                  icon: <Icons.Files />,
-                  count: "12 Total",
-                  link: "/survey",
-                },
-                {
-                  label: "Pending",
-                  icon: <Icons.Pending />,
-                  count: "View All",
-                  link: "/survey",
-                },
-                {
-                  label: "Ongoing",
-                  icon: <Icons.Ongoing />,
-                  count: "View All",
-                  link: "/survey",
-                },
-                {
-                  label: "Completed",
-                  icon: <Icons.Completed />,
-                  count: "View All",
-                  link: "/survey",
-                },
-                // {
-                //   label: "Reports",
-                //   icon: <Icons.Chart />,
-                //   count: "View All",
-                //   link: "/survey/report",
-                // },
-                // {
-                //   label: "Unit Converter",
-                //   icon: <Icons.Options />,
-                //   count: "Tool",
-                //   type: "unit",
-                // },
-                // {
-                //   label: "Camera",
-                //   icon: <Icons.Map />,
-                //   count: "Ready",
-                //   link: "/camera",
-                // },
-              ].map((action, i) => (
-                <Box
-                  key={i}
-                  onClick={() => {
-                    if (action.type === "unit") {
-                      handleOpen("unit converter");
-                    } else if (action.link) {
-                      navigate(action.link);
-                    }
-                  }}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    px: 2,
-                    py: 1,
-                    borderRadius: "16px",
-                    cursor: "pointer",
-                    bgcolor: i === 0 ? PRIMARY_BRAND : "transparent",
-                    color: i === 0 ? "white" : "#64748b",
-                    border: i === 0 ? "none" : "1px solid #f1f5f9",
-                    whiteSpace: "nowrap",
-                    transition: "0.2s",
-                    "&:hover": {
-                      bgcolor: i === 0 ? HEADER_GRADIENT_START : "#f8fafc",
-                    },
-                  }}
-                >
-                  <Box sx={{ color: i === 0 ? "white" : PRIMARY_BRAND }}>
-                    {action.icon}
+        <Container maxWidth="lg" sx={{ p: "0px !important" }}>
+          <Box
+            sx={{
+              mt: -4,
+              mb: 4,
+              paddingLeft: "20px",
+              paddingRight: "20px",
+            }}
+          >
+            <Box sx={{ display: "flex", justifyContent: "start" }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: "8px",
+                  borderRadius: "20px",
+                  display: "inline-flex",
+                  gap: 2,
+
+                  // --- THE GLASSY BACKGROUND ---
+                  bgcolor: "rgba(255, 255, 255, 0.4)", // Low opacity white
+                  backdropFilter: "blur(12px)", // This creates the "glass" look
+                  WebkitBackdropFilter: "blur(12px)", // Safari Support
+                  border: "1px solid rgba(255, 255, 255, 0.3)", // Subtle light edge
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                  // -----------------------------
+
+                  maxWidth: "100%",
+                  overflowX: "auto",
+                  "&::-webkit-scrollbar": { display: "none" },
+                }}
+              >
+                {[
+                  {
+                    label: "Projects",
+                    icon: <Icons.Files />,
+                    count: "12 Total",
+                  },
+                  {
+                    label: "Pending",
+                    icon: <Icons.Pending />,
+                    count: "View All",
+                  },
+                  {
+                    label: "Ongoing",
+                    icon: <Icons.Ongoing />,
+                    count: "View All",
+                  },
+                  {
+                    label: "Completed",
+                    icon: <Icons.Completed />,
+                    count: "View All",
+                  },
+                ].map((action, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      px: 2,
+                      py: 1,
+                      borderRadius: "16px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+
+                      // Only the active item stays solid, others stay transparent/glassy
+                      bgcolor: i === 0 ? PRIMARY_BRAND : "transparent",
+                      color: i === 0 ? "white" : "#1e293b",
+
+                      transition: "0.2s",
+                      "&:hover": {
+                        bgcolor:
+                          i === 0 ? PRIMARY_BRAND : "rgba(255, 255, 255, 0.3)",
+                      },
+                    }}
+                    onClick={() => {
+                      navigate("/survey");
+                    }}
+                  >
+                    <Box sx={{ color: i === 0 ? "white" : PRIMARY_BRAND }}>
+                      {action.icon}
+                    </Box>
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        fontWeight={800}
+                        sx={{ lineHeight: 1.1 }}
+                      >
+                        {action.label}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ opacity: 0.8, fontWeight: 600 }}
+                      >
+                        {action.count}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box>
-                    <Typography variant="body2" fontWeight={800}>
-                      {action.label}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ opacity: 0.7, fontWeight: 600 }}
-                    >
-                      {action.count}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Paper>
-          </Container>
-        </Box>
+                ))}
+              </Paper>
+            </Box>
+          </Box>
+        </Container>
 
         {/* Dashboard Main Grid */}
         <Container maxWidth="lg">

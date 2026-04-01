@@ -105,14 +105,14 @@ const AppHeader = ({ sidebar = true }) => {
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           borderBottom: "1px solid rgba(255,255,255,0.15)",
-          pt: { xs: 2, md: 3 },
-          pb: { xs: 2, md: 3 },
+          pt: { xs: 0.5, md: 1 },
+          pb: { xs: 0.5, md: 1 },
           color: "white",
           boxShadow: "0 10px 30px -10px rgba(79, 70, 229, 0.5)",
           transition: "all 0.3s ease-in-out",
         }}
       >
-        <Container maxWidth="lg">
+        <Box px={2}>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -140,14 +140,14 @@ const AppHeader = ({ sidebar = true }) => {
                     fontSize: { xs: "0.85rem", md: "1rem" },
                   }}
                 >
-                  {user?.name || "Professional User"}
+                  Hi, {user?.name || "Professional User"}
                 </Typography>
-                <Typography
+                {/* <Typography
                   variant="caption"
                   sx={{ opacity: 0.8, fontWeight: 600 }}
                 >
                   {user?.role || "CAD Engineer"}
-                </Typography>
+                </Typography> */}
               </Box>
             </Stack>
 
@@ -163,7 +163,7 @@ const AppHeader = ({ sidebar = true }) => {
                   }
                 }}
                 sx={{
-                  display: { xs: 'none', sm: 'flex' },
+                  display: { xs: "none", sm: "flex" },
                   width: { sm: 220, md: 300 },
                   "& .MuiOutlinedInput-root": {
                     bgcolor: "rgba(255,255,255,0.15)",
@@ -246,7 +246,7 @@ const AppHeader = ({ sidebar = true }) => {
               )}
             </Stack>
           </Stack>
-        </Container>
+        </Box>
       </Box>
     </>
   );
