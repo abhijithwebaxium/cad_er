@@ -1,4 +1,5 @@
 import { Activity, useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { startLoading, stopLoading } from "../../redux/loadingSlice";
@@ -36,26 +37,13 @@ import SmallHeader from "../../components/SmallHeader";
 import DeductionContent from "./components/DeductionContent";
 import AlertDialogSlide from "../../components/AlertDialogSlide";
 import StyledTextLink from "../../components/StyledTextLink";
+import { showAlert } from "../../redux/alertSlice";
 
-const toggleButtonSx = {
-  flex: 1,
-  fontSize: { xs: "0.75rem", sm: "0.9rem" },
-  py: { xs: 0.7, sm: 1 },
-  border: "1px solid rgb(25 118 210 / 50%) !important",
-  borderRadius: "10px !important",
-  color: "#1976d2 !important",
-  fontWeight: "600",
-  boxShadow:
-    "0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12) !important",
-  "&.Mui-selected": {
-    backgroundColor: "rgb(25 118 210 / 8%)",
-    borderColor: "#1976d2",
-  },
-  "&.Mui-selected:hover": {
-    backgroundColor: "rgb(25 118 210 / 8%)",
-    borderColor: "#1976d2",
-  },
-};
+import { VscGraphLine } from "react-icons/vsc";
+import { SlGraph } from "react-icons/sl";
+import { BiSolidReport } from "react-icons/bi";
+import { HiOutlineDocumentReport } from "react-icons/hi";
+import { FaFileExport } from "react-icons/fa6";
 
 const Report = () => {
   const { id } = useParams();
@@ -246,6 +234,15 @@ const Report = () => {
   };
 
   const handleClickDelete = (p) => {
+    if (p.type === "Initial Level") {
+      return dispatch(
+        showAlert({
+          type: "warning",
+          message: "You cannot delete Initial Level",
+        }),
+      );
+    }
+
     setDeletePurpose(p);
     setDeleteAlertOpen(true);
   };
@@ -280,245 +277,492 @@ const Report = () => {
   };
 
   return (
-    <>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc" }}>
       <SmallHeader />
       <AlertDialogSlide {...deleteAlertData} open={deleteAlertOpen} />
+      <AlertDialogSlide {...alertData} open={open} />
 
-      <Stack
-        p={2}
-        spacing={2}
-        className="overlapping-header"
-        sx={{ mx: "auto" }}
-      >
-        <Typography variant="h6" fontSize={18} fontWeight={700} align="center">
-          Your Reports Are Here!
-        </Typography>
-
-        {/* Report Type Selector */}
-        <Paper
-          elevation={2}
+      <Box pt={{ xs: 3, md: 5 }} pb={2}>
+        <Typography
+          variant="h4"
+          fontWeight={900}
+          align="center"
+          color="#1e293b"
           sx={{
-            p: 2,
-            mb: 3,
-            borderRadius: 3,
+            letterSpacing: "-0.02em",
+            fontSize: { xs: "1.5rem", md: "2rem" },
           }}
         >
-          {!id ? (
-            <Box mb={2}>
-              <BasicAutocomplete
-                label={
-                  state?.getBranchReport ? "Select Branch" : "Select Survey"
-                }
-                options={
-                  surveys?.length
-                    ? surveys?.map((s) => ({ label: s.project, value: s._id }))
-                    : []
-                }
-                value={inputValue}
-                onChange={(e, newValue) => handleInputChange(e, newValue)}
-                placeholder={"Select..."}
-              />
-            </Box>
-          ) : (
-            <Typography
-              variant="subtitle1"
-              fontWeight="bold"
-              sx={{ mb: 1, fontSize: { xs: "0.85rem", sm: "1rem" } }}
-            >
-              Project Name:{" "}
-              <span style={{ fontWeight: "500" }}>{survey?.project}</span>
-            </Typography>
-          )}
-
-          {state?.getBranchReport && survey && (
-            <Box display={"flex"} justifyContent={"start"} mb={1}>
-              <StyledTextLink
-                onClick={() => handleClickFiledBook(survey._id)}
-                children={"Generate FLB"}
-              />
-            </Box>
-          )}
-
-          <Typography
-            variant="subtitle1"
-            fontWeight="bold"
-            sx={{ mb: 1, fontSize: { xs: "0.85rem", sm: "1rem" } }}
-          >
-            Select Report Type
-          </Typography>
-
-          <ToggleButtonGroup
-            value={reportType}
-            exclusive
-            fullWidth
-            onChange={(e, value) => setReportType(value)}
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <ToggleButton value="cross" sx={toggleButtonSx}>
-                CS
-              </ToggleButton>
-              <ToggleButton value="longitudinal" sx={toggleButtonSx}>
-                LS
-              </ToggleButton>
-              <ToggleButton value="area" sx={toggleButtonSx}>
-                Area
-              </ToggleButton>
-              <ToggleButton value="volume" sx={toggleButtonSx}>
-                Volume
-              </ToggleButton>
-            </Box>
-            <ToggleButton value="batch-plotting" sx={toggleButtonSx}>
-              Batch plotting
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Paper>
-
-        <Activity
-          mode={
-            survey && reportType === "volume" && selectedPurposes.length === 2
-              ? "visible"
-              : "hidden"
-          }
+          Your Reports Are Here!
+        </Typography>
+        <Typography
+          variant="body2"
+          align="center"
+          color="text.secondary"
+          fontWeight={600}
+          mt={1}
         >
-          <AlertDialogSlide {...alertData} open={open} />
-          <Box display={"flex"} justifyContent={"center"}>
-            <BasicButton
-              value={"DEDUCTION"}
-              variant="outlined"
+          Select a report type from the bottom menu to continue
+        </Typography>
+      </Box>
+
+      {/* Select Report Type Island */}
+      <Box
+        component={motion.div}
+        initial={{ y: 100, opacity: 0, x: "-50%" }}
+        animate={{ y: 0, opacity: 1, x: "-50%" }}
+        transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.2 }}
+        sx={{
+          position: "fixed",
+          bottom: { xs: 16, md: 32 },
+          left: "50%",
+          zIndex: 1000,
+          width: "max-content",
+          maxWidth: "90vw",
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            p: "8px",
+            borderRadius: "20px",
+            display: "inline-flex",
+            gap: { xs: 1, md: 2 },
+            background: "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+            backdropFilter: "blur(0px)",
+            WebkitBackdropFilter: "blur(0px)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+            maxWidth: "100%",
+            overflowX: "auto",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
+          {[
+            {
+              label: "CS",
+              value: "cross",
+              icon: <VscGraphLine />,
+            },
+            {
+              label: "LS",
+              value: "longitudinal",
+              icon: <SlGraph />,
+            },
+            {
+              label: "Area",
+              value: "area",
+              icon: <BiSolidReport />,
+            },
+            {
+              label: "Volume",
+              value: "volume",
+              icon: <HiOutlineDocumentReport />,
+            },
+            {
+              label: "Export",
+              value: "batch-plotting",
+              icon: <FaFileExport />,
+            },
+          ].map((type, i) => (
+            <Box
+              key={i}
               sx={{
-                fontSize: "12px",
-                padding: "5.6px 11px",
-                minWidth: "200px",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                px: { xs: 2, md: 3 },
+                py: { xs: 1, md: 1.5 },
+                borderRadius: "16px",
+                cursor: "pointer",
+                minWidth: "70px",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                // bgcolor: "transparent",
+                bgcolor: "white",
+                color: reportType === type.value ? "white" : "#1e293b",
+                transition: "color 0.2s",
+                "&:hover": {
+                  bgcolor:
+                    reportType === type.value
+                      ? "transparent"
+                      : "rgba(255, 255, 255, 0.5)",
+                },
               }}
-              onClick={handleOpen}
-            />
-          </Box>
-        </Activity>
-
-        <Activity mode={survey && reportType ? "visible" : "hidden"}>
-          {/* Purpose Table */}
-          <TableContainer
-            component={Paper}
-            sx={{ borderRadius: 3, overflow: "hidden" }}
-          >
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  {/* <TableCell padding="checkbox">
-                <Checkbox
-                  color="primary"
-                  checked={allSelected}
-                  indeterminate={partiallySelected}
-                  onChange={toggleSelectAll}
+              onClick={() => setReportType(type.value)}
+            >
+              {reportType === type.value && (
+                <Box
+                  component={motion.div}
+                  layoutId="activeReportType"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    bgcolor: "#6366f1",
+                    borderRadius: "16px",
+                    zIndex: 0,
+                  }}
                 />
-              </TableCell> */}
-                  <TableCell></TableCell>
+              )}
 
-                  <TableCell
-                    sx={{ fontWeight: "bold", fontSize: { xs: 12, sm: 14 } }}
-                  >
-                    Purpose
-                  </TableCell>
-                  <TableCell
-                    sx={{ fontWeight: "bold", fontSize: { xs: 12, sm: 14 } }}
-                  >
-                    Description
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography
+                  variant="body2"
+                  fontWeight={800}
+                  sx={{
+                    lineHeight: 1.1,
+                    position: "relative",
+                    zIndex: 1,
+                    color: reportType === type.value ? "white" : "#6366f1",
+                  }}
+                >
+                  {type.icon}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={800}
+                  sx={{
+                    lineHeight: 1.1,
+                    position: "relative",
+                    zIndex: 1,
+                    color: reportType === type.value ? "white" : "#6366f1",
+                  }}
+                >
+                  {type.label}
+                </Typography>
+              </Box>
+            </Box>
+          ))}
+        </Paper>
+      </Box>
 
-              <TableBody>
-                {survey?.purposes?.map((purpose) => (
-                  <TableRow
-                    key={purpose._id}
-                    hover
-                    onClick={() => togglePurpose(purpose)}
+      {/* Main Content Card with Animation */}
+      <AnimatePresence mode="wait">
+        {reportType && (
+          <motion.div
+            key={reportType}
+            initial={{ y: 30, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -30, opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            style={{
+              // width: "100%",
+              maxWidth: "900px",
+              margin: "0 auto",
+              padding: "0 16px",
+              paddingBottom: "100px",
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 3, md: 5 },
+                borderRadius: "28px",
+                bgcolor: "#ffffff",
+                boxShadow: "0 20px 40px -15px rgba(0,0,0,0.05)",
+                border: "1px solid rgba(226, 232, 240, 0.8)",
+                position: "relative",
+                overflow: "hidden",
+                mt: 3,
+              }}
+            >
+              {/* Decorative Header Line */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "6px",
+                  background:
+                    "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+                }}
+              />
+
+              <Stack spacing={4}>
+                {!id ? (
+                  <Box>
+                    <BasicAutocomplete
+                      label={
+                        state?.getBranchReport
+                          ? "Select Branch"
+                          : "Select Survey"
+                      }
+                      options={
+                        surveys?.length
+                          ? surveys?.map((s) => ({
+                              label: s.project,
+                              value: s._id,
+                            }))
+                          : []
+                      }
+                      value={inputValue}
+                      onChange={(e, newValue) => handleInputChange(e, newValue)}
+                      placeholder={"Select..."}
+                    />
+                  </Box>
+                ) : (
+                  <Typography
+                    variant="h6"
+                    fontWeight="800"
+                    color="#334155"
+                    noWrap={true}
+                  >
+                    Project Name:{" "}
+                    <span style={{ fontWeight: "600", color: "#6366f1" }}>
+                      {survey?.project}
+                    </span>
+                  </Typography>
+                )}
+
+                {state?.getBranchReport && survey && (
+                  <Box display={"flex"} justifyContent={"start"}>
+                    <StyledTextLink
+                      onClick={() => handleClickFiledBook(survey._id)}
+                      children={"Generate FLB"}
+                    />
+                  </Box>
+                )}
+
+                <Activity
+                  mode={
+                    survey &&
+                    reportType === "volume" &&
+                    selectedPurposes.length === 2
+                      ? "visible"
+                      : "hidden"
+                  }
+                >
+                  <Box display={"flex"} justifyContent={"center"}>
+                    <BasicButton
+                      value={"DEDUCTION"}
+                      variant="outlined"
+                      sx={{
+                        fontSize: "12px",
+                        padding: "5.6px 11px",
+                        minWidth: "200px",
+                      }}
+                      onClick={handleOpen}
+                    />
+                  </Box>
+                </Activity>
+
+                <Activity mode={survey ? "visible" : "hidden"}>
+                  <TableContainer
+                    component={Box}
                     sx={{
-                      cursor: "pointer",
-                      background: isSelected(purpose._id)
-                        ? "rgba(25,118,210,0.08)"
-                        : "inherit",
+                      borderRadius: 3,
+                      overflow: "hidden",
+                      border: "1px solid rgba(226, 232, 240, 0.8)",
                     }}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isSelected(purpose._id)}
-                      />
-                    </TableCell>
+                    <Table>
+                      <TableHead sx={{ bgcolor: "#f1f5f9" }}>
+                        <TableRow>
+                          <TableCell></TableCell>
+                          <TableCell
+                            sx={{
+                              fontWeight: "bold",
+                              fontSize: { xs: 12, sm: 14 },
+                              color: "#475569",
+                            }}
+                          >
+                            Purpose
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              fontWeight: "bold",
+                              fontSize: { xs: 12, sm: 14 },
+                              color: "#475569",
+                              textAlign: "center",
+                            }}
+                          >
+                            Description
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              fontWeight: "bold",
+                              fontSize: { xs: 12, sm: 14 },
+                              color: "#475569",
+                              textAlign: "end",
+                              paddingRight: 4,
+                            }}
+                          >
+                            Action
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
 
-                    <TableCell sx={{ fontSize: { xs: 12, sm: 14 } }}>
-                      {purpose.type}
-                    </TableCell>
+                      <TableBody>
+                        {survey?.purposes?.map((purpose) => (
+                          <TableRow
+                            key={purpose._id}
+                            hover
+                            onClick={() => togglePurpose(purpose)}
+                            sx={{
+                              cursor: "pointer",
+                              background: isSelected(purpose._id)
+                                ? "rgba(99, 102, 241, 0.08)"
+                                : "inherit",
+                              transition: "background 0.2s",
+                            }}
+                          >
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                color="primary"
+                                checked={isSelected(purpose._id)}
+                              />
+                            </TableCell>
 
-                    <TableCell sx={{ fontSize: { xs: 12, sm: 14 } }}>
-                      {purpose.description || "No description"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                            <TableCell sx={{ fontSize: { xs: 12, sm: 14 } }}>
+                              {purpose.type}
+                            </TableCell>
 
-          {/* Selected Purposes */}
-          <Activity mode={selectedPurposes.length > 0 ? "visible" : "hidden"}>
-            <Paper
-              elevation={2}
-              sx={{
-                mt: 4,
-                p: 2,
-                borderRadius: 3,
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                mb={1}
-                sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}
-              >
-                Selected Purposes
-              </Typography>
+                            <TableCell
+                              sx={{
+                                fontSize: { xs: 12, sm: 14 },
+                                textAlign: "center",
+                              }}
+                            >
+                              {purpose.description || "No description"}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                fontSize: { xs: 12, sm: 14 },
+                              }}
+                            >
+                              <Box display={"flex"} justifyContent={"end"}>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handleClickDelete(purpose)}
+                                  disabled={purpose.type === "Initial Level"}
+                                  sx={{
+                                    background:
+                                      "linear-gradient(135deg, #e54646ff 0%, #e54646ff 100%)",
+                                    color: "white",
+                                    height: "30px",
+                                    borderRadius: "8px",
+                                    border: "none",
+                                    fontWeight: 800,
+                                    letterSpacing: "0.05em",
+                                    boxShadow:
+                                      "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                      background:
+                                        "linear-gradient(135deg, #ca3838ff 0%, #e54646ff 100%)",
+                                      boxShadow:
+                                        "0 15px 30px -5px rgba(202, 56, 56, 0.5)",
+                                    },
+                                    "&:disabled": {
+                                      background: "#e2e8f0",
+                                      color: "#94a3b8",
+                                      boxShadow: "none",
+                                    },
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
 
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {selectedPurposes.map(
-                  (p) =>
-                    p.type !== "Initial Level" && (
-                      <Chip
-                        key={p._id}
-                        label={p.type}
-                        onDelete={() => handleClickDelete(p)}
-                        deleteIcon={<MdDelete />}
-                        sx={{
-                          fontSize: { xs: 10, sm: 12 },
-                          height: { xs: 24, sm: 28 },
-                        }}
-                      />
-                    ),
-                )}
-              </Box>
+                  <Activity
+                    mode={selectedPurposes.length > 0 ? "visible" : "hidden"}
+                  >
+                    <Box mt={4}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        mb={2}
+                        color="#334155"
+                      >
+                        Selected Purposes
+                      </Typography>
 
-              <Divider sx={{ my: 2 }} />
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                        {selectedPurposes.map((p) => (
+                          <Chip
+                            key={p._id}
+                            label={p.type}
+                            onDelete={() =>
+                              setSelectedPurposes((prev) =>
+                                prev.filter((x) => x._id !== p._id),
+                              )
+                            }
+                            deleteIcon={<MdDelete />}
+                            sx={{
+                              fontSize: { xs: 11, sm: 13 },
+                              fontWeight: 600,
+                              bgcolor: "#f1f5f9",
+                              color: "#1e293b",
+                              "& .MuiChip-deleteIcon": {
+                                color: "#ef4444",
+                              },
+                            }}
+                          />
+                        ))}
+                      </Box>
 
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                disabled={!reportType || selectedPurposes.length === 0}
-                onClick={() => generateReport()}
-                sx={{
-                  py: { xs: 1, sm: 1.5 },
-                  borderRadius: 2,
-                  fontSize: { xs: "0.75rem", sm: "0.9rem" },
-                }}
-              >
-                Generate Report
-              </Button>
+                      <Divider sx={{ my: 3 }} />
+
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          size="large"
+                          disabled={
+                            !reportType || selectedPurposes.length === 0
+                          }
+                          onClick={() => generateReport()}
+                          sx={{
+                            background:
+                              "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                            color: "white",
+                            height: "50px",
+                            borderRadius: "16px",
+                            border: "none",
+                            fontWeight: 800,
+                            letterSpacing: "0.05em",
+                            boxShadow:
+                              "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
+                              boxShadow:
+                                "0 15px 30px -5px rgba(99, 102, 241, 0.5)",
+                            },
+                            "&:disabled": {
+                              background: "#e2e8f0",
+                              color: "#94a3b8",
+                              boxShadow: "none",
+                            },
+                          }}
+                        >
+                          GENERATE REPORT
+                        </Button>
+                      </motion.div>
+                    </Box>
+                  </Activity>
+                </Activity>
+              </Stack>
             </Paper>
-          </Activity>
-        </Activity>
-      </Stack>
-    </>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Box>
   );
 };
 

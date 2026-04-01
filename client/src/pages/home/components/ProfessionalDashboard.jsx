@@ -393,7 +393,7 @@ const TaskCard = ({ task, index }) => (
   </motion.div>
 );
 
-export default function ProfDash() {
+export default function ProfessionalDashboard() {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
 

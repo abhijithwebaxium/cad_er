@@ -13,8 +13,6 @@ import { useNavigate } from "react-router-dom";
 import { stopLoading } from "../../redux/loadingSlice";
 import { useEffect, useState } from "react";
 import BasicButton from "../../components/BasicButton";
-import SimpleAlert from "../../components/SimpleAlert";
-
 import { GoAlert } from "react-icons/go";
 import { IoCheckmarkCircle } from "react-icons/io5";
 import autoLevelIcon from "../../assets/icons/compass.json";
@@ -22,7 +20,7 @@ import totalStationIcon from "../../assets/total-station.png";
 import DGPSIcon from "../../assets/icons/GPS Navigation.json";
 import DroneIcon from "../../assets/icons/Drone Camera.json";
 import BathymetryIcon from "../../assets/icons/Boat-Looking-For-Land.json";
-import { IoIosArrowForward } from "react-icons/io";
+import { FaLocationArrow } from "react-icons/fa";
 import SmallHeader from "../../components/SmallHeader";
 import { showAlert } from "../../redux/alertSlice";
 
@@ -312,14 +310,14 @@ const SelectEquipment = () => {
                   alignItems="center"
                   justifyContent="center"
                 >
+                  <FaLocationArrow fontSize="22px" />
                   <Typography
                     fontSize="1.1rem"
                     fontWeight={900}
                     letterSpacing="0.05em"
                   >
-                    CONTINUE TO SURVEY
+                    NEXT
                   </Typography>
-                  <IoIosArrowForward fontSize="22px" />
                 </Stack>
               }
               sx={{

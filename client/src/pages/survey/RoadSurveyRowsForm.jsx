@@ -50,12 +50,44 @@ import AddBranch from "./components/AddBranch";
 import EnterBranch from "./components/EnterBranch";
 import ObservationNotes from "./components/ObservationNotes";
 import AddBreak from "./components/AddBreak";
-
+import { GiCrossroad } from "react-icons/gi";
+import { PiRoadHorizonFill } from "react-icons/pi";
+import { MdAddRoad } from "react-icons/md";
+import { FaLocationArrow } from "react-icons/fa";
+import { GrSafariOption } from "react-icons/gr"; // options icon
 const colors = {
   Initial: "green",
   Proposed: "blue",
   Final: "red",
 };
+
+const fUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+const PulseDot = () => (
+  <Box
+    component={motion.span}
+    sx={{
+      width: 8,
+      height: 8,
+      borderRadius: "50%",
+      bgcolor: "primary.main",
+      display: "inline-block",
+      mr: 1,
+    }}
+    animate={{
+      scale: [1, 1.5, 1],
+      opacity: [1, 0.5, 1],
+    }}
+    transition={{
+      duration: 1.2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  />
+);
 
 const addButtonSx = {
   display: "flex",
@@ -347,25 +379,25 @@ const RoadSurveyRowsForm = () => {
   const speedDialActions = [
     {
       icon: <IoGitBranchOutline />,
-      name: "Add Branch",
+      name: "BRANCH",
       onClick: () => handleOpenAddBranch(),
       show: purpose && purpose?.type === "Initial Level",
     },
     {
       icon: <IoGitBranchOutline />,
-      name: "Enter Branch",
+      name: "BRANCH",
       onClick: () => handleOpenEnterBranch(),
       show: purpose && purpose?.type !== "Initial Level",
     },
     {
       icon: <PiLinkSimpleBreakBold />,
-      name: "Add Break",
+      name: "BREAK",
       onClick: () => handleOpenAddBreak(),
       show: true,
     },
     {
       icon: <AiOutlinePauseCircle />,
-      name: "Pause Survey",
+      name: "PAUSE",
       onClick: () => handleClickOpen("Pause Survey"),
       show:
         purpose &&
@@ -375,7 +407,7 @@ const RoadSurveyRowsForm = () => {
     },
     {
       icon: <MdDone />,
-      name: "Finish Survey",
+      name: "WRAP",
       onClick: () => handleClickOpen("Finish Survey"),
       show: purpose && page === 0,
     },
@@ -1315,7 +1347,103 @@ const RoadSurveyRowsForm = () => {
       />
 
       {/* Main Form Layout Container */}
-      <Container maxWidth="md" sx={{ pt: { xs: 3, md: 5 } }}>
+      <Container maxWidth="md">
+        {rowType === "Chainage" &&
+          page === 1 &&
+          selectedCs &&
+          selectedCs?.series && (
+            <Box
+              position={"sticky"}
+              top={"68px"}
+              bgcolor={"white"}
+              zIndex={2}
+              sx={{
+                p: "8px",
+                borderRadius: "0px 0px 20px 20px",
+                gap: { xs: 1, md: 2 },
+                bgcolor: "rgba(255, 255, 255, 0.6)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                maxWidth: "100%",
+                overflowX: "auto",
+                "& .svg-container svg": {
+                  borderRadius: "20px",
+                  backgroundColor: "transparent !important",
+                },
+              }}
+            >
+              <Box display={"flex"} justifyContent={"end"} pr={2}>
+                <motion.div variants={fUp}>
+                  <Box
+                    sx={{
+                      display: "inline-flex",
+                      px: 2,
+                      py: 0.5,
+                      mb: 3,
+                      borderRadius: 10,
+                      bgcolor: "rgba(99, 102, 241, 0.1)",
+                      border: "1px solid rgba(99, 102, 241, 0.2)",
+                    }}
+                  >
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      width={"max-content"}
+                    >
+                      <PulseDot />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          // Change: Pure white or very light indigo for readability
+                          color: "primary.main",
+                          fontWeight: 700,
+                          letterSpacing: 1,
+                        }}
+                      >
+                        live
+                      </Typography>
+                    </Box>
+                  </Box>
+                </motion.div>
+              </Box>
+
+              <Activity
+                mode={purpose.type === "Initial Level" ? "hidden" : "visible"}
+              >
+                <Box display={"flex"} justifyContent={"end"}>
+                  <BasicSelect
+                    label="Compare"
+                    options={purpose.surveyId?.purposes
+                      ?.filter((p) => p.type !== purpose.type)
+                      .map((p) => ({ label: p.type, value: p.type }))}
+                    value={compareData?.type || ""}
+                    onChange={(e) => handleChangeCompare(e.target.value)}
+                    sx={{
+                      width: "62px",
+                      "& .MuiOutlinedInput-root": { padding: "4px 14px" },
+                    }}
+                  />
+                </Box>
+              </Activity>
+
+              <Plot
+                data={selectedCs?.series?.map((s) => ({
+                  x: s?.data?.map((p) => p.x),
+                  y: s?.data?.map((p) => p.y),
+                  type: "scatter",
+                  mode: "lines",
+                  name: s.name,
+                  line: { shape: "linear", width: 2, color: s.color },
+                }))}
+                config={chartOptions.config}
+                layout={chartOptions.layout}
+                style={{ width: "100%", height: 100 }}
+              />
+            </Box>
+          )}
+
         <Paper
           elevation={0}
           sx={{
@@ -1326,6 +1454,7 @@ const RoadSurveyRowsForm = () => {
             border: "1px solid rgba(226, 232, 240, 0.8)",
             position: "relative",
             overflow: "hidden",
+            mt: 2,
           }}
         >
           {/* Subtle Decorative Gradient Header */}
@@ -1339,46 +1468,6 @@ const RoadSurveyRowsForm = () => {
               background: "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
             }}
           />
-
-          {rowType === "Chainage" &&
-            page === 1 &&
-            selectedCs &&
-            selectedCs?.series && (
-              <Box position={"sticky"} top={0} bgcolor={"white"} zIndex={2}>
-                <Activity
-                  mode={purpose.type === "Initial Level" ? "hidden" : "visible"}
-                >
-                  <Box display={"flex"} justifyContent={"end"}>
-                    <BasicSelect
-                      label="Compare"
-                      options={purpose.surveyId?.purposes
-                        ?.filter((p) => p.type !== purpose.type)
-                        .map((p) => ({ label: p.type, value: p.type }))}
-                      value={compareData?.type || ""}
-                      onChange={(e) => handleChangeCompare(e.target.value)}
-                      sx={{
-                        width: "62px",
-                        "& .MuiOutlinedInput-root": { padding: "4px 14px" },
-                      }}
-                    />
-                  </Box>
-                </Activity>
-
-                <Plot
-                  data={selectedCs?.series?.map((s) => ({
-                    x: s?.data?.map((p) => p.x),
-                    y: s?.data?.map((p) => p.y),
-                    type: "scatter",
-                    mode: "lines",
-                    name: s.name,
-                    line: { shape: "linear", width: 1, color: s.color },
-                  }))}
-                  config={chartOptions.config}
-                  layout={chartOptions.layout}
-                  style={{ width: "100%", height: 100 }}
-                />
-              </Box>
-            )}
 
           <Stack spacing={2} sx={{ position: "relative" }}>
             <Stack
@@ -1816,6 +1905,141 @@ const RoadSurveyRowsForm = () => {
               </Grid>
             </Box>
 
+            {/* Select Report Type Island */}
+            <Box
+              component={motion.div}
+              initial={{ y: 100, opacity: 0, x: "-50%" }}
+              animate={{ y: 0, opacity: 1, x: "-50%" }}
+              transition={{
+                type: "spring",
+                damping: 20,
+                stiffness: 100,
+                delay: 0.2,
+              }}
+              sx={{
+                position: "fixed",
+                bottom: { xs: 16, md: 32 },
+                left: "50%",
+                zIndex: 1000,
+                width: "max-content",
+                maxWidth: "90vw",
+              }}
+            >
+              <Paper
+                elevation={0}
+                sx={{
+                  p: "8px",
+                  borderRadius: "20px",
+                  display: "inline-flex",
+                  gap: { xs: 1, md: 2 },
+                  background:
+                    "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+                  // bgcolor: "rgba(255, 255, 255, 0.6)",
+                  backdropFilter: "blur(0px)",
+                  WebkitBackdropFilter: "blur(0px)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
+                  maxWidth: "100%",
+                  overflowX: "auto",
+                  "&::-webkit-scrollbar": { display: "none" },
+                }}
+              >
+                {[
+                  {
+                    label: "CS",
+                    value: "cross",
+                  },
+                  {
+                    label: "LS",
+                    value: "longitudinal",
+                  },
+                  {
+                    label: "Area",
+                    value: "area",
+                  },
+                  {
+                    label: "Volume",
+                    value: "volume",
+                  },
+                  {
+                    label: "Export",
+                    value: "batch-plotting",
+                  },
+                ].map((type, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      px: { xs: 2, md: 3 },
+                      py: { xs: 1, md: 1.5 },
+                      borderRadius: "16px",
+                      cursor: "pointer",
+                      minWidth: "70px",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      // bgcolor: "transparent",
+                      bgcolor: "white",
+                      color: "#1e293b",
+                      transition: "color 0.2s",
+                      "&:hover": {
+                        bgcolor: "rgba(255, 255, 255, 0.5)",
+                      },
+                    }}
+                  >
+                    {/* {reportType === type.value && (
+                      <Box
+                        component={motion.div}
+                        layoutId="activeReportType"
+                        initial={false}
+                        transition={{
+                          type: "spring",
+                          stiffness: 350,
+                          damping: 25,
+                        }}
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          bgcolor: "#6366f1",
+                          borderRadius: "16px",
+                          zIndex: 0,
+                        }}
+                      />
+                    )} */}
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight={800}
+                        sx={{
+                          lineHeight: 1.1,
+                          position: "relative",
+                          zIndex: 1,
+                          color: "#6366f1",
+                        }}
+                      >
+                        {/* {type.icon} */}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={800}
+                        sx={{
+                          lineHeight: 1.1,
+                          position: "relative",
+                          zIndex: 1,
+                          color: "#6366f1",
+                        }}
+                      >
+                        {type.label}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+              </Paper>
+            </Box>
+
             <Stack
               direction={{ xs: "column", sm: "row" }}
               justifyContent={"end"}
@@ -1842,13 +2066,13 @@ const RoadSurveyRowsForm = () => {
                               alignItems="center"
                               justifyContent="center"
                             >
-                              <IoIosAddCircleOutline fontSize={"22px"} />
+                              <MdAddRoad fontSize={"22px"} />
                               <Typography
                                 fontSize={"1.05rem"}
                                 fontWeight={800}
                                 letterSpacing="0.05em"
                               >
-                                CHAINAGE
+                                CH
                               </Typography>
                             </Stack>
                           }
@@ -1886,7 +2110,7 @@ const RoadSurveyRowsForm = () => {
                               alignItems="center"
                               justifyContent="center"
                             >
-                              <IoIosAddCircleOutline fontSize={"22px"} />
+                              <GiCrossroad fontSize={"22px"} />
                               <Typography
                                 fontSize={"1.05rem"}
                                 fontWeight={800}
@@ -1930,7 +2154,7 @@ const RoadSurveyRowsForm = () => {
                               alignItems="center"
                               justifyContent="center"
                             >
-                              <IoIosAddCircleOutline fontSize={"22px"} />
+                              <PiRoadHorizonFill fontSize={"22px"} />
                               <Typography
                                 fontSize={"1.05rem"}
                                 fontWeight={800}
@@ -1992,14 +2216,14 @@ const RoadSurveyRowsForm = () => {
                         </>
                       ) : (
                         <>
+                          <FaLocationArrow fontSize={"24px"} />
                           <Typography
                             fontSize={"1.05rem"}
                             fontWeight={800}
                             letterSpacing="0.05em"
                           >
-                            CONTINUE
+                            NEXT
                           </Typography>
-                          <IoIosArrowForward fontSize={"24px"} />
                         </>
                       )}
                     </Stack>

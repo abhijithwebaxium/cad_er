@@ -404,16 +404,25 @@ export default function ProjectsList() {
                   <Box>
                     <BasicAccordion
                       summary={
-                        <Stack direction="row" spacing={2} alignItems="center" width="100%" pr={1}>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          alignItems="center"
+                          width="100%"
+                          pr={1}
+                        >
                           {/* Modern Avatar */}
                           <Box
-                            onClick={(e) => { e.stopPropagation(); handleContinueSurvey(survey._id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleContinueSurvey(survey._id);
+                            }}
                             sx={{
                               minWidth: 50,
                               height: 50,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                               bgcolor: `${PRIMARY_BRAND}15`,
                               borderRadius: "14px",
                               color: PRIMARY_BRAND,
@@ -426,18 +435,54 @@ export default function ProjectsList() {
                           </Box>
 
                           {/* Main Info */}
-                          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography variant="caption" fontWeight={800} sx={{ color: PRIMARY_BRAND, letterSpacing: "0.05em" }}>
+                          <Stack
+                            spacing={0.5}
+                            sx={{ flexGrow: 1, minWidth: 0 }}
+                          >
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                            >
+                              <Typography
+                                variant="caption"
+                                fontWeight={800}
+                                sx={{
+                                  color: PRIMARY_BRAND,
+                                  letterSpacing: "0.05em",
+                                }}
+                              >
                                 {survey.type?.toUpperCase() || "SURVEY"}
                               </Typography>
-                              <Box sx={{ width: 4, height: 4, borderRadius: "50%", bgcolor: "#cbd5e1" }} />
-                              <Typography variant="caption" fontWeight={700} color="#94a3b8">
-                                {new Date(survey.createdAt)?.toLocaleDateString("en-IN")}
+                              <Box
+                                sx={{
+                                  width: 4,
+                                  height: 4,
+                                  borderRadius: "50%",
+                                  bgcolor: "#cbd5e1",
+                                }}
+                              />
+                              <Typography
+                                variant="caption"
+                                fontWeight={700}
+                                color="#94a3b8"
+                              >
+                                {new Date(survey.createdAt)?.toLocaleDateString(
+                                  "en-IN",
+                                )}
                               </Typography>
                             </Stack>
 
-                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight={800}
+                              color="#1e293b"
+                              sx={{
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
                               {highlightText(survey.project, search)}
                             </Typography>
                           </Stack>
@@ -479,12 +524,12 @@ export default function ProjectsList() {
                                     color={
                                       key === "lastPurpose"
                                         ? colors[
-                                        survey[key]?.includes("Initial")
-                                          ? "Initial"
-                                          : survey[key]?.includes("Final")
-                                            ? "Final"
-                                            : ""
-                                        ]
+                                            survey[key]?.includes("Initial")
+                                              ? "Initial"
+                                              : survey[key]?.includes("Final")
+                                                ? "Final"
+                                                : ""
+                                          ]
                                         : ""
                                     }
                                     fontSize={14}
@@ -492,8 +537,8 @@ export default function ProjectsList() {
                                   >
                                     {type === "Date"
                                       ? new Date(
-                                        survey[key],
-                                      )?.toLocaleDateString("en-IN")
+                                          survey[key],
+                                        )?.toLocaleDateString("en-IN")
                                       : type === "constant"
                                         ? key
                                         : survey[key]}
@@ -552,15 +597,24 @@ export default function ProjectsList() {
                   <Box>
                     <BasicAccordion
                       summary={
-                        <Stack direction="row" spacing={2} alignItems="center" width="100%" pr={1}>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          alignItems="center"
+                          width="100%"
+                          pr={1}
+                        >
                           <Box
-                            onClick={(e) => { e.stopPropagation(); handleContinueSurvey(survey._id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleContinueSurvey(survey._id);
+                            }}
                             sx={{
                               minWidth: 50,
                               height: 50,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                               bgcolor: `${PRIMARY_BRAND}15`,
                               borderRadius: "14px",
                               color: PRIMARY_BRAND,
@@ -571,21 +625,56 @@ export default function ProjectsList() {
                           >
                             {survey.project.slice(0, 1).toUpperCase()}
                           </Box>
-                          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography variant="caption" fontWeight={800} sx={{ color: PRIMARY_BRAND, letterSpacing: "0.05em" }}>
+                          <Stack
+                            spacing={0.5}
+                            sx={{ flexGrow: 1, minWidth: 0 }}
+                          >
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                            >
+                              <Typography
+                                variant="caption"
+                                fontWeight={800}
+                                sx={{
+                                  color: PRIMARY_BRAND,
+                                  letterSpacing: "0.05em",
+                                }}
+                              >
                                 {survey.type?.toUpperCase() || "SURVEY"}
                               </Typography>
-                              <Box sx={{ width: 4, height: 4, borderRadius: "50%", bgcolor: "#cbd5e1" }} />
-                              <Typography variant="caption" fontWeight={700} color="#94a3b8">
-                                {new Date(survey.createdAt)?.toLocaleDateString("en-IN")}
+                              <Box
+                                sx={{
+                                  width: 4,
+                                  height: 4,
+                                  borderRadius: "50%",
+                                  bgcolor: "#cbd5e1",
+                                }}
+                              />
+                              <Typography
+                                variant="caption"
+                                fontWeight={700}
+                                color="#94a3b8"
+                              >
+                                {new Date(survey.createdAt)?.toLocaleDateString(
+                                  "en-IN",
+                                )}
                               </Typography>
                             </Stack>
-                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight={800}
+                              color="#1e293b"
+                              sx={{
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
                               {highlightText(survey.project, search)}
                             </Typography>
                           </Stack>
-
                         </Stack>
                       }
                       details={
@@ -615,12 +704,12 @@ export default function ProjectsList() {
                                     color={
                                       key === "lastPurpose"
                                         ? colors[
-                                        survey[key]?.includes("Initial")
-                                          ? "Initial"
-                                          : survey[key]?.includes("Final")
-                                            ? "Final"
-                                            : ""
-                                        ]
+                                            survey[key]?.includes("Initial")
+                                              ? "Initial"
+                                              : survey[key]?.includes("Final")
+                                                ? "Final"
+                                                : ""
+                                          ]
                                         : ""
                                     }
                                     fontSize={14}
@@ -628,8 +717,8 @@ export default function ProjectsList() {
                                   >
                                     {type === "Date"
                                       ? new Date(
-                                        survey[key],
-                                      )?.toLocaleDateString("en-IN")
+                                          survey[key],
+                                        )?.toLocaleDateString("en-IN")
                                       : type === "constant"
                                         ? key
                                         : survey[key]}
@@ -733,15 +822,24 @@ export default function ProjectsList() {
                   <Box>
                     <BasicAccordion
                       summary={
-                        <Stack direction="row" spacing={2} alignItems="center" width="100%" pr={1}>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          alignItems="center"
+                          width="100%"
+                          pr={1}
+                        >
                           <Box
-                            onClick={(e) => { e.stopPropagation(); handleContinueSurvey(survey._id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleContinueSurvey(survey._id);
+                            }}
                             sx={{
                               minWidth: 50,
                               height: 50,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                               bgcolor: `${PRIMARY_BRAND}15`,
                               borderRadius: "14px",
                               color: PRIMARY_BRAND,
@@ -752,21 +850,56 @@ export default function ProjectsList() {
                           >
                             {survey.project.slice(0, 1).toUpperCase()}
                           </Box>
-                          <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography variant="caption" fontWeight={800} sx={{ color: PRIMARY_BRAND, letterSpacing: "0.05em" }}>
+                          <Stack
+                            spacing={0.5}
+                            sx={{ flexGrow: 1, minWidth: 0 }}
+                          >
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                            >
+                              <Typography
+                                variant="caption"
+                                fontWeight={800}
+                                sx={{
+                                  color: PRIMARY_BRAND,
+                                  letterSpacing: "0.05em",
+                                }}
+                              >
                                 {survey.type?.toUpperCase() || "SURVEY"}
                               </Typography>
-                              <Box sx={{ width: 4, height: 4, borderRadius: "50%", bgcolor: "#cbd5e1" }} />
-                              <Typography variant="caption" fontWeight={700} color="#94a3b8">
-                                {new Date(survey.createdAt)?.toLocaleDateString("en-IN")}
+                              <Box
+                                sx={{
+                                  width: 4,
+                                  height: 4,
+                                  borderRadius: "50%",
+                                  bgcolor: "#cbd5e1",
+                                }}
+                              />
+                              <Typography
+                                variant="caption"
+                                fontWeight={700}
+                                color="#94a3b8"
+                              >
+                                {new Date(survey.createdAt)?.toLocaleDateString(
+                                  "en-IN",
+                                )}
                               </Typography>
                             </Stack>
-                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight={800}
+                              color="#1e293b"
+                              sx={{
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
                               {highlightText(survey.project, search)}
                             </Typography>
                           </Stack>
-
                         </Stack>
                       }
                       details={
@@ -796,12 +929,12 @@ export default function ProjectsList() {
                                     color={
                                       key === "lastPurpose"
                                         ? colors[
-                                        survey[key]?.includes("Initial")
-                                          ? "Initial"
-                                          : survey[key]?.includes("Final")
-                                            ? "Final"
-                                            : ""
-                                        ]
+                                            survey[key]?.includes("Initial")
+                                              ? "Initial"
+                                              : survey[key]?.includes("Final")
+                                                ? "Final"
+                                                : ""
+                                          ]
                                         : ""
                                     }
                                     fontSize={14}
@@ -809,8 +942,8 @@ export default function ProjectsList() {
                                   >
                                     {type === "Date"
                                       ? new Date(
-                                        survey[key],
-                                      )?.toLocaleDateString("en-IN")
+                                          survey[key],
+                                        )?.toLocaleDateString("en-IN")
                                       : type === "constant"
                                         ? key
                                         : survey[key]}
@@ -891,7 +1024,10 @@ export default function ProjectsList() {
   };
 
   return (
-    <Box overflow={"hidden"} sx={{ bgcolor: BG_COLOR, minHeight: "100vh", pb: 5 }}>
+    <Box
+      overflow={"hidden"}
+      sx={{ bgcolor: BG_COLOR, minHeight: "100vh", pb: 5 }}
+    >
       <SmallHeader />
 
       <AlertDialogSlide
@@ -931,7 +1067,10 @@ export default function ProjectsList() {
           }}
         >
           {/* 🔍 Left Icon */}
-          <IconButton onClick={() => setSearchMode(true)} sx={{ color: "white" }}>
+          <IconButton
+            onClick={() => setSearchMode(true)}
+            sx={{ color: "white" }}
+          >
             <MdOutlineSearch size={26} />
           </IconButton>
 
@@ -947,8 +1086,12 @@ export default function ProjectsList() {
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <Typography fontWeight={900} fontSize="24px" letterSpacing="-0.5px">
-                    Projects
+                  <Typography
+                    fontWeight={900}
+                    fontSize="24px"
+                    letterSpacing="-0.5px"
+                  >
+                    Here's Your Project!
                   </Typography>
                 </motion.div>
               ) : (

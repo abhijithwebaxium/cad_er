@@ -32,8 +32,9 @@ import AlertDialogSlide from "../../components/AlertDialogSlide";
 import { IoIosArrowForward, IoIosRemove } from "react-icons/io";
 import AdvancedAutoComplete from "../../components/AdvancedAutoComplete";
 import SmallHeader from "../../components/SmallHeader";
-import { FaCalendarAlt } from "react-icons/fa";
+import { CgGoogleTasks } from "react-icons/cg";
 import { IoAdd } from "react-icons/io5";
+import { FaLocationArrow } from "react-icons/fa";
 
 const alertData = {
   title: "Generate Proposal",
@@ -485,8 +486,8 @@ const RoadSurveyForm = () => {
     quantity:
       type && entryType === "autoGenerate"
         ? Yup.number()
-          .typeError("Quantity is required")
-          .required("Quantity is required")
+            .typeError("Quantity is required")
+            .required("Quantity is required")
         : Yup.string().nullable(),
 
     width:
@@ -507,8 +508,8 @@ const RoadSurveyForm = () => {
     proposedLevel:
       type && entryType === "manualEntry"
         ? Yup.number()
-          .typeError("Proposed Level is required")
-          .required("Proposed Level is required")
+            .typeError("Proposed Level is required")
+            .required("Proposed Level is required")
         : Yup.string().nullable(),
 
     instrumentNo: !id
@@ -518,8 +519,8 @@ const RoadSurveyForm = () => {
     backSight:
       !id || (id && !type)
         ? Yup.number()
-          .typeError("Backsight is required")
-          .required("Backsight is required")
+            .typeError("Backsight is required")
+            .required("Backsight is required")
         : Yup.string().nullable(),
 
     remark: !id
@@ -529,19 +530,19 @@ const RoadSurveyForm = () => {
     reducedLevel:
       !id || (id && !type)
         ? Yup.number()
-          .typeError("Reduced level is required")
-          .required("Reduced level is required")
+            .typeError("Reduced level is required")
+            .required("Reduced level is required")
         : Yup.string().nullable(),
     chainageMultiple: !id
       ? Yup.number()
-        .typeError("Chainage multiple must be a number")
-        .required("Chainage multiple is required")
-        .moreThan(0, "Chainage multiple must be greater than 0")
+          .typeError("Chainage multiple must be a number")
+          .required("Chainage multiple is required")
+          .moreThan(0, "Chainage multiple must be greater than 0")
       : Yup.string().nullable(),
     separator: !id
       ? Yup.string()
-        .required("Separator is required")
-        .matches(/^[/+,]$/, "Only '/', '+', ',' are allowed")
+          .required("Separator is required")
+          .matches(/^[/+,]$/, "Only '/', '+', ',' are allowed")
       : Yup.string().nullable(),
 
     lSection: Yup.string().nullable(),
@@ -560,15 +561,15 @@ const RoadSurveyForm = () => {
     cSection:
       type && crossSection === "slop"
         ? Yup.number()
-          .typeError("Cross section slop is required")
-          .required("Cross section slop is required")
+            .typeError("Cross section slop is required")
+            .required("Cross section slop is required")
         : Yup.string().nullable(),
 
     csSlop:
       type && crossSection === "slop"
         ? Yup.number()
-          .typeError("Cross section slop is required")
-          .required("Cross section slop is required")
+            .typeError("Cross section slop is required")
+            .required("Cross section slop is required")
         : Yup.string().nullable(),
     csCamper:
       type && crossSection === "camper"
@@ -638,9 +639,9 @@ const RoadSurveyForm = () => {
         ? entryType === "autoGenerate" && type === false
           ? await createSurveyPurpose(id, formValues)
           : await generateSurveyPurpose(id, {
-            ...formValues,
-            interpolation: rows,
-          })
+              ...formValues,
+              interpolation: rows,
+            })
         : await createSurvey(formValues);
 
       if (data.success) {
@@ -742,13 +743,13 @@ const RoadSurveyForm = () => {
                 hidden: false,
                 options: type
                   ? [
-                    completedPurposes.length
-                      ? completedPurposes?.at(-1)
-                      : "Initial Level",
-                  ].map((p) => ({ label: p, value: p }))
+                      completedPurposes.length
+                        ? completedPurposes?.at(-1)
+                        : "Initial Level",
+                    ].map((p) => ({ label: p, value: p }))
                   : purposeLevels
-                    ?.filter((p) => !completedLevels.includes(p))
-                    .map((p) => ({ label: p, value: p })),
+                      ?.filter((p) => !completedLevels.includes(p))
+                      .map((p) => ({ label: p, value: p })),
                 size: type ? 6 : null,
               };
             }
@@ -1100,9 +1101,7 @@ const RoadSurveyForm = () => {
                   fontSize: { xs: "1.5rem", md: "2rem" },
                 }}
               >
-                {
-                  id ? 'Continue Your Survey' : 'Create New Project'
-                }
+                {id ? "Continue Your Survey" : "Create New Project"}
               </Typography>
               <Typography
                 variant="body2"
@@ -1154,20 +1153,20 @@ const RoadSurveyForm = () => {
                       {((type && input.name === "purpose") ||
                         input.name === "lSection" ||
                         input.name === "cSection") && (
-                          <Typography
-                            variant="body2"
-                            fontSize={"16px"}
-                            fontWeight={600}
-                            color="black"
-                          >
-                            {input.name === "purpose"
-                              ? "Proposal Between"
-                              : input.name === "lSection"
-                                ? "Longitudinal section slop"
-                                : "Cross section slop"}
-                            :
-                          </Typography>
-                        )}
+                        <Typography
+                          variant="body2"
+                          fontSize={"16px"}
+                          fontWeight={600}
+                          color="black"
+                        >
+                          {input.name === "purpose"
+                            ? "Proposal Between"
+                            : input.name === "lSection"
+                              ? "Longitudinal section slop"
+                              : "Cross section slop"}
+                          :
+                        </Typography>
+                      )}
 
                       {mode === "select" ? (
                         <BasicSelect
@@ -1255,14 +1254,14 @@ const RoadSurveyForm = () => {
                       alignItems="center"
                       justifyContent="center"
                     >
+                      <CgGoogleTasks fontSize="20px" />
                       <Typography
                         fontSize="1.05rem"
                         fontWeight={800}
                         letterSpacing="0.05em"
                       >
-                        SCHEDULE
+                        QUEUE
                       </Typography>
-                      <FaCalendarAlt fontSize="20px" />
                     </Stack>
                   }
                   sx={{
@@ -1300,14 +1299,15 @@ const RoadSurveyForm = () => {
                     alignItems="center"
                     justifyContent="center"
                   >
+                    <FaLocationArrow fontSize="22px" />
+
                     <Typography
                       fontSize="1.05rem"
                       fontWeight={800}
                       letterSpacing="0.05em"
                     >
-                      CONTINUE
+                      NEXT
                     </Typography>
-                    <IoIosArrowForward fontSize="22px" />
                   </Stack>
                 }
                 sx={{

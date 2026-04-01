@@ -121,7 +121,7 @@ const AppHeader = ({ sidebar = true }) => {
             <Stack direction="row" spacing={2} alignItems="center">
               <motion.div whileHover={{ scale: 1.05 }}>
                 <Avatar
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || "Professional"}`}
+                  src={"/assets/blank-profile-picture.webp"}
                   sx={{
                     width: { xs: 40, md: 48 },
                     height: { xs: 40, md: 48 },
