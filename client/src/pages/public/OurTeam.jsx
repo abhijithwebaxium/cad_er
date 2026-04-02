@@ -49,7 +49,7 @@ const teamMembers = [
   {
     name: "Anees Majeed",
     role: "Founder & Chief Executive Officer",
-    bio: "A visionary leader with a decade of expertise in mapping and mining, driving CADer’s innovation and strategic growth.",
+    bio: "A visionary leader with a decade of expertise in mapping and mining, driving CADER’s innovation and strategic growth.",
   },
   {
     name: "Muhjir Ibrahim Shajahan",
@@ -59,7 +59,7 @@ const teamMembers = [
   {
     name: "Jaseem CM",
     role: "Research & Development, Civil Engineer",
-    bio: "Leads technical innovation by applying civil engineering precision to CADer’s cutting-edge methodologies.",
+    bio: "Leads technical innovation by applying civil engineering precision to CADER's cutting-edge methodologies.",
   },
   {
     name: "Asif Majeed",
@@ -74,7 +74,7 @@ const teamMembers = [
   {
     name: "Kishore K. Ajayan",
     role: "Head of Marketing",
-    bio: "Drives brand strategy and institutional outreach to expand CADer’s market presence and industry credibility.",
+    bio: "Drives brand strategy and institutional outreach to expand CADER’s market presence and industry credibility.",
   },
 ];
 

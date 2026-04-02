@@ -233,7 +233,7 @@ const Placements = () => {
                 variant="h6"
                 sx={{ color: "#475569", maxWidth: 600, fontWeight: 400 }}
               >
-                Connecting CADer certified professionals with leading
+                Connecting CADER certified professionals with leading
                 construction and engineering firms globally.
               </Typography>
             </Stack>
@@ -491,7 +491,7 @@ const Placements = () => {
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                               fullWidth
-                              label="CADer Student ID / Email"
+                              label="CADER Student ID / Email"
                               required
                               variant="outlined"
                             />

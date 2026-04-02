@@ -129,7 +129,7 @@ const timelineEvents = [
   {
     year: "2024",
     title: "Global Scaling",
-    detail: "Reaching 15,000+ users and defining the future of CADer.",
+    detail: "Reaching 15,000+ users and defining the future of CADER.",
   },
 ];
 

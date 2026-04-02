@@ -217,7 +217,7 @@ const Careers = () => {
                 variant="h6"
                 sx={{ color: "#64748b", maxWidth: 600, fontWeight: 400 }}
               >
-                Join CADer and help us revolutionize how site engineers and
+                Join CADER and help us revolutionize how site engineers and
                 surveyors work across the globe.
               </Typography>
             </Stack>

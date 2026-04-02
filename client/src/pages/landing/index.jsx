@@ -787,7 +787,7 @@ const Landing = () => {
                         }}
                       >
                         Yeah, you heard it right. Automate construction surveys
-                        with CADer, stop letting outdated methods and slow
+                        with CADER, stop letting outdated methods and slow
                         processes hold your team back. Transform your workflow
                         with a true panacea for road, canal, sewer & water
                         network survey projects across any terrain.
@@ -1046,7 +1046,7 @@ const Landing = () => {
                         lineHeight: 1.7,
                       }}
                     >
-                      With CADer, Our advanced AI system generates proposed
+                      With CADER, Our advanced AI system generates proposed
                       level alongside your field data instantly generate
                       comprehensive Area and Volume reports, calculating
                       vertical differences in seconds. By using our system, your
@@ -1124,7 +1124,7 @@ const Landing = () => {
                     lineHeight: 1.6,
                   }}
                 >
-                  Choosing CADer for your projects has many advantages.
+                  Choosing CADER for your projects has many advantages.
                   <br /> Let’s expand!
                 </Typography>
               </Stack>
@@ -1260,7 +1260,7 @@ const Landing = () => {
                             color: "#000",
                           }}
                         >
-                          CADer{" "}
+                          CADER{" "}
                           <Box component="span" sx={{ color: "#6366f1" }}>
                             Training Program
                           </Box>

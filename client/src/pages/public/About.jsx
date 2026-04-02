@@ -424,7 +424,7 @@ const About = () => {
                     fontSize: "1.1rem",
                   }}
                 >
-                  We are pleased to offer a specialized CADer training program
+                  We are pleased to offer a specialized CADER training program
                   for students at your esteemed institution, designed to prepare
                   them for today's competitive job market.
                 </Typography>

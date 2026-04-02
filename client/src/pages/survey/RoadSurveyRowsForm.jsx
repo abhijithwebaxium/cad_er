@@ -54,7 +54,7 @@ import { GiCrossroad } from "react-icons/gi";
 import { PiRoadHorizonFill } from "react-icons/pi";
 import { MdAddRoad } from "react-icons/md";
 import { FaLocationArrow } from "react-icons/fa";
-import { GrSafariOption } from "react-icons/gr"; // options icon
+import { GrSafariOption } from "react-icons/gr";
 const colors = {
   Initial: "green",
   Proposed: "blue",
@@ -1453,8 +1453,8 @@ const RoadSurveyRowsForm = () => {
             boxShadow: "0 20px 40px -15px rgba(0,0,0,0.05)",
             border: "1px solid rgba(226, 232, 240, 0.8)",
             position: "relative",
-            overflow: "hidden",
             mt: 2,
+            // overflow: "hidden" removed to allow SpeedDial overflow
           }}
         >
           {/* Subtle Decorative Gradient Header */}
@@ -1466,6 +1466,8 @@ const RoadSurveyRowsForm = () => {
               right: 0,
               height: "6px",
               background: "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+              borderTopLeftRadius: "28px",
+              borderTopRightRadius: "28px",
             }}
           />
 
@@ -1682,7 +1684,7 @@ const RoadSurveyRowsForm = () => {
 
             {page === 0 && (
               <Stack direction={"row"} justifyContent={"end"} width={"100%"}>
-                <Box width={"40px"} zIndex={2}>
+                <Box width={"40px"} zIndex={1050} position={"relative"}>
                   <BasicSpeedDial
                     actions={speedDialActions?.filter((a) => a.show)}
                     direction={"down"}
@@ -1906,348 +1908,236 @@ const RoadSurveyRowsForm = () => {
             </Box>
 
             {/* Select Report Type Island */}
-            <Box
-              component={motion.div}
-              initial={{ y: 100, opacity: 0, x: "-50%" }}
-              animate={{ y: 0, opacity: 1, x: "-50%" }}
-              transition={{
-                type: "spring",
-                damping: 20,
-                stiffness: 100,
-                delay: 0.2,
-              }}
-              sx={{
-                position: "fixed",
-                bottom: { xs: 16, md: 32 },
-                left: "50%",
-                zIndex: 1000,
-                width: "max-content",
-                maxWidth: "90vw",
-              }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  p: "8px",
-                  borderRadius: "20px",
-                  display: "inline-flex",
-                  gap: { xs: 1, md: 2 },
-                  background:
-                    "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
-                  // bgcolor: "rgba(255, 255, 255, 0.6)",
-                  backdropFilter: "blur(0px)",
-                  WebkitBackdropFilter: "blur(0px)",
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
-                  maxWidth: "100%",
-                  overflowX: "auto",
-                  "&::-webkit-scrollbar": { display: "none" },
-                }}
-              >
-                {[
-                  {
-                    label: "CS",
-                    value: "cross",
-                  },
-                  {
-                    label: "LS",
-                    value: "longitudinal",
-                  },
-                  {
-                    label: "Area",
-                    value: "area",
-                  },
-                  {
-                    label: "Volume",
-                    value: "volume",
-                  },
-                  {
-                    label: "Export",
-                    value: "batch-plotting",
-                  },
-                ].map((type, i) => (
-                  <Box
-                    key={i}
+            {purpose &&
+              purpose?.status === "Active" &&
+              purpose?.phase === "Actual" &&
+              page === 0 && (
+                <Box
+                  component={motion.div}
+                  initial={{ y: 100, opacity: 0, x: "-50%" }}
+                  animate={{ y: 0, opacity: 1, x: "-50%" }}
+                  transition={{
+                    type: "spring",
+                    damping: 20,
+                    stiffness: 100,
+                    delay: 0.2,
+                  }}
+                  sx={{
+                    position: "fixed",
+                    bottom: { xs: 24, md: 32 },
+                    left: "50%",
+                    zIndex: 1000,
+                    width: "max-content",
+                    maxWidth: "90vw",
+                  }}
+                >
+                  <Paper
+                    elevation={0}
                     sx={{
-                      position: "relative",
-                      display: "flex",
+                      p: "8px",
+                      borderRadius: "24px",
+                      display: "inline-flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      px: { xs: 2, md: 3 },
-                      py: { xs: 1, md: 1.5 },
-                      borderRadius: "16px",
-                      cursor: "pointer",
-                      minWidth: "70px",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                      // bgcolor: "transparent",
-                      bgcolor: "white",
-                      color: "#1e293b",
-                      transition: "color 0.2s",
-                      "&:hover": {
-                        bgcolor: "rgba(255, 255, 255, 0.5)",
-                      },
+                      gap: { xs: 1, md: 1.5 },
+                      background: "rgba(99, 102, 241, 0.15)", // Transparent indigo
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                      border: "1px solid rgba(99, 102, 241, 0.3)",
+                      boxShadow: "0 20px 40px -10px rgba(99, 102, 241, 0.2)",
+                      height: { xs: "50px", md: "60px" },
+                      maxWidth: "stretch",
+                      overflowX: "auto",
+                      "&::-webkit-scrollbar": { display: "none" },
                     }}
                   >
-                    {/* {reportType === type.value && (
+                    {[
+                      {
+                        label: "CH",
+                        value: "Chainage",
+                        icon: <MdAddRoad fontSize="20px" />,
+                        onClick: () => handleChangeRowType("Chainage"),
+                      },
+                      {
+                        label: "CP",
+                        value: "CP",
+                        icon: <GiCrossroad fontSize="20px" />,
+                        onClick: () => handleChangeRowType("CP"),
+                      },
+                      {
+                        label: "TBM",
+                        value: "TBM",
+                        icon: <PiRoadHorizonFill fontSize="20px" />,
+                        onClick: () => handleChangeRowType("TBM"),
+                      },
+                      {
+                        label: "NEXT",
+                        value: "",
+                        icon: <FaLocationArrow fontSize="20px" />,
+                        onClick: () => handleSubmit(),
+                      },
+                      // {
+                      //   label: "OPTIONS",
+                      //   value: "",
+                      //   icon: <GrSafariOption fontSize="20px" />,
+                      //   onClick: () => console.log("hi"),
+                      // },
+                    ].map((type, i) => (
                       <Box
-                        component={motion.div}
-                        layoutId="activeReportType"
-                        initial={false}
-                        transition={{
-                          type: "spring",
-                          stiffness: 350,
-                          damping: 25,
-                        }}
+                        key={i}
                         sx={{
-                          position: "absolute",
-                          inset: 0,
-                          bgcolor: "#6366f1",
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          px: { xs: 4, md: 6 },
+                          height: "100%",
                           borderRadius: "16px",
-                          zIndex: 0,
+                          cursor: "pointer",
+                          minWidth: "70px",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                          bgcolor: "white",
+                          color: rowType === type.value ? "white" : "#6366f1",
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            bgcolor:
+                              rowType === type.value ? "white" : "#f8fafc",
+                          },
                         }}
-                      />
-                    )} */}
+                        onClick={type.onClick}
+                      >
+                        {rowType === type.value && (
+                          <Box
+                            component={motion.div}
+                            layoutId="activeReportType"
+                            initial={false}
+                            transition={{
+                              type: "spring",
+                              stiffness: 350,
+                              damping: 25,
+                            }}
+                            sx={{
+                              position: "absolute",
+                              inset: 0,
+                              background: "#6366f1", // similar tone color for selected
+                              borderRadius: "16px",
+                              zIndex: 0,
+                              boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
+                            }}
+                          />
+                        )}
 
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography
-                        variant="body2"
-                        fontWeight={800}
-                        sx={{
-                          lineHeight: 1.1,
-                          position: "relative",
-                          zIndex: 1,
-                          color: "#6366f1",
-                        }}
-                      >
-                        {/* {type.icon} */}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={800}
-                        sx={{
-                          lineHeight: 1.1,
-                          position: "relative",
-                          zIndex: 1,
-                          color: "#6366f1",
-                        }}
-                      >
-                        {type.label}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Paper>
-            </Box>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Typography
+                            variant="body2"
+                            fontWeight={900}
+                            sx={{
+                              lineHeight: 1,
+                              position: "relative",
+                              zIndex: 1,
+                              color: "inherit",
+                              display: "flex",
+                              alignItems: "center",
+                              transition: "color 0.3s ease",
+                            }}
+                          >
+                            {type.icon}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={900}
+                            letterSpacing="0.05em"
+                            sx={{
+                              lineHeight: 1,
+                              position: "relative",
+                              zIndex: 1,
+                              color: "inherit",
+                              fontSize: { xs: "0.9rem", md: "1rem" },
+                              transition: "color 0.3s ease",
+                            }}
+                          >
+                            {type.label}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Paper>
+                </Box>
+              )}
 
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              justifyContent={"end"}
-              width={"100%"}
-              gap={2}
-              pt={3}
-            >
-              {purpose &&
-                purpose?.status === "Active" &&
-                purpose?.phase === "Actual" &&
-                page === 0 && (
-                  <>
-                    {rowType !== "Chainage" && (
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        style={{ flex: 1 }}
-                      >
-                        <BasicButtons
-                          value={
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <MdAddRoad fontSize={"22px"} />
-                              <Typography
-                                fontSize={"1.05rem"}
-                                fontWeight={800}
-                                letterSpacing="0.05em"
-                              >
-                                CH
-                              </Typography>
-                            </Stack>
-                          }
-                          onClick={() => handleChangeRowType("Chainage")}
-                          sx={{
-                            background:
-                              "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                            color: "white",
-                            height: "60px",
-                            borderRadius: "16px",
-                            border: "none",
-                            boxShadow:
-                              "0 10px 25px -5px rgba(59, 130, 246, 0.4)",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                            },
-                          }}
-                          fullWidth={true}
-                        />
-                      </motion.div>
-                    )}
-                    {rowType !== "CP" && (
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        style={{ flex: 1 }}
-                      >
-                        <BasicButtons
-                          value={
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <GiCrossroad fontSize={"22px"} />
-                              <Typography
-                                fontSize={"1.05rem"}
-                                fontWeight={800}
-                                letterSpacing="0.05em"
-                              >
-                                CP
-                              </Typography>
-                            </Stack>
-                          }
-                          onClick={() => handleChangeRowType("CP")}
-                          sx={{
-                            background:
-                              "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                            color: "white",
-                            height: "60px",
-                            borderRadius: "16px",
-                            border: "none",
-                            boxShadow:
-                              "0 10px 25px -5px rgba(59, 130, 246, 0.4)",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                            },
-                          }}
-                          fullWidth={true}
-                        />
-                      </motion.div>
-                    )}
-                    {rowType !== "TBM" && (
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        style={{ flex: 1 }}
-                      >
-                        <BasicButtons
-                          value={
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <PiRoadHorizonFill fontSize={"22px"} />
-                              <Typography
-                                fontSize={"1.05rem"}
-                                fontWeight={800}
-                                letterSpacing="0.05em"
-                              >
-                                TBM
-                              </Typography>
-                            </Stack>
-                          }
-                          onClick={() => handleChangeRowType("TBM")}
-                          sx={{
-                            background:
-                              "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                            color: "white",
-                            height: "60px",
-                            borderRadius: "16px",
-                            border: "none",
-                            boxShadow:
-                              "0 10px 25px -5px rgba(59, 130, 246, 0.4)",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                            },
-                          }}
-                          fullWidth={true}
-                        />
-                      </motion.div>
-                    )}
-                  </>
-                )}
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ flex: 1 }}
+            {page === 1 && (
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                justifyContent={"end"}
+                width={"100%"}
+                gap={2}
+                pt={3}
               >
-                <BasicButtons
-                  value={
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      {(purpose?.phase === "Proposal" &&
-                        isLastProposalReading &&
-                        page === 1) ||
-                      (rowType !== "Chainage" && isLastProposalReading) ? (
-                        <>
-                          <Typography
-                            fontSize={"1.05rem"}
-                            fontWeight={800}
-                            letterSpacing="0.05em"
-                            textTransform="uppercase"
-                          >
-                            Finish {purpose?.type}
-                          </Typography>
-                          <MdDone fontSize={"24px"} />
-                        </>
-                      ) : (
-                        <>
-                          <FaLocationArrow fontSize={"24px"} />
-                          <Typography
-                            fontSize={"1.05rem"}
-                            fontWeight={800}
-                            letterSpacing="0.05em"
-                          >
-                            NEXT
-                          </Typography>
-                        </>
-                      )}
-                    </Stack>
-                  }
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
-                    color: "white",
-                    height: "60px",
-                    borderRadius: "16px",
-                    border: "none",
-                    boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  style={{ flex: 1 }}
+                >
+                  <BasicButtons
+                    value={
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+                        {(purpose?.phase === "Proposal" &&
+                          isLastProposalReading &&
+                          page === 1) ||
+                        (rowType !== "Chainage" && isLastProposalReading) ? (
+                          <>
+                            <Typography
+                              fontSize={"1.05rem"}
+                              fontWeight={800}
+                              letterSpacing="0.05em"
+                              textTransform="uppercase"
+                            >
+                              Finish {purpose?.type}
+                            </Typography>
+                            <MdDone fontSize={"24px"} />
+                          </>
+                        ) : (
+                          <>
+                            <FaLocationArrow fontSize={"24px"} />
+                            <Typography
+                              fontSize={"1.05rem"}
+                              fontWeight={800}
+                              letterSpacing="0.05em"
+                            >
+                              NEXT
+                            </Typography>
+                          </>
+                        )}
+                      </Stack>
+                    }
+                    sx={{
                       background:
-                        "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
-                    },
-                  }}
-                  fullWidth={true}
-                  onClick={handleSubmit}
-                  loading={btnLoading}
-                />
-              </motion.div>
-            </Stack>
+                        "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                      color: "white",
+                      height: "60px",
+                      borderRadius: "16px",
+                      border: "none",
+                      boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        background:
+                          "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
+                      },
+                    }}
+                    fullWidth={true}
+                    onClick={handleSubmit}
+                    loading={btnLoading}
+                  />
+                </motion.div>
+              </Stack>
+            )}
           </Stack>
 
           <Activity

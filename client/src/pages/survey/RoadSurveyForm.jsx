@@ -1234,13 +1234,129 @@ const RoadSurveyForm = () => {
             </Grid>
           </Stack>
 
-          <Stack
-            width={"100%"}
-            gap={2}
-            direction={{ xs: "column", sm: "row" }}
-            pt={3}
-          >
-            {!id && (
+          {!id && (
+            <Box
+              component={motion.div}
+              initial={{ y: 100, opacity: 0, x: "-50%" }}
+              animate={{ y: 0, opacity: 1, x: "-50%" }}
+              transition={{
+                type: "spring",
+                damping: 20,
+                stiffness: 100,
+                delay: 0.2,
+              }}
+              sx={{
+                position: "fixed",
+                bottom: { xs: 24, md: 32 },
+                left: "50%",
+                zIndex: 1000,
+                width: "max-content",
+                maxWidth: "90vw",
+              }}
+            >
+              <Paper
+                elevation={0}
+                sx={{
+                  p: "8px",
+                  borderRadius: "24px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: { xs: 1, md: 1.5 },
+                  background: "rgba(99, 102, 241, 0.15)", // Transparent indigo
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(99, 102, 241, 0.3)",
+                  boxShadow: "0 20px 40px -10px rgba(99, 102, 241, 0.2)",
+                  height: { xs: "50px", md: "60px" },
+                  maxWidth: "stretch",
+                  overflowX: "auto",
+                  "&::-webkit-scrollbar": { display: "none" },
+                }}
+              >
+                {[
+                  {
+                    label: "QUEUE",
+                    value: "QUEUE",
+                    icon: <CgGoogleTasks fontSize="20px" />,
+                    onClick: () => setScheduleProjectOpen(true),
+                  },
+                  {
+                    label: "NEXT",
+                    value: "",
+                    icon: <FaLocationArrow fontSize="20px" />,
+                    onClick: () => handleSubmit(),
+                  },
+                ].map((type, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      px: { xs: 4, md: 6 },
+                      height: "100%",
+                      borderRadius: "16px",
+                      cursor: "pointer",
+                      minWidth: "70px",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      bgcolor: "white",
+                      color: "#6366f1",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        bgcolor: "#6366f1",
+                        color: "white",
+                      },
+                    }}
+                    onClick={type.onClick}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight={900}
+                        sx={{
+                          lineHeight: 1,
+                          position: "relative",
+                          zIndex: 1,
+                          color: "inherit",
+                          display: "flex",
+                          alignItems: "center",
+                          transition: "color 0.3s ease",
+                        }}
+                      >
+                        {type.icon}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={900}
+                        letterSpacing="0.05em"
+                        sx={{
+                          lineHeight: 1,
+                          position: "relative",
+                          zIndex: 1,
+                          color: "inherit",
+                          fontSize: { xs: "0.9rem", md: "1rem" },
+                          transition: "color 0.3s ease",
+                        }}
+                      >
+                        {type.label}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+              </Paper>
+            </Box>
+          )}
+
+          {id && (
+            <Stack
+              width={"100%"}
+              gap={2}
+              direction={{ xs: "column", sm: "row" }}
+              pt={3}
+            >
+              {/* {!id && (
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -1284,53 +1400,54 @@ const RoadSurveyForm = () => {
                   loading={btnLoading}
                 />
               </motion.div>
-            )}
+            )} */}
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ width: "100%" }}
-            >
-              <BasicButtons
-                value={
-                  <Stack
-                    direction="row"
-                    spacing={1.5}
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <FaLocationArrow fontSize="22px" />
-
-                    <Typography
-                      fontSize="1.05rem"
-                      fontWeight={800}
-                      letterSpacing="0.05em"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ width: "100%" }}
+              >
+                <BasicButtons
+                  value={
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      alignItems="center"
+                      justifyContent="center"
                     >
-                      NEXT
-                    </Typography>
-                  </Stack>
-                }
-                sx={{
-                  background:
-                    "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
-                  color: "white",
-                  height: "60px",
-                  borderRadius: "16px",
-                  border: "none",
-                  boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
+                      <FaLocationArrow fontSize="22px" />
+
+                      <Typography
+                        fontSize="1.05rem"
+                        fontWeight={800}
+                        letterSpacing="0.05em"
+                      >
+                        NEXT
+                      </Typography>
+                    </Stack>
+                  }
+                  sx={{
                     background:
-                      "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
-                    boxShadow: "0 15px 30px -5px rgba(99, 102, 241, 0.5)",
-                  },
-                }}
-                fullWidth={true}
-                onClick={preSubmitCheck}
-                loading={btnLoading}
-              />
-            </motion.div>
-          </Stack>
+                      "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+                    color: "white",
+                    height: "60px",
+                    borderRadius: "16px",
+                    border: "none",
+                    boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      background:
+                        "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
+                      boxShadow: "0 15px 30px -5px rgba(99, 102, 241, 0.5)",
+                    },
+                  }}
+                  fullWidth={true}
+                  onClick={preSubmitCheck}
+                  loading={btnLoading}
+                />
+              </motion.div>
+            </Stack>
+          )}
         </Paper>
       </Container>
     </Box>

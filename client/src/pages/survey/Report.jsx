@@ -314,7 +314,7 @@ const Report = () => {
         transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.2 }}
         sx={{
           position: "fixed",
-          bottom: { xs: 16, md: 32 },
+          bottom: { xs: 24, md: 32 },
           left: "50%",
           zIndex: 1000,
           width: "max-content",
@@ -325,15 +325,17 @@ const Report = () => {
           elevation={0}
           sx={{
             p: "8px",
-            borderRadius: "20px",
+            borderRadius: "24px",
             display: "inline-flex",
-            gap: { xs: 1, md: 2 },
-            background: "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
-            backdropFilter: "blur(0px)",
-            WebkitBackdropFilter: "blur(0px)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08)",
-            maxWidth: "100%",
+            alignItems: "center",
+            gap: { xs: 1, md: 1.5 },
+            background: "rgba(99, 102, 241, 0.15)", // Transparent indigo
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(99, 102, 241, 0.3)",
+            boxShadow: "0 20px 40px -10px rgba(99, 102, 241, 0.2)",
+            height: { xs: "50px", md: "60px" },
+            maxWidth: "stretch",
             overflowX: "auto",
             "&::-webkit-scrollbar": { display: "none" },
           }}
@@ -342,27 +344,27 @@ const Report = () => {
             {
               label: "CS",
               value: "cross",
-              icon: <VscGraphLine />,
+              icon: <VscGraphLine fontSize="20px" />,
             },
             {
               label: "LS",
               value: "longitudinal",
-              icon: <SlGraph />,
+              icon: <SlGraph fontSize="20px" />,
             },
             {
               label: "Area",
               value: "area",
-              icon: <BiSolidReport />,
+              icon: <BiSolidReport fontSize="20px" />,
             },
             {
               label: "Volume",
               value: "volume",
-              icon: <HiOutlineDocumentReport />,
+              icon: <HiOutlineDocumentReport fontSize="20px" />,
             },
             {
               label: "Export",
               value: "batch-plotting",
-              icon: <FaFileExport />,
+              icon: <FaFileExport fontSize="20px" />,
             },
           ].map((type, i) => (
             <Box
@@ -372,22 +374,18 @@ const Report = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                px: { xs: 2, md: 3 },
-                py: { xs: 1, md: 1.5 },
+                px: { xs: 4, md: 6 },
+                height: "100%",
                 borderRadius: "16px",
                 cursor: "pointer",
                 minWidth: "70px",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
-                // bgcolor: "transparent",
                 bgcolor: "white",
-                color: reportType === type.value ? "white" : "#1e293b",
-                transition: "color 0.2s",
+                color: reportType === type.value ? "white" : "#6366f1",
+                transition: "all 0.3s ease",
                 "&:hover": {
-                  bgcolor:
-                    reportType === type.value
-                      ? "transparent"
-                      : "rgba(255, 255, 255, 0.5)",
+                  bgcolor: reportType === type.value ? "white" : "#f8fafc",
                 },
               }}
               onClick={() => setReportType(type.value)}
@@ -401,9 +399,10 @@ const Report = () => {
                   sx={{
                     position: "absolute",
                     inset: 0,
-                    bgcolor: "#6366f1",
+                    background: "#6366f1", // similar tone color for selected
                     borderRadius: "16px",
                     zIndex: 0,
+                    boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
                   }}
                 />
               )}
@@ -411,24 +410,30 @@ const Report = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Typography
                   variant="body2"
-                  fontWeight={800}
+                  fontWeight={900}
                   sx={{
-                    lineHeight: 1.1,
+                    lineHeight: 1,
                     position: "relative",
                     zIndex: 1,
-                    color: reportType === type.value ? "white" : "#6366f1",
+                    color: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    transition: "color 0.3s ease",
                   }}
                 >
                   {type.icon}
                 </Typography>
                 <Typography
                   variant="body2"
-                  fontWeight={800}
+                  fontWeight={900}
+                  letterSpacing="0.05em"
                   sx={{
-                    lineHeight: 1.1,
+                    lineHeight: 1,
                     position: "relative",
                     zIndex: 1,
-                    color: reportType === type.value ? "white" : "#6366f1",
+                    color: "inherit",
+                    fontSize: { xs: "0.9rem", md: "1rem" },
+                    transition: "color 0.3s ease",
                   }}
                 >
                   {type.label}

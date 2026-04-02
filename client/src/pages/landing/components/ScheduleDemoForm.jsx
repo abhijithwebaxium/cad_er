@@ -652,7 +652,7 @@ const ScheduleDemoForm = ({ open, onClose }) => {
                       <TextField
                         select
                         fullWidth
-                        label="CADer Relevance Rating"
+                        label="CADER Relevance Rating"
                         name="relevanceRating"
                         value={formData.relevanceRating}
                         onChange={handleInputChange}

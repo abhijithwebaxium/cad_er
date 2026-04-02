@@ -526,6 +526,7 @@ export default function ProfessionalDashboard() {
                 <Stack
                   alignItems={{ xs: "end", md: "end" }}
                   justifyContent={"space-between"}
+                  height={"100%"}
                 >
                   <motion.div variants={fUp}>
                     <Box

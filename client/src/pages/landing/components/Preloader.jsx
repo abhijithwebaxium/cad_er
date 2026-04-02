@@ -68,7 +68,7 @@ const Preloader = ({ onLoadingComplete }) => {
               display: "inline-block",
             }}
           >
-            er
+            ER
             {/* Shimmer Effect */}
             <Box
               component={motion.div}

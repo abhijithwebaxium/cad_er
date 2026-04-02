@@ -98,7 +98,7 @@ const LandingFooter = () => {
             >
               CAD
               <Box component="span" sx={{ color: "#6366f1" }}>
-                er.
+                ER.
               </Box>
             </Typography>
             <Typography
@@ -106,7 +106,7 @@ const LandingFooter = () => {
               color="text.secondary"
               sx={{ maxWidth: 400, lineHeight: 1.7 }}
             >
-              CADer simplifies autolevel surveying, reducing on-site time by 40%
+              CADER simplifies autolevel surveying, reducing on-site time by 40%
               while ensuring accurate, error-free calculations for
               professionals.
             </Typography>
@@ -296,7 +296,7 @@ const LandingFooter = () => {
           spacing={2}
         >
           <Typography variant="caption" color="text.disabled">
-            © 2025 CADer. All rights reserved.
+            © 2025 CADER. All rights reserved.
           </Typography>
           <Stack direction="row" spacing={3}>
             <StyledLink to="#">Privacy Policy</StyledLink>
