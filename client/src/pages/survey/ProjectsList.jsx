@@ -6,6 +6,7 @@ import {
   styled,
   IconButton,
   TextField,
+  Paper,
 } from "@mui/material";
 import IOSegmentedTabs from "../../components/IOSegmentedTabs";
 import { useDispatch } from "react-redux";
@@ -28,6 +29,8 @@ import BasicButton from "../../components/BasicButton";
 import { MdDelete } from "react-icons/md";
 import SmallHeader from "../../components/SmallHeader";
 import BasicDivider from "../../components/BasicDevider";
+import { CgGoogleTasks } from "react-icons/cg";
+import { GoClock } from "react-icons/go";
 
 const alertDetails = {
   title: "Field Book",
@@ -156,7 +159,7 @@ export default function ProjectsList() {
 
   const [deleteId, setDeleteId] = useState("");
 
-  const handleChange = (e, newValue) => setTab(newValue);
+  const handleChange = (newValue) => setTab(newValue);
 
   const filteredSurveys = list?.in_progress.filter((s) =>
     s.project.toLowerCase().includes(search.toLowerCase()),
@@ -393,7 +396,7 @@ export default function ProjectsList() {
   };
 
   const tabContent = {
-    todo: (
+    queue: (
       <motion.div {...fadeSlide}>
         {list?.todo?.length ? (
           <Stack spacing={2}>
@@ -811,7 +814,7 @@ export default function ProjectsList() {
         )}
       </motion.div>
     ),
-    finished: (
+    wrapped: (
       <motion.div {...fadeSlide}>
         {list?.finished?.length ? (
           <Stack spacing={2}>
@@ -1067,72 +1070,26 @@ export default function ProjectsList() {
           }}
         >
           {/* 🔍 Left Icon */}
-          <IconButton
+          {/* <IconButton
             onClick={() => setSearchMode(true)}
             sx={{ color: "white" }}
           >
             <MdOutlineSearch size={26} />
-          </IconButton>
+          </IconButton> */}
 
-          {/* 🔄 Title / Search Input with Animation */}
-          <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
-            <AnimatePresence mode="wait">
-              {!searchMode ? (
-                // 🏷️ Projects Title
-                <motion.div
-                  key="title"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <Typography
-                    fontWeight={900}
-                    fontSize="24px"
-                    letterSpacing="-0.5px"
-                  >
-                    Here's Your Project!
-                  </Typography>
-                </motion.div>
-              ) : (
-                // 🔍 Search Input
-                <motion.div
-                  key="searchInput"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.25 }}
-                  style={{ width: "100%" }}
-                >
-                  <TextField
-                    autoFocus
-                    size="small"
-                    placeholder="Search projects..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    sx={{
-                      width: "85%",
-                      background: "#F3F3F3",
-                      borderRadius: "8px",
-                      "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                    }}
-                    slotProps={{
-                      endAdornment: (
-                        <IconButton
-                          onClick={() => {
-                            setSearch("");
-                            setSearchMode(false);
-                          }}
-                        >
-                          ❌
-                        </IconButton>
-                      ),
-                    }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Box>
+          <div></div>
+
+          <motion.div
+            key="title"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.25 }}
+          >
+            <Typography fontWeight={900} fontSize="24px" letterSpacing="-0.5px">
+              Here's Your Library!
+            </Typography>
+          </motion.div>
 
           {/* ↕ Sort Icon */}
           <IconButton sx={{ color: "white" }}>
@@ -1141,7 +1098,7 @@ export default function ProjectsList() {
         </Box>
 
         {/* iOS Tabs display: 'flex', justifyContent: 'center', */}
-        <Box>
+        {/* <Box>
           <IOSegmentedTabs
             value={tab}
             onChange={handleChange}
@@ -1151,7 +1108,160 @@ export default function ProjectsList() {
               { label: "Finished", value: "finished" },
             ]}
           />
-        </Box>
+        </Box> */}
+      </Box>
+
+      <Box
+        component={motion.div}
+        initial={{ y: 100, opacity: 0, x: "-50%" }}
+        animate={{ y: 0, opacity: 1, x: "-50%" }}
+        transition={{
+          type: "spring",
+          damping: 20,
+          stiffness: 100,
+          delay: 0.2,
+        }}
+        sx={{
+          position: "fixed",
+          bottom: { xs: 24, md: 32 },
+          left: "50%",
+          zIndex: 1000,
+          width: "max-content",
+          maxWidth: "90vw",
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            p: "8px",
+            borderRadius: "24px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: { xs: 1, md: 1.5 },
+            background: "rgba(99, 102, 241, 0.15)", // Transparent indigo
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(99, 102, 241, 0.3)",
+            boxShadow: "0 20px 40px -10px rgba(99, 102, 241, 0.2)",
+            height: { xs: "50px", md: "60px" },
+            maxWidth: "stretch",
+            overflowX: "auto",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
+          {[
+            {
+              label: "QUEUE",
+              value: "queue",
+              icon: <CgGoogleTasks fontSize="20px" />,
+              onClick: () => handleChange("queue"),
+            },
+            {
+              label: "IN_PROGRESS",
+              value: "in_progress",
+              icon: <GoClock fontSize="20px" />,
+              onClick: () => handleChange("in_progress"),
+            },
+            {
+              label: "WRAPPED",
+              value: "wrapped",
+              icon: (
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              ),
+              onClick: () => handleChange("wrapped"),
+            },
+          ].map((type, i) => (
+            <Box
+              key={i}
+              sx={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                px: { xs: 4, md: 6 },
+                height: "100%",
+                borderRadius: "16px",
+                cursor: "pointer",
+                minWidth: "70px",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                bgcolor: "white",
+                color: tab === type.value ? "white" : "#6366f1",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  bgcolor: tab === type.value ? "white" : "#f8fafc",
+                },
+              }}
+              onClick={type.onClick}
+            >
+              {tab === type.value && (
+                <Box
+                  component={motion.div}
+                  layoutId="activeReportType"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 25,
+                  }}
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "#6366f1", // similar tone color for selected
+                    borderRadius: "16px",
+                    zIndex: 0,
+                    boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
+                  }}
+                />
+              )}
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography
+                  variant="body2"
+                  fontWeight={900}
+                  sx={{
+                    lineHeight: 1,
+                    position: "relative",
+                    zIndex: 1,
+                    color: "inherit",
+                    display: "flex",
+                    alignItems: "center",
+                    transition: "color 0.3s ease",
+                  }}
+                >
+                  {type.icon}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={900}
+                  letterSpacing="0.05em"
+                  sx={{
+                    lineHeight: 1,
+                    position: "relative",
+                    zIndex: 1,
+                    color: "inherit",
+                    fontSize: { xs: "0.9rem", md: "1rem" },
+                    transition: "color 0.3s ease",
+                  }}
+                >
+                  {type.label}
+                </Typography>
+              </Box>
+            </Box>
+          ))}
+        </Paper>
       </Box>
 
       {/* Animate tab content */}

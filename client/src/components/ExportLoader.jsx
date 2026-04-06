@@ -6,6 +6,7 @@ import {
   Box,
   LinearProgress,
   Paper,
+  CircularProgress,
 } from "@mui/material";
 import { keyframes } from "@emotion/react";
 
@@ -61,7 +62,7 @@ const DownloadIcon = ({ size = 14, color = "currentColor" }) => (
   </svg>
 );
 
-const ExportLoader = ({ open = true }) => {
+const ExportLoader = ({ open = true, loader = "export" }) => {
   return (
     <Backdrop
       open={open}
@@ -103,7 +104,11 @@ const ExportLoader = ({ open = true }) => {
               animation: `${pulse} 2s infinite ease-in-out`,
             }}
           >
-            <FileTextIcon size={32} color="white" />
+            {loader === "export" ? (
+              <FileTextIcon size={32} color="white" />
+            ) : (
+              <CircularProgress size={32} color="white" />
+            )}
             <Box
               sx={{
                 position: "absolute",
@@ -129,7 +134,7 @@ const ExportLoader = ({ open = true }) => {
                 letterSpacing: "-0.01em",
               }}
             >
-              Generating PDF
+              {loader === "export" ? "Generating PDF" : "Initializing System"}
             </Typography>
             <Typography
               variant="body2"
@@ -138,7 +143,9 @@ const ExportLoader = ({ open = true }) => {
                 textAlign: "center",
               }}
             >
-              Preparing your document for download...
+              {loader === "export"
+                ? "Preparing your document for download..."
+                : "Please wait a moment"}
             </Typography>
           </Stack>
 

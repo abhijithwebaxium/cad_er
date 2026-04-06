@@ -1843,6 +1843,7 @@ const editSurveyPurpose = async (req, res, next) => {
       },
     }));
 
+    
     if (ops.length) {
       await SurveyRow.bulkWrite(ops, { session });
     }

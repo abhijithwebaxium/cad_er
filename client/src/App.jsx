@@ -36,6 +36,8 @@ import Pricing from "./pages/public/Pricing";
 import PublicAppBarLayout from "./layout/PublicAppBarLayout";
 import ImpactStats from "./pages/public/ImpactStats";
 import PlottingAndQuantityReport from "./pages/survey/PlottingAndQuantityReport";
+import Settings from "./pages/settings";
+import Trash from "./pages/trash";
 
 function App() {
   return (
@@ -123,6 +125,9 @@ function App() {
                   <Route index element={<TicketsDashboard />} />
                   <Route path=":id/followup" element={<Followup />} />
                 </Route>
+                
+                <Route path="settings" element={<Settings />} />
+                <Route path="trash" element={<Trash />} />
               </Route>
 
               {/* Errors */}
