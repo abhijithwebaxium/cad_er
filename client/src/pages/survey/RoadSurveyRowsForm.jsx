@@ -1499,30 +1499,60 @@ const RoadSurveyRowsForm = () => {
                   <MdArrowBackIosNew size={22} />
                 </IconButton>
               )}
+              <Stack
+                direction={"row"}
+                justifyContent={"space-between"}
+                alignItems={"center"}
+                width={"100%"}
+              >
+                <Box>
+                  <Typography
+                    variant="h4"
+                    fontWeight={900}
+                    color="#1e293b"
+                    sx={{
+                      letterSpacing: "-0.02em",
+                      fontSize: { xs: "1.4rem", md: "1.8rem" },
+                    }}
+                    width={"max-content"}
+                  >
+                    {page === 1
+                      ? "Enter Intermediate Sight"
+                      : `Enter ${rowType} Details`}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={600}
+                    mt={0.5}
+                  >
+                    {purpose?.type || "Survey"} Data Entry
+                  </Typography>
+                </Box>
 
-              <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight={900}
-                  color="#1e293b"
-                  sx={{
-                    letterSpacing: "-0.02em",
-                    fontSize: { xs: "1.4rem", md: "1.8rem" },
-                  }}
-                >
-                  {page === 1
-                    ? "Enter Intermediate Sight"
-                    : `Enter ${rowType} Details`}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  fontWeight={600}
-                  mt={0.5}
-                >
-                  {purpose?.type || "Survey"} Data Entry
-                </Typography>
-              </Box>
+                {page === 0 && (
+                  <Stack
+                    direction={"row"}
+                    justifyContent={"end"}
+                    width={"100%"}
+                  >
+                    <Box width={"40px"} zIndex={1050} position={"relative"}>
+                      <BasicSpeedDial
+                        actions={speedDialActions?.filter((a) => a.show)}
+                        direction={"down"}
+                        sx={{
+                          top: "-8px",
+                          right: 0,
+                          "& button": {
+                            width: "40px",
+                            height: "40px",
+                          },
+                        }}
+                      />
+                    </Box>
+                  </Stack>
+                )}
+              </Stack>
             </Stack>
 
             <Stack width={"100%"}>
@@ -1681,25 +1711,6 @@ const RoadSurveyRowsForm = () => {
                 </Stack>
               )}
             </Stack>
-
-            {page === 0 && (
-              <Stack direction={"row"} justifyContent={"end"} width={"100%"}>
-                <Box width={"40px"} zIndex={1050} position={"relative"}>
-                  <BasicSpeedDial
-                    actions={speedDialActions?.filter((a) => a.show)}
-                    direction={"down"}
-                    sx={{
-                      top: "-8px",
-                      right: 0,
-                      "& button": {
-                        width: "40px",
-                        height: "40px",
-                      },
-                    }}
-                  />
-                </Box>
-              </Stack>
-            )}
 
             <Box width={"100%"} maxWidth={"md"}>
               <Grid container spacing={2} columns={12}>

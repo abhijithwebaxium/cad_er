@@ -935,7 +935,17 @@ const CrossSectionReport = () => {
                           <BasicButton
                             value={row.chainage}
                             variant="outlined"
-                            sx={{ py: 1, px: 2, cursor: "pointer" }}
+                            sx={{
+                              py: 1,
+                              px: 2,
+                              cursor: "pointer",
+                              border: "1px solid #6366f1",
+                              color: "#6366f1",
+                              "&:hover": {
+                                bgcolor: "#f8fafc",
+                                color: "#6366f1",
+                              },
+                            }}
                             onClick={() => handleTableToggle(row._id)}
                           />
                         </TableCell>
