@@ -1981,88 +1981,97 @@ const RoadSurveyRowsForm = () => {
                       //   icon: <GrSafariOption fontSize="20px" />,
                       //   onClick: () => console.log("hi"),
                       // },
-                    ].map((type, i) => (
-                      <Box
-                        key={i}
-                        sx={{
-                          position: "relative",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          px: { xs: 4, md: 6 },
-                          height: "100%",
-                          borderRadius: "16px",
-                          cursor: "pointer",
-                          minWidth: "70px",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                          bgcolor: "white",
-                          color: rowType === type.value ? "white" : "#6366f1",
-                          transition: "all 0.3s ease",
-                          "&:hover": {
-                            bgcolor:
-                              rowType === type.value ? "white" : "#f8fafc",
-                          },
-                        }}
-                        onClick={type.onClick}
-                      >
-                        {rowType === type.value && (
+                    ].map(
+                      (type, i) =>
+                        rowType !== type.value && (
                           <Box
-                            component={motion.div}
-                            layoutId="activeReportType"
-                            initial={false}
-                            transition={{
-                              type: "spring",
-                              stiffness: 350,
-                              damping: 25,
-                            }}
+                            key={i}
                             sx={{
-                              position: "absolute",
-                              inset: 0,
-                              background: "#6366f1", // similar tone color for selected
-                              borderRadius: "16px",
-                              zIndex: 0,
-                              boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
-                            }}
-                          />
-                        )}
-
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Typography
-                            variant="body2"
-                            fontWeight={900}
-                            sx={{
-                              lineHeight: 1,
                               position: "relative",
-                              zIndex: 1,
-                              color: "inherit",
                               display: "flex",
                               alignItems: "center",
-                              transition: "color 0.3s ease",
+                              justifyContent: "center",
+                              px: { xs: 4, md: 6 },
+                              height: "100%",
+                              borderRadius: "16px",
+                              cursor: "pointer",
+                              minWidth: "70px",
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                              bgcolor: "white",
+                              color:
+                                rowType === type.value ? "white" : "#6366f1",
+                              transition: "all 0.3s ease",
+                              "&:hover": {
+                                bgcolor:
+                                  rowType === type.value ? "white" : "#f8fafc",
+                              },
                             }}
+                            onClick={type.onClick}
                           >
-                            {type.icon}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight={900}
-                            letterSpacing="0.05em"
-                            sx={{
-                              lineHeight: 1,
-                              position: "relative",
-                              zIndex: 1,
-                              color: "inherit",
-                              fontSize: { xs: "0.9rem", md: "1rem" },
-                              transition: "color 0.3s ease",
-                            }}
-                          >
-                            {type.label}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    ))}
+                            {rowType === type.value && (
+                              <Box
+                                component={motion.div}
+                                layoutId="activeReportType"
+                                initial={false}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 350,
+                                  damping: 25,
+                                }}
+                                sx={{
+                                  position: "absolute",
+                                  inset: 0,
+                                  background: "#6366f1", // similar tone color for selected
+                                  borderRadius: "16px",
+                                  zIndex: 0,
+                                  boxShadow:
+                                    "0 4px 15px rgba(99, 102, 241, 0.3)",
+                                }}
+                              />
+                            )}
+
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                fontWeight={900}
+                                sx={{
+                                  lineHeight: 1,
+                                  position: "relative",
+                                  zIndex: 1,
+                                  color: "inherit",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  transition: "color 0.3s ease",
+                                }}
+                              >
+                                {type.icon}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                fontWeight={900}
+                                letterSpacing="0.05em"
+                                sx={{
+                                  lineHeight: 1,
+                                  position: "relative",
+                                  zIndex: 1,
+                                  color: "inherit",
+                                  fontSize: { xs: "0.9rem", md: "1rem" },
+                                  transition: "color 0.3s ease",
+                                }}
+                              >
+                                {type.label}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ),
+                    )}
                   </Paper>
                 </Box>
               )}

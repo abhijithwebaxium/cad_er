@@ -107,22 +107,26 @@ const ExportLoader = ({ open = true, loader = "export" }) => {
             {loader === "export" ? (
               <FileTextIcon size={32} color="white" />
             ) : (
-              <CircularProgress size={32} color="white" />
+              <Typography sx={{ color: "white", fontWeight: 600 }}>
+                CADER
+              </Typography>
             )}
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: -2,
-                right: -2,
-                borderRadius: "50%",
-                p: 0.8,
-                display: "flex",
-                background: "white",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              }}
-            >
-              <DownloadIcon size={14} color="#6366f1" />
-            </Box>
+            {loader === "export" && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: -2,
+                  right: -2,
+                  borderRadius: "50%",
+                  p: 0.8,
+                  display: "flex",
+                  background: "white",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                }}
+              >
+                <DownloadIcon size={14} color="#6366f1" />
+              </Box>
+            )}
           </Box>
 
           <Stack spacing={1} alignItems="center">
@@ -143,9 +147,7 @@ const ExportLoader = ({ open = true, loader = "export" }) => {
                 textAlign: "center",
               }}
             >
-              {loader === "export"
-                ? "Preparing your document for download..."
-                : "Please wait a moment"}
+              {loader === "export" && "Preparing your document for download..."}
             </Typography>
           </Stack>
 
