@@ -1311,7 +1311,14 @@ const RoadSurveyForm = () => {
                     }}
                     onClick={type.onClick}
                   >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: { xs: "column", sm: "row" },
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
                       <Typography
                         variant="body2"
                         fontWeight={900}

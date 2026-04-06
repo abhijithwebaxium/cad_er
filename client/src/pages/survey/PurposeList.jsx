@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getAllSurveyPurpose } from '../../services/surveyServices';
-import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAllSurveyPurpose } from "../../services/surveyServices";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Table,
@@ -15,12 +15,11 @@ import {
   IconButton,
   Chip,
   Stack,
-} from '@mui/material';
-import { startLoading, stopLoading } from '../../redux/loadingSlice';
-import { FaEye, FaChevronRight } from 'react-icons/fa';
-import { handleFormError } from '../../utils/handleFormError';
-import { showAlert } from '../../redux/alertSlice';
-import ButtonLink from '../../components/ButtonLink';
+} from "@mui/material";
+import { stopLoading } from "../../redux/loadingSlice";
+import { FaEye, FaChevronRight } from "react-icons/fa";
+import { handleFormError } from "../../utils/handleFormError";
+import ButtonLink from "../../components/ButtonLink";
 
 export default function PurposeList() {
   const navigate = useNavigate();
@@ -36,7 +35,7 @@ export default function PurposeList() {
       if (data.success) {
         setPurposes(data.purposes || []);
       } else {
-        throw Error('Failed to fetch purposes');
+        throw Error("Failed to fetch purposes");
       }
     } catch (error) {
       handleFormError(error, null, dispatch, navigate);
@@ -53,7 +52,7 @@ export default function PurposeList() {
     navigate(`/survey/road-survey/${id}/rows`);
 
   const handleEndSurvey = async (id) => {
-    alert('!');
+    alert("!");
   };
 
   if (purposes.length === 0)
@@ -65,20 +64,20 @@ export default function PurposeList() {
 
   return (
     <Box p={3}>
-      <Stack direction={'row'} alignItems={'center'} spacing={2} mb={2}>
+      <Stack direction={"row"} alignItems={"center"} spacing={2} mb={2}>
         <Typography variant="h5" fontWeight={700}>
           Survey List
         </Typography>
 
         <ButtonLink
-          label={'Project List'}
-          onClick={() => navigate('/survey')}
+          label={"Project List"}
+          onClick={() => navigate("/survey")}
         />
       </Stack>
 
       <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
         <Table>
-          <TableHead sx={{ backgroundColor: '#f4f6f8' }}>
+          <TableHead sx={{ backgroundColor: "#f4f6f8" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 700 }}>Title</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Purpose</TableCell>
@@ -104,7 +103,7 @@ export default function PurposeList() {
                 <TableCell>
                   <Chip
                     label={purpose.status}
-                    color={purpose.isPurposeFinish ? 'success' : 'warning'}
+                    color={purpose.isPurposeFinish ? "success" : "warning"}
                     size="small"
                   />
                 </TableCell>
@@ -116,7 +115,7 @@ export default function PurposeList() {
                     color="primary"
                     onClick={() =>
                       navigate(
-                        `/survey/road-survey/${purpose?.surveyId?._id}/report`
+                        `/survey/road-survey/${purpose?.surveyId?._id}/report`,
                       )
                     }
                   >
@@ -124,20 +123,20 @@ export default function PurposeList() {
                   </IconButton>
                 </TableCell>
                 <TableCell>
-                  {purpose.type === 'Initial Level' &&
+                  {purpose.type === "Initial Level" &&
                   purpose.isPurposeFinish ? (
                     <IconButton
                       color="primary"
                       onClick={() =>
                         navigate(
-                          `/survey/road-survey/${purpose?._id}/field-book`
+                          `/survey/road-survey/${purpose?._id}/field-book`,
                         )
                       }
                     >
                       <FaEye />
                     </IconButton>
                   ) : (
-                    'N/A'
+                    "N/A"
                   )}
                 </TableCell>
 

@@ -1502,7 +1502,7 @@ const RoadSurveyRowsForm = () => {
               <Stack
                 direction={"row"}
                 justifyContent={"space-between"}
-                alignItems={"center"}
+                alignItems={"start"}
                 width={"100%"}
               >
                 <Box>
@@ -1541,7 +1541,7 @@ const RoadSurveyRowsForm = () => {
                         actions={speedDialActions?.filter((a) => a.show)}
                         direction={"down"}
                         sx={{
-                          top: "-8px",
+                          top: 0,
                           right: 0,
                           "& button": {
                             width: "40px",
@@ -2046,6 +2046,7 @@ const RoadSurveyRowsForm = () => {
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
+                                flexDirection: { xs: "column", sm: "row" },
                                 gap: 1,
                               }}
                             >

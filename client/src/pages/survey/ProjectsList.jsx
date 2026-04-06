@@ -1151,13 +1151,13 @@ export default function ProjectsList() {
         >
           {[
             {
-              label: "QUEUE",
+              label: "QUEUED",
               value: "queue",
               icon: <CgGoogleTasks fontSize="20px" />,
               onClick: () => handleChange("queue"),
             },
             {
-              label: "IN_PROGRESS",
+              label: "UNDERWAY",
               value: "in_progress",
               icon: <GoClock fontSize="20px" />,
               onClick: () => handleChange("in_progress"),
@@ -1227,7 +1227,14 @@ export default function ProjectsList() {
                 />
               )}
 
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
                 <Typography
                   variant="body2"
                   fontWeight={900}
