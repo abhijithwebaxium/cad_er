@@ -20,7 +20,7 @@ import {
 import Lenis from "@studio-freight/lenis";
 import { FaArrowRight } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import TrainingCard from "./components/TrainingCard";
 import Preloader from "./components/Preloader";
 import ValidateCertificate from "../../components/ValidateCertificate";
@@ -574,6 +574,8 @@ const Landing = () => {
 
   const navigate = useNavigate();
 
+  const location = useLocation();
+
   const [open, setOpen] = useState(false);
 
   const [openValidateCert, setOpenValidateCert] = useState(false);
@@ -674,6 +676,19 @@ const Landing = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (location.state?.target) {
+      const element = document.getElementById(location.state.target);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+
+      if (location.state.target === "schedule demo") {
+        setOpen(true);
+      }
+    }
+  }, [location.state?.target]);
+
   return (
     <Box sx={{ bgcolor: "#fff", minHeight: "100vh" }}>
       <AnimatePresence mode="wait">
@@ -719,7 +734,7 @@ const Landing = () => {
               // backgroundImage: `url("${GRID_PATTERN}")`,
             }}
           >
-            <Container maxWidth="lg">
+            <Container maxWidth="lg" id="schedule demo">
               <Grid container spacing={6} alignItems="center">
                 <Grid size={{ xs: 12, md: 7 }}>
                   <motion.div
@@ -1664,7 +1679,7 @@ const Landing = () => {
 
           {/*  CONNECT WITH US */}
           <Box sx={{ py: { xs: 8, md: 15 }, bgcolor: "#fff" }}>
-            <Container maxWidth="lg">
+            <Container maxWidth="lg" id="contact">
               <Paper
                 elevation={0}
                 sx={{

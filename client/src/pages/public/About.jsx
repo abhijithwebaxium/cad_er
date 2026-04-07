@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import ScrollToTop from "../../components/ScrollToTop";
+import { useNavigate } from "react-router-dom";
 
 const CustomIcons = {
   Thunderbolt: () => (
@@ -96,6 +97,8 @@ const staggerContainer = {
 
 const About = () => {
   const containerRef = useRef(null);
+
+  const navigate = useNavigate();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -442,6 +445,9 @@ const About = () => {
                     textTransform: "none",
                     "&:hover": { bgcolor: "#f1f5f9" },
                   }}
+                  onClick={() =>
+                    navigate("/", { state: { target: "contact" } })
+                  }
                 >
                   Enquire for Institution
                 </Button>

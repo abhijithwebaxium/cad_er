@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import ScrollToTop from "../../components/ScrollToTop";
+import { useNavigate } from "react-router-dom";
 
 // --- Icons ---
 const CheckIcon = () => (
@@ -49,10 +50,13 @@ const ChevronDownIcon = () => (
 const PricingCard = ({
   tier,
   price,
+  introductoryPrice,
   duration,
+  includes,
   features,
   highlighted = false,
-  buttonText = "Get Started",
+  buttonText = "Contact Sales",
+  handleContactSales,
 }) => (
   <motion.div
     whileHover={{ y: -10 }}
@@ -102,14 +106,63 @@ const PricingCard = ({
         {tier}
       </Typography>
 
-      <Box sx={{ display: "flex", alignItems: "baseline", mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "baseline",
+          mb: introductoryPrice && introductoryPrice !== price ? 0.5 : 3,
+        }}
+      >
         <Typography variant="h3" sx={{ fontWeight: 800, color: "#000" }}>
-          ₹{price}
+          {(introductoryPrice || price) === "Custom"
+            ? "Custom"
+            : `₹${introductoryPrice || price}`}
         </Typography>
-        <Typography variant="body1" sx={{ color: "text.secondary", ml: 1 }}>
-          /{duration}
-        </Typography>
+        {(introductoryPrice || price) !== "Custom" && (
+          <Typography variant="body1" sx={{ color: "text.secondary", ml: 1 }}>
+            /{tier === "Junior" ? "mtr" : duration}
+          </Typography>
+        )}
       </Box>
+
+      {introductoryPrice &&
+        introductoryPrice !== price &&
+        introductoryPrice !== "Custom" &&
+        price !== "Custom" && (
+          <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "text.secondary", textDecoration: "line-through" }}
+            >
+              ₹{price}/{tier === "Junior" ? "mtr" : duration}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#10b981",
+                fontWeight: 700,
+                bgcolor: "rgba(16, 185, 129, 0.1)",
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                fontSize: "0.75rem",
+              }}
+            >
+              Launch Price
+            </Typography>
+          </Box>
+        )}
+
+      {includes && (
+        <Box sx={{ mb: 2 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ fontWeight: 700, color: "#4f46e5" }}
+          >
+            {includes}
+          </Typography>
+        </Box>
+      )}
 
       <Stack spacing={2} sx={{ mb: 5, flexGrow: 1 }}>
         {features.map((feature, index) => (
@@ -142,6 +195,7 @@ const PricingCard = ({
             borderColor: highlighted ? "#4f46e5" : "#000",
           },
         }}
+        onClick={handleContactSales}
       >
         {buttonText}
       </Button>
@@ -175,45 +229,73 @@ const FAQItem = ({ question, answer }) => (
 const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState("monthly");
 
+  const navigate = useNavigate();
+
+  const handleContactSales = () => {
+    navigate("/", { state: { target: "schedule demo" } });
+  };
+
   const plans = [
     {
-      tier: "Professionals",
-      price: billingCycle === "monthly" ? "7500" : "4500",
+      tier: billingCycle === "monthly" ? "Junior" : "Professionals",
+      price: billingCycle === "monthly" ? "1.9" : "45000",
+      introductoryPrice: billingCycle === "monthly" ? "1" : "9999",
       duration: billingCycle === "monthly" ? "mo" : "yr",
       features: [
-        "Single User Access",
-        "Online training ",
-        "Priority email support ",
-        "Community Access",
+        "Single user access",
+        "Priority email support",
         "Export to .pdf, .csv, .dwg, .xlsx formats",
+        "Multi-user collaboration",
+        "Use anywhere (mobile / tablet / desktop)",
+        "Cloud storage",
+        ...(billingCycle === "yearly"
+          ? [
+              "Auto level calibration check",
+              "Use anywhere (mobile / tablet / desktop)",
+            ]
+          : []),
       ],
     },
     {
-      tier: "Institutions",
-      price: billingCycle === "monthly" ? "79" : "720",
-      duration: billingCycle === "monthly" ? "mo" : "yr",
+      tier: billingCycle === "monthly" ? "Executive" : "Institutions",
+      price: billingCycle === "monthly" ? "2999" : "Custom",
+      introductoryPrice: billingCycle === "monthly" ? "1199" : "Custom",
       highlighted: true,
+      duration: billingCycle === "monthly" ? "mo" : "yr",
+      includes: `All features of ${
+        billingCycle === "monthly" ? "Junior" : "Professionals"
+      }`,
       features: [
-        "Up to 5 Team Members",
-        "Advanced Terrain Modeling",
-        "Unlimited Cloud Storage",
-        "Priority Email Support",
-        "High-Res Render Exports",
-        "API Access",
+        "Limited to 10 projects",
+        ...(billingCycle === "yearly"
+          ? [
+              "Multi-user access",
+              "Strategic upskilling",
+              "Certification",
+              "Loyalty privileges",
+              "Digital portfolio",
+              "Community access",
+            ]
+          : []),
       ],
     },
     {
-      tier: "Students",
-      price: "Custom",
+      tier: billingCycle === "monthly" ? "Director" : "Enterprise",
+      price: billingCycle === "monthly" ? "5999" : "Custom",
+      introductoryPrice: billingCycle === "monthly" ? "2999" : "Custom",
       duration: "org",
-      buttonText: "Contact Sales",
+      includes: `All features of ${
+        billingCycle === "monthly" ? "Executive" : "Institutions"
+      }`,
       features: [
-        "Unlimited Users",
-        "Dedicated Account Manager",
-        "SLA Guarantee",
-        "Custom Feature Development",
-        "SSO & Security Controls",
-        "On-site Training",
+        "Unlimited projects",
+        ...(billingCycle === "yearly"
+          ? [
+              "Dedicated account manager",
+              "Custom feature development",
+              "On-site training",
+            ]
+          : []),
       ],
     },
   ];
@@ -310,7 +392,10 @@ const Pricing = () => {
           <Grid container spacing={4} sx={{ mb: 15 }}>
             {plans.map((plan, index) => (
               <Grid size={{ xs: 12, md: 4 }} key={index}>
-                <PricingCard {...plan} />
+                <PricingCard
+                  {...plan}
+                  handleContactSales={handleContactSales}
+                />
               </Grid>
             ))}
           </Grid>
@@ -385,6 +470,7 @@ const Pricing = () => {
                 textTransform: "none",
                 "&:hover": { bgcolor: "#f0f0f0" },
               }}
+              onClick={() => navigate("/", { state: { target: "contact" } })}
             >
               Chat with an Expert
             </Button>
