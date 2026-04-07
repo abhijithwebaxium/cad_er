@@ -374,7 +374,7 @@ const Report = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                px: { xs: 4, md: 6 },
+                px: { xs: 2, md: 6 },
                 height: "100%",
                 borderRadius: "16px",
                 cursor: "pointer",
@@ -439,7 +439,7 @@ const Report = () => {
                     position: "relative",
                     zIndex: 1,
                     color: "inherit",
-                    fontSize: { xs: "0.9rem", md: "1rem" },
+                    fontSize: { xs: "0.8rem", md: "1rem" },
                     transition: "color 0.3s ease",
                   }}
                 >

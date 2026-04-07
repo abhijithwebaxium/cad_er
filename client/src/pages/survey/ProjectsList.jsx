@@ -1066,7 +1066,6 @@ export default function ProjectsList() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 2,
           }}
         >
           {/* 🔍 Left Icon */}
@@ -1086,7 +1085,12 @@ export default function ProjectsList() {
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.25 }}
           >
-            <Typography fontWeight={900} fontSize="24px" letterSpacing="-0.5px">
+            <Typography
+              fontWeight={900}
+              fontSize="24px"
+              letterSpacing="-0.5px"
+              mb={0}
+            >
               Here's Your Library!
             </Typography>
           </motion.div>
@@ -1190,7 +1194,7 @@ export default function ProjectsList() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                px: { xs: 4, md: 6 },
+                px: { xs: 2, md: 6 },
                 height: "100%",
                 borderRadius: "16px",
                 cursor: "pointer",
@@ -1259,7 +1263,7 @@ export default function ProjectsList() {
                     position: "relative",
                     zIndex: 1,
                     color: "inherit",
-                    fontSize: { xs: "0.9rem", md: "1rem" },
+                    fontSize: { xs: "0.8rem", md: "1rem" },
                     transition: "color 0.3s ease",
                   }}
                 >
