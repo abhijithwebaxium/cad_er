@@ -62,7 +62,31 @@ const DownloadIcon = ({ size = 14, color = "currentColor" }) => (
   </svg>
 );
 
-const ExportLoader = ({ open = true, loader = "export" }) => {
+const ExportLoader = ({
+  open = true,
+  loader = "export",
+  duration = 0,
+  progress = null,
+  progressMessage = "",
+  estimatedTimeLeft = null,
+}) => {
+  const [timeLeft, setTimeLeft] = React.useState(duration);
+
+  React.useEffect(() => {
+    if (open) {
+      setTimeLeft(duration);
+    }
+  }, [open, duration]);
+
+  React.useEffect(() => {
+    if (!open || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [open, timeLeft]);
   return (
     <Backdrop
       open={open}
@@ -147,8 +171,37 @@ const ExportLoader = ({ open = true, loader = "export" }) => {
                 textAlign: "center",
               }}
             >
-              {loader === "export" && "Preparing your document for download..."}
+              {loader === "export" && (progress !== null ? (progressMessage || "Preparing your document for download...") : "Preparing your document for download...")}
             </Typography>
+            {loader === "export" && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#a5b4fc", // Premium light indigo
+                  fontWeight: 600,
+                  mt: 0.5,
+                  textAlign: "center",
+                }}
+              >
+                {progress !== null ? (
+                  estimatedTimeLeft !== null ? (
+                    estimatedTimeLeft > 0 ? (
+                      estimatedTimeLeft >= 60 ? (
+                        `Estimated Time Left: ~${Math.floor(estimatedTimeLeft / 60)}m ${estimatedTimeLeft % 60}s`
+                      ) : (
+                        `Estimated Time Left: ~${estimatedTimeLeft}s`
+                      )
+                    ) : (
+                      "Finalizing document..."
+                    )
+                  ) : (
+                    "Estimating remaining time..."
+                  )
+                ) : duration > 0 ? (
+                  timeLeft > 0 ? `Estimated Time: ~${timeLeft}s` : "Finalizing document..."
+                ) : null}
+              </Typography>
+            )}
           </Stack>
 
           {/* Custom Modern Progress Bar */}
@@ -163,7 +216,8 @@ const ExportLoader = ({ open = true, loader = "export" }) => {
               }}
             >
               <LinearProgress
-                variant="indeterminate"
+                variant={progress !== null ? "determinate" : "indeterminate"}
+                value={progress !== null ? progress : undefined}
                 sx={{
                   height: 6,
                   borderRadius: 3,

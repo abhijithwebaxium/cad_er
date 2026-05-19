@@ -402,7 +402,14 @@ export default function FieldBook() {
           <BasicButtons
             variant="outlined"
             sx={{ py: 1, px: 2, fontSize: 12, minWidth: "78px" }}
-            onClick={() => navigate(`/survey/road-survey/${purpose?.surveyId}`)}
+            onClick={() =>
+              navigate(
+                `/survey/road-survey/${
+                  purpose?.surveyId?._id || purpose?.surveyId || survey?._id
+                }`,
+                { state: { fromPL: true } }
+              )
+            }
             value={
               <Stack direction="row" gap={0.5} alignItems="center">
                 <IoIosAddCircleOutline fontSize={16} />

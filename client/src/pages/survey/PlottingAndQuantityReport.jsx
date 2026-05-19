@@ -6,6 +6,7 @@ import { getFieldBook, getSurvey } from "../../services/surveyServices";
 import { handleFormError } from "../../utils/handleFormError";
 import {
   Box,
+  Grid,
   Paper,
   Stack,
   Table,
@@ -87,16 +88,191 @@ const initialDetails = {
   secondaryEntry: "",
 };
 
+const drawPDFHeader = (doc, surveyInfo, reportDetails) => {
+  // Centered Headers
+  doc.setFont("helvetica", "bold").setFontSize(14);
+  doc.setTextColor(26, 26, 26);
+  doc.text(
+    (surveyInfo?.department || "IRRIGATION DEPARTMENT").toUpperCase(),
+    105,
+    15,
+    { align: "center" },
+  );
+
+  doc.setFont("helvetica", "italic").setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text("(Government of Kerala)", 105, 21, { align: "center" });
+
+  const phaseTitle = `${reportDetails?.initialEntry} -${" "}
+    ${reportDetails?.secondaryEntry}`;
+  doc.setFont("helvetica", "bold").setFontSize(12);
+  doc.setTextColor(211, 47, 47); // Crimson red
+  doc.text(`${phaseTitle}`, 105, 30, {
+    align: "center",
+  });
+
+  // Instrument Details Section (No Border)
+
+  doc.setFont("helvetica", "bold").setFontSize(7.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("INSTRUMENT TYPE:", 13, 41);
+  doc.text("PART NO:", 13, 49);
+  doc.text("INSTRUMENT MODEL:", 105, 41);
+  doc.text("SL NO:", 105, 49);
+
+  doc.setFont("helvetica", "normal").setFontSize(7.5);
+  doc.setTextColor(80, 80, 80);
+  doc.text("Auto Level Readings (Degree)", 45, 41);
+  doc.text("0 601 068 5F0", 45, 49);
+  doc.text(surveyInfo?.instrumentNo || "BOSCH GOL 32D Professional", 138, 41);
+  doc.text("122240174", 138, 49);
+
+  // Work Details with Underlines
+  doc.setFont("helvetica", "bold").setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Name of Work", 10, 62);
+
+  // Values
+  doc.setFont("helvetica", "normal").setFontSize(8);
+  doc.setTextColor(30, 30, 30);
+
+  // Wrap work name if it is long
+  const workName =
+    surveyInfo?.project ||
+    "GENERAL-ROAD WORK -REPAIR WORKS TO MAIN ROAD CONNECTING PEECHI DAM AND KERI-GENERAL CIVIL WORK";
+  const splitWorkName = doc.splitTextToSize(workName, 155);
+  doc.text(splitWorkName, 43, 62);
+  // Underline for Name of Work
+  const lineCount = splitWorkName.length || 1;
+  const workUnderlineY = 62 + (lineCount - 1) * 4 + 3.5;
+  doc.setDrawColor(180, 180, 180).setLineWidth(0.4); // Thicker line
+  doc.line(42, workUnderlineY, 200, workUnderlineY);
+
+  const yAgreement = workUnderlineY + 8.5;
+  doc.setFont("helvetica", "bold").setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Agreement No", 10, yAgreement);
+  doc.setFont("helvetica", "normal").setFontSize(8);
+  doc.setTextColor(30, 30, 30);
+  const agreementText = surveyInfo?.agreementNo
+    ? `: ${surveyInfo.agreementNo}`
+    : ": _____________________________________________________________________________________";
+  doc.text(agreementText, 43, yAgreement);
+  doc.setDrawColor(180, 180, 180).setLineWidth(0.2);
+  doc.line(42, yAgreement + 2.5, 200, yAgreement + 2.5);
+
+  const contractorText = surveyInfo?.contractor
+    ? `: ${surveyInfo.contractor}`
+    : ": _____________________________________________________________________________________";
+  const yContractor = yAgreement + 9.5;
+  doc.setFont("helvetica", "bold").setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Name of Contractor", 10, yContractor);
+  doc.setFont("helvetica", "normal").setFontSize(8);
+  doc.setTextColor(30, 30, 30);
+  doc.text(contractorText, 43, yContractor);
+  doc.line(42, yContractor + 2.5, 200, yContractor + 2.5);
+
+  const divisionText = surveyInfo?.division
+    ? `: ${surveyInfo.division}`
+    : ": _____________________________________________________________________________________";
+  const yDivision = yContractor + 9.5;
+  doc.setFont("helvetica", "bold").setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Division", 10, yDivision);
+  doc.setFont("helvetica", "normal").setFontSize(8);
+  doc.setTextColor(30, 30, 30);
+  doc.text(divisionText, 43, yDivision);
+  doc.line(42, yDivision + 2.5, 200, yDivision + 2.5);
+
+  const subDivText = surveyInfo?.subDivision
+    ? `: ${surveyInfo.subDivision}`
+    : ": _____________________________________________________________________________________";
+  const ySubDiv = yDivision + 9.5;
+  doc.setFont("helvetica", "bold").setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Sub-Division", 10, ySubDiv);
+  doc.setFont("helvetica", "normal").setFontSize(8);
+  doc.setTextColor(30, 30, 30);
+  doc.text(subDivText, 43, ySubDiv);
+  doc.line(42, ySubDiv + 2.5, 200, ySubDiv + 2.5);
+
+  const sectionText = surveyInfo?.section
+    ? `: ${surveyInfo.section}`
+    : ": _____________________________________________________________________________________";
+  const ySection = ySubDiv + 9.5;
+  doc.setFont("helvetica", "bold").setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Section", 10, ySection);
+  doc.setFont("helvetica", "normal").setFontSize(8);
+  doc.setTextColor(30, 30, 30);
+  doc.text(sectionText, 43, ySection);
+  doc.line(42, ySection + 2.5, 200, ySection + 2.5);
+
+  // Declaration
+  const yDecl = ySection + 8.5;
+  doc.setFont("helvetica", "bold").setFontSize(8.5);
+  doc.setTextColor(50, 50, 50);
+  doc.text("Declaration ,", 10, yDecl);
+
+  doc.setFont("helvetica", "normal").setFontSize(7.5);
+  doc.setTextColor(60, 60, 60);
+  const declText =
+    "I, the Assistant Engineer certify that levels recorded from page _____ to _____ of Level Field book [REG No.:_______________________] were taken personally by me from ____/____/_______ to ____/____/_______.";
+  const splitDecl = doc.splitTextToSize(declText, 190);
+  doc.text(splitDecl, 10, yDecl + 5);
+
+  // Sign Off
+  const ySign = yDecl + 17;
+  doc.setFont("helvetica", "normal").setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text("X", 155, ySign);
+  doc.line(145, ySign + 2, 195, ySign + 2);
+  doc.setFont("helvetica", "bold").setFontSize(7.5);
+  doc.text("Assistant Engineer", 170, ySign + 6, { align: "center" });
+
+  // Reset text color to default black
+  doc.setTextColor(0, 0, 0);
+};
+
 const exportPdf = async ({
   tableData,
   reportDetails,
   surveyInfo,
   showArea,
   setLoading,
+  setProgress,
 }) => {
   if (setLoading) setLoading(true);
+  if (setProgress) setProgress({ percent: 0, message: "Initializing document...", estimatedTimeLeft: null });
 
   try {
+    const chartItems = document.querySelectorAll(".pdf-chart-item");
+    let totalSteps = 1; // Cover page
+    if (tableData?.rows?.length > 0) totalSteps++;
+    if (tableData?.areaReport?.length > 0) totalSteps++;
+    totalSteps += chartItems.length;
+
+    let currentStep = 0;
+    const startTime = Date.now();
+
+    const updateProgress = (message) => {
+      currentStep++;
+      const percent = Math.min(Math.round((currentStep / totalSteps) * 100), 100);
+      
+      let estimatedTimeLeft = null;
+      if (currentStep > 1 && currentStep < totalSteps) {
+        const elapsed = Date.now() - startTime;
+        const avgTimePerStep = elapsed / currentStep;
+        const remainingSteps = totalSteps - currentStep;
+        estimatedTimeLeft = Math.round((avgTimePerStep * remainingSteps) / 1000);
+      }
+      
+      if (setProgress) {
+        setProgress({ percent, message, estimatedTimeLeft });
+      }
+    };
+
     // Optimization 1: Enable internal PDF compression
     const doc = new jsPDF({
       orientation: "p",
@@ -109,6 +285,10 @@ const exportPdf = async ({
     const pageTotalHeight = doc.internal.pageSize.getHeight();
     const margin = 10;
     const contentWidth = pageTotalWidth - margin * 2;
+
+    // Draw the cover page alone on the first page
+    drawPDFHeader(doc, surveyInfo, reportDetails);
+    updateProgress("Cover page generated");
 
     // ===== VOLUME REPORT =====
     if (tableData?.rows?.length > 0) {
@@ -182,6 +362,8 @@ const exportPdf = async ({
           : []),
       ]);
 
+      doc.addPage();
+
       autoTable(doc, {
         margin: { top: 20 },
         theme: "grid",
@@ -244,11 +426,11 @@ const exportPdf = async ({
           );
         },
       });
+      updateProgress("Volume report table generated");
     }
 
     // ===== AREA REPORT =====
     if (tableData?.areaReport?.length > 0) {
-      if (tableData?.rows?.length > 0) doc.addPage();
       const areaBody = [];
       tableData.areaReport.forEach((section) => {
         areaBody.push([
@@ -309,6 +491,8 @@ const exportPdf = async ({
             : []),
         ]);
       });
+
+      doc.addPage();
 
       autoTable(doc, {
         margin: { top: 20 },
@@ -371,6 +555,7 @@ const exportPdf = async ({
           );
         },
       });
+      updateProgress("Area report table generated");
     }
 
     // ===== CHARTS & GRAPHS SECTION =====
@@ -436,10 +621,10 @@ const exportPdf = async ({
       // (Status labels logic same as before...)
     };
 
-    const chartItems = document.querySelectorAll(".pdf-chart-item");
-
     for (let i = 0; i < chartItems.length; i++) {
       const el = chartItems[i];
+      updateProgress(`Processing chart ${i + 1} of ${chartItems.length}...`);
+
       // Give time for charts to render
       await new Promise((res) => setTimeout(res, 500));
 
@@ -507,6 +692,9 @@ const exportPdf = async ({
       canvas.height = 0;
     }
 
+    if (setProgress) {
+      setProgress({ percent: 100, message: "Saving PDF document...", estimatedTimeLeft: 0 });
+    }
     doc.save(`plotting-and-quantity-report.pdf`);
   } catch (err) {
     console.error("Export error:", err);
@@ -550,15 +738,18 @@ const PlottingAndQuantityReport = () => {
 
   const [allCs, setAllCs] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(null);
 
   const handleMenuSelect = async (item) => {
     if (item.value === "pdf download") {
+      setProgress({ percent: 0, message: "Initializing document...", estimatedTimeLeft: null });
       await exportPdf({
         tableData,
         reportDetails: reportDetails.current,
         surveyInfo: survey,
         showArea,
         setLoading,
+        setProgress,
       });
     }
   };
@@ -1127,7 +1318,12 @@ const PlottingAndQuantityReport = () => {
 
   return (
     <Box p={2}>
-      <ExportLoader open={loading} />
+      <ExportLoader
+        open={loading}
+        progress={progress?.percent}
+        progressMessage={progress?.message}
+        estimatedTimeLeft={progress?.estimatedTimeLeft}
+      />
       <Stack
         direction={"row"}
         justifyContent={"space-between"}
@@ -1160,6 +1356,353 @@ const PlottingAndQuantityReport = () => {
           />
         </Box>
       </Stack>
+
+      {/* Premium Official Field Book Header Section */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, sm: 4 },
+          mb: 4,
+          backgroundColor: "#ffffff",
+          borderRadius: "8px",
+          border: "1px solid #e2e8f0",
+          fontFamily: "'Outfit', 'Inter', sans-serif",
+          boxShadow:
+            "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)",
+          "@media print": {
+            border: "none",
+            boxShadow: "none",
+            p: 0,
+            mb: 2,
+          },
+        }}
+      >
+        {/* Centered Department & Subtitle */}
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              letterSpacing: "1.5px",
+              color: "#0f172a",
+              fontSize: { xs: "1.2rem", sm: "1.5rem" },
+              mb: 0.5,
+              textTransform: "uppercase",
+            }}
+          >
+            {survey?.department || "IRRIGATION DEPARTMENT"}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontStyle: "italic",
+              color: "#64748b",
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              mb: 3,
+            }}
+          >
+            (Government of Kerala)
+          </Typography>
+
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 800,
+              color: "#dc2626", // Red-600
+              letterSpacing: "1px",
+              fontSize: { xs: "1.1rem", sm: "1.35rem" },
+              mt: 2,
+              mb: 3,
+              textTransform: "uppercase",
+            }}
+          >
+            {reportDetails?.current?.initialEntry} -{" "}
+            {reportDetails.current.secondaryEntry}
+          </Typography>
+        </Box>
+
+        {/* Instrument Details Grid Box */}
+        <Box
+          sx={{
+            borderTop: "1px solid #e2e8f0",
+            borderBottom: "1px solid #e2e8f0",
+            py: 2,
+            mb: 4,
+          }}
+        >
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 700, color: "#475569" }}
+                >
+                  INSTRUMENT TYPE:
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#334155" }}>
+                  Auto Level Readings (Degree)
+                </Typography>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 700, color: "#475569" }}
+                >
+                  INSTRUMENT MODEL:
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#334155" }}>
+                  {survey?.instrumentNo || "BOSCH GOL 32D Professional"}
+                </Typography>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 700, color: "#475569" }}
+                >
+                  PART NO:
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#334155" }}>
+                  0 601 068 5F0
+                </Typography>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 700, color: "#475569" }}
+                >
+                  SL NO:
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#334155" }}>
+                  122240174
+                </Typography>
+              </Stack>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Work & Contract Details */}
+        <Stack spacing={2.5} sx={{ mb: 4 }}>
+          <Box>
+            <Grid container alignItems="flex-start" spacing={1}>
+              <Grid item xs={12} sm={2.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
+                >
+                  Name of Work
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={9.5}
+                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#1e293b", fontWeight: 600, lineHeight: 1.5 }}
+                >
+                  {survey?.project ||
+                    "GENERAL-ROAD WORK -REPAIR WORKS TO MAIN ROAD CONNECTING PEECHI DAM AND KERI-GENERAL CIVIL WORK"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box>
+            <Grid container alignItems="center" spacing={1}>
+              <Grid item xs={12} sm={2.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
+                >
+                  Agreement No
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={9.5}
+                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
+              >
+                <Typography variant="body2" sx={{ color: "#1e293b" }}>
+                  {survey?.agreementNo
+                    ? `: ${survey.agreementNo}`
+                    : ": _____________________________________________________________________________________"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box>
+            <Grid container alignItems="center" spacing={1}>
+              <Grid item xs={12} sm={2.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
+                >
+                  Name of Contractor
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={9.5}
+                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
+              >
+                <Typography variant="body2" sx={{ color: "#1e293b" }}>
+                  {survey?.contractor
+                    ? `: ${survey.contractor}`
+                    : ": _____________________________________________________________________________________"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box>
+            <Grid container alignItems="center" spacing={1}>
+              <Grid item xs={12} sm={2.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
+                >
+                  Division
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={9.5}
+                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
+              >
+                <Typography variant="body2" sx={{ color: "#1e293b" }}>
+                  {survey?.division
+                    ? `: ${survey.division}`
+                    : ": _____________________________________________________________________________________"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box>
+            <Grid container alignItems="center" spacing={1}>
+              <Grid item xs={12} sm={2.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
+                >
+                  Sub-Division
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={9.5}
+                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
+              >
+                <Typography variant="body2" sx={{ color: "#1e293b" }}>
+                  {survey?.subDivision
+                    ? `: ${survey.subDivision}`
+                    : ": _____________________________________________________________________________________"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box>
+            <Grid container alignItems="center" spacing={1}>
+              <Grid item xs={12} sm={2.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
+                >
+                  Section
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={9.5}
+                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
+              >
+                <Typography variant="body2" sx={{ color: "#1e293b" }}>
+                  {survey?.section
+                    ? `: ${survey.section}`
+                    : ": _____________________________________________________________________________________"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+        </Stack>
+
+        {/* Declaration & AE Sign Box */}
+        <Box sx={{ mt: 4, pt: 3, borderTop: "1px dashed #e2e8f0" }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ fontWeight: 700, mb: 1, color: "#334155" }}
+          >
+            Declaration ,
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#475569",
+              lineHeight: 1.8,
+              fontSize: "0.9rem",
+            }}
+          >
+            I, the Assistant Engineer certify that levels recorded from page{" "}
+            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>{" "}
+            to{" "}
+            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>{" "}
+            of Level Field book [REG No.:{" "}
+            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+            ] were taken personally by me from{" "}
+            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
+              &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>{" "}
+            to{" "}
+            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
+              &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+            .
+          </Typography>
+
+          {/* Assistant Engineer Signbox */}
+          <Box
+            sx={{ display: "flex", justifyContent: "flex-end", mt: 4, pr: 2 }}
+          >
+            <Stack spacing={0.5} sx={{ width: "220px", textAlign: "center" }}>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: "normal", mb: 0, color: "#1e293b" }}
+              >
+                X
+              </Typography>
+              <Box sx={{ borderTop: "1px solid #1e293b", pt: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ fontWeight: 700, color: "#334155", display: "block" }}
+                >
+                  Assistant Engineer
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+        </Box>
+      </Paper>
 
       <TableContainer component={Paper} sx={{ mt: 2 }}>
         <FieldBookTable

@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { handleFormError } from "../../utils/handleFormError";
 import { startLoading, stopLoading } from "../../redux/loadingSlice";
 import { getSurvey } from "../../services/surveyServices";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography, Paper } from "@mui/material";
 import CrossSectionChart from "./components/CrossSectionChart";
 import { v1ChartOptions, v2ChartOptions } from "../../constants";
 import BasicMenu from "../../components/BasicMenu";
@@ -12,6 +12,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { MdDownload } from "react-icons/md";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import SmallHeader from "../../components/SmallHeader";
 
 const LEVEL_ORDER = [
   "Initial Level",
@@ -263,6 +264,7 @@ const LongitudinalSectionReport = () => {
     const data = {
       id,
       type: "ls",
+      chainages: safeChainages,
       series: [],
       allRl: [], // We will only store NUMBERS here
     };
@@ -359,26 +361,53 @@ const LongitudinalSectionReport = () => {
   }, [tableData]);
 
   return (
-    <Box p={2}>
-      <Stack
-        direction={"row"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        spacing={2}
-        mb={2}
-      >
-        <Typography variant="h6" fontSize={18} fontWeight={700} align="center">
-          LONGITUDINAL SECTION
-        </Typography>
-        <Box textAlign={"end"}>
-          <BasicMenu
-            label={<BsThreeDots />}
-            items={menuItems}
-            onSelect={handleMenuSelect}
-            sx={{ minWidth: "fit-content", p: 1 }}
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc" }}>
+      <SmallHeader />
+      <Box sx={{ maxWidth: "1200px", margin: "0 auto", p: { xs: 2, md: 4 } }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 5 },
+            borderRadius: "28px",
+            bgcolor: "#ffffff",
+            boxShadow: "0 20px 40px -15px rgba(0,0,0,0.05)",
+            border: "1px solid rgba(226, 232, 240, 0.8)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Decorative Header Line */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "6px",
+              background:
+                "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+            }}
           />
-        </Box>
-      </Stack>
+
+          <Stack
+            direction={"row"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            spacing={2}
+            mb={4}
+          >
+            <Typography variant="h6" fontSize={20} fontWeight={800} color="#1e293b">
+              LONGITUDINAL SECTION
+            </Typography>
+            <Box textAlign={"end"}>
+              <BasicMenu
+                label={<BsThreeDots />}
+                items={menuItems}
+                onSelect={handleMenuSelect}
+                sx={{ minWidth: "fit-content", p: 1 }}
+              />
+            </Box>
+          </Stack>
       <Box
         sx={{
           textAlign: "center",
@@ -403,7 +432,9 @@ const LongitudinalSectionReport = () => {
           [Hor Scale – 1 in 150 : Ver Scale – 1 in 150]
         </Typography>
       </Box>
-    </Box>
+    </Paper>
+  </Box>
+</Box>
   );
 };
 

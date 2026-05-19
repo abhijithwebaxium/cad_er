@@ -31,6 +31,7 @@ import { showAlert } from "../../redux/alertSlice";
 import { DxfWriter, point2d } from "@tarikjabiri/dxf";
 import { saveAs } from "file-saver";
 import ExportLoader from "../../components/ExportLoader";
+import SmallHeader from "../../components/SmallHeader";
 
 const LEVEL_ORDER = [
   "Initial Level",
@@ -128,6 +129,7 @@ const CrossSectionReport = () => {
   const [allCs, setAllCs] = useState(null);
 
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(null);
 
   const handleToggle = (rowId) => {
     setOpenRowId((prev) => (prev === rowId ? null : rowId));
@@ -137,6 +139,7 @@ const CrossSectionReport = () => {
     if (!allCsRef.current) return;
 
     setLoading(true);
+    setProgress({ percent: 0, message: "Initializing PDF document...", estimatedTimeLeft: null });
 
     const pdf = new jsPDF("p", "mm", "a4");
     const margin = 10;
@@ -144,9 +147,27 @@ const CrossSectionReport = () => {
     const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
 
     const items = allCsRef.current.querySelectorAll(".pdf-chart-item");
+    const totalSteps = items.length;
+    const startTime = Date.now();
 
     for (let i = 0; i < items.length; i++) {
       const el = items[i];
+
+      // Calculate dynamic progress & time left
+      const percent = Math.min(Math.round((i / totalSteps) * 100), 99);
+      let estimatedTimeLeft = null;
+      if (i > 0) {
+        const elapsed = Date.now() - startTime;
+        const avgTimePerStep = elapsed / i;
+        const remainingSteps = totalSteps - i;
+        estimatedTimeLeft = Math.round((avgTimePerStep * remainingSteps) / 1000);
+      }
+
+      setProgress({
+        percent,
+        message: `Processing chart ${i + 1} of ${totalSteps}...`,
+        estimatedTimeLeft,
+      });
 
       await new Promise((res) => setTimeout(res, 500));
 
@@ -172,6 +193,7 @@ const CrossSectionReport = () => {
       pdf.addImage(imgData, "PNG", margin, y, imgWidth, imgHeight);
     }
 
+    setProgress({ percent: 100, message: "Saving PDF document...", estimatedTimeLeft: 0 });
     pdf.save("cross-section.pdf");
 
     setLoading(false);
@@ -348,6 +370,9 @@ const CrossSectionReport = () => {
       const initialEntry = tableData[0];
       if (!initialEntry?.rows?.length) return;
 
+      setLoading(true);
+      setProgress({ percent: 0, message: "Preparing report data...", estimatedTimeLeft: null });
+
       const allFormattedData = initialEntry.rows
         ?.filter((row) => row.type === "Chainage")
         .map((row) => buildCsData(row))
@@ -356,6 +381,7 @@ const CrossSectionReport = () => {
       setAllCs(allFormattedData);
     } catch (err) {
       console.error(err);
+      setLoading(false);
     }
   };
 
@@ -773,69 +799,61 @@ const CrossSectionReport = () => {
   }, [tableData]);
 
   return (
-    <Box p={2}>
-      <ExportLoader open={loading} />
-
-      <Stack
-        direction={"row"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        spacing={2}
-        mb={2}
-      >
-        <Typography variant="h6" fontSize={18} fontWeight={700} align="center">
-          CROSS SECTION AT CH {selectedCs?.chainage}
-        </Typography>
-
-        <Box textAlign={"end"}>
-          <BasicMenu
-            label={<BsThreeDots />}
-            items={menuItems}
-            onSelect={handleMenuSelect}
-            sx={{ minWidth: "fit-content", p: 1 }}
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc" }}>
+      <SmallHeader />
+      <Box sx={{ maxWidth: "1200px", margin: "0 auto", p: { xs: 2, md: 4 } }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 5 },
+            borderRadius: "28px",
+            bgcolor: "#ffffff",
+            boxShadow: "0 20px 40px -15px rgba(0,0,0,0.05)",
+            border: "1px solid rgba(226, 232, 240, 0.8)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Decorative Header Line */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "6px",
+              background:
+                "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+            }}
           />
-        </Box>
-      </Stack>
 
-      <Stack direction={"row"} spacing={2} mb={2}>
-        <Box>
-          <Typography
-            variant="body2"
-            sx={{
-              mb: 0.5,
-              fontWeight: 600,
-              color: "black",
-            }}
+          <ExportLoader
+            open={loading}
+            progress={progress?.percent}
+            progressMessage={progress?.message}
+            estimatedTimeLeft={progress?.estimatedTimeLeft}
+          />
+
+          <Stack
+            direction={"row"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            spacing={2}
+            mb={4}
           >
-            Horizontal Scale X
-          </Typography>
-          <Stack direction={"row"} spacing={1}>
-            <BasicInput label={""} placeholder={"1"} />
-            <BasicInput label={""} placeholder={"100"} value={""} />
+            <Typography variant="h6" fontSize={20} fontWeight={800} color="#1e293b">
+              CROSS SECTION AT CH {selectedCs?.chainage}
+            </Typography>
+
+            <Box textAlign={"end"}>
+              <BasicMenu
+                label={<BsThreeDots />}
+                items={menuItems}
+                onSelect={handleMenuSelect}
+                sx={{ minWidth: "fit-content", p: 1 }}
+              />
+            </Box>
           </Stack>
-        </Box>
-        <Box>
-          <Typography
-            variant="body2"
-            sx={{
-              mb: 0.5,
-              fontWeight: 600,
-              color: "black",
-            }}
-          >
-            Vertical Scale Y
-          </Typography>
-          <Stack direction={"row"} spacing={1}>
-            <BasicInput label={""} placeholder={"1"} />
-            <BasicInput
-              label={""}
-              placeholder={"100"}
-              value={maxValue || ""}
-              onChange={(e) => handleInputChange(e.target.value)}
-            />
-          </Stack>
-        </Box>
-      </Stack>
 
       <Box
         sx={{
@@ -1092,7 +1110,9 @@ const CrossSectionReport = () => {
           </Table>
         </TableContainer>
       </Box>
-    </Box>
+    </Paper>
+  </Box>
+</Box>
   );
 };
 

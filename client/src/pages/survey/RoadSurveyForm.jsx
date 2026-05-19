@@ -12,7 +12,7 @@ import {
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { MdArrowBackIosNew } from "react-icons/md";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BasicButtons from "../../components/BasicButton";
 import { useDispatch, useSelector } from "react-redux";
 import { handleFormError } from "../../utils/handleFormError";
@@ -245,17 +245,7 @@ const inputDetails = [
     hidden: true,
     for: "Proposed Level",
   },
-  {
-    label: "Formula*",
-    name: "formula",
-    mode: "select",
-    options: [
-      { label: "Default", value: "Default" },
-      { label: "Interpolation", value: "Interpolation" },
-    ],
-    hidden: true,
-    for: "Proposed Level",
-  },
+
   // {
   //   label: '',
   //   name: 'lSection',
@@ -407,11 +397,13 @@ const RoadSurveyForm = () => {
 
   const { global } = useSelector((state) => state.loading);
 
+  const { state } = useLocation();
+
   const [inputData, setInputData] = useState(inputDetails);
 
   const [survey, setSurvey] = useState(null);
 
-  const [type, setType] = useState(false);
+  const [type, setType] = useState(state?.fromPL || false);
 
   const [crossSection, setCrossSection] = useState("camper");
 
@@ -500,10 +492,7 @@ const RoadSurveyForm = () => {
         ? Yup.string().required("Length is required")
         : Yup.string().nullable(),
 
-    formula:
-      type && entryType === "autoGenerate"
-        ? Yup.string().required("Formula is required")
-        : Yup.string().nullable(),
+    formula: Yup.string().nullable(),
 
     proposedLevel:
       type && entryType === "manualEntry"
@@ -732,7 +721,7 @@ const RoadSurveyForm = () => {
     }
   };
 
-  const updateInputData = (completedLevels, completedPurposes) => {
+  const updateInputData = (completedLevels = [], completedPurposes = []) => {
     setInputData((prev) =>
       prev.map((e) => {
         if (id) {
@@ -743,7 +732,7 @@ const RoadSurveyForm = () => {
                 hidden: false,
                 options: type
                   ? [
-                      completedPurposes.length
+                      completedPurposes?.length
                         ? completedPurposes?.at(-1)
                         : "Initial Level",
                     ].map((p) => ({ label: p, value: p }))
@@ -779,8 +768,7 @@ const RoadSurveyForm = () => {
 
             if (
               e.name === "length" ||
-              e.name === "width" ||
-              e.name === "formula"
+              e.name === "width"
             ) {
               return { ...e, hidden: entryType === "manualEntry" };
             }
@@ -997,7 +985,7 @@ const RoadSurveyForm = () => {
 
       const completedPurposes = survey?.purposes
         ?.filter((p) => p.phase === "Proposal")
-        .map((p) => p.type);
+        .map((p) => p.type) || [];
 
       updateInputData(completedLevels, completedPurposes);
     } else {
