@@ -262,6 +262,213 @@ const createSurvey = async (req, res, next) => {
   }
 };
 
+// ─── Queue Survey ─────────────────────────────────────────────────────────────
+// Creates a "Scheduled" survey with only Step-1 data. No purpose/rows are
+// created. The user can return later to complete the technical details.
+const queueSurvey = async (req, res, next) => {
+  try {
+    const {
+      user: { userId },
+      body: {
+        project,
+        purpose,
+        department,
+        division,
+        subDivision,
+        section,
+        consultant,
+        client,
+        engineerSurveyor,
+        assistant1,
+        assistant2,
+        assistant3,
+        assistant4,
+        assistant5,
+        // Schedule modal fields
+        proposalScheduleDate,
+        proposalDeadline,
+        location,
+        finalScheduleDate,
+        finalDeadline,
+      },
+    } = req;
+
+    if (!project || !purpose) {
+      throw createHttpError(400, "Project name and purpose are required");
+    }
+    if (!proposalScheduleDate || !proposalDeadline || !location) {
+      throw createHttpError(
+        400,
+        "Proposal Schedule Date, Proposal Deadline and Location are required",
+      );
+    }
+
+    const isPublicProject = !!(department && division && subDivision && section);
+    const isPrivateProject = !!(consultant && client);
+
+    if (!isPublicProject && !isPrivateProject) {
+      throw createHttpError(
+        400,
+        "Please provide either Administrative units or External parties",
+      );
+    }
+
+    const survey = await Survey.create({
+      project,
+      createdBy: userId,
+      status: "Scheduled",
+      ...(isPublicProject ? { department, division, subDivision, section } : {}),
+      ...(isPrivateProject ? { consultant, client } : {}),
+      engineerSurveyor,
+      assistant1,
+      assistant2,
+      assistant3,
+      assistant4,
+      assistant5,
+      proposalScheduleDate,
+      proposalDeadline,
+      location,
+      finalScheduleDate: finalScheduleDate || null,
+      finalDeadline: finalDeadline || null,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Survey queued successfully",
+      survey,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── Complete Survey ──────────────────────────────────────────────────────────
+// Accepts Step-2 technical fields for an existing Scheduled survey, updates it
+// to Active, then creates the first SurveyPurpose and TBM row.
+const completeSurvey = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const {
+      user: { userId },
+      params: { id },
+      body: {
+        purpose,
+        agreementNo,
+        contractor,
+        instrumentNo,
+        reducedLevel,
+        backSight,
+        remark,
+        chainageMultiple,
+        separator,
+      },
+    } = req;
+
+    if (
+      !purpose ||
+      !agreementNo ||
+      !contractor ||
+      !instrumentNo ||
+      !reducedLevel ||
+      !backSight ||
+      !chainageMultiple ||
+      !separator
+    ) {
+      throw createHttpError(400, "All technical fields are required");
+    }
+
+    const survey = await Survey.findOne({
+      _id: id,
+      createdBy: userId,
+      status: "Scheduled",
+      deleted: false,
+    }).session(session);
+
+    if (!survey) {
+      throw createHttpError(
+        404,
+        "Scheduled survey not found or already activated",
+      );
+    }
+
+    // Update survey with technical fields and activate it
+    survey.agreementNo = agreementNo;
+    survey.contractor = contractor;
+    survey.instrumentNo = instrumentNo;
+    survey.chainageMultiple = Number(chainageMultiple);
+    survey.separator = separator;
+    survey.reducedLevel = Number(reducedLevel).toFixed(3);
+    survey.status = "Active";
+    await survey.save({ session });
+
+    // Create first purpose
+    const purposeDoc = await SurveyPurpose.create(
+      [
+        {
+          surveyId: survey._id,
+          createdBy: userId,
+          type: purpose,
+          isSurveyFinish: false,
+        },
+      ],
+      { session },
+    );
+
+    const purposeObj = purposeDoc[0];
+
+    // Create first TBM row
+    const row = await SurveyRow.create(
+      [
+        {
+          surveyId: survey._id,
+          purposeId: purposeObj._id,
+          createdBy: userId,
+          type: "Instrument setup",
+          backSight: Number(backSight).toFixed(3),
+          remarks: [remark || "TBM - 1"],
+          reducedLevels: [Number(reducedLevel).toFixed(3)],
+          heightOfInstrument: Number(
+            Number(reducedLevel) + Number(backSight),
+          ).toFixed(3),
+        },
+      ],
+      { session },
+    );
+
+    await History.create(
+      [
+        {
+          entityType: "Survey",
+          entityId: survey._id,
+          action: "Update",
+          notes: `Scheduled survey completed and activated with purpose ${purpose}`,
+          performedBy: userId,
+        },
+      ],
+      { session },
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      success: true,
+      message: "Survey activated successfully",
+      survey: {
+        ...survey.toObject(),
+        purposeId: purposeObj._id,
+        status: "Active",
+      },
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
+
 const getSurvey = async (req, res, next) => {
   try {
     const {
@@ -2464,6 +2671,8 @@ export {
   checkSurveyExists,
   getAllSurvey,
   createSurvey,
+  queueSurvey,
+  completeSurvey,
   getSurveyPurpose,
   getFieldBook,
   createSurveyPurpose,

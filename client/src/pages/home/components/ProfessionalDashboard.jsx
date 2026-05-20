@@ -481,7 +481,7 @@ export default function ProfessionalDashboard() {
                     <motion.div variants={fUp}>
                       <Box
                         sx={{
-                          display: "inline-flex",
+                          // display: "inline-flex",
                           px: 2,
                           py: 0.5,
                           borderRadius: 10,
@@ -531,7 +531,7 @@ export default function ProfessionalDashboard() {
                   <motion.div variants={fUp}>
                     <Box
                       sx={{
-                        display: "inline-flex",
+                        // display: "inline-flex",
                         px: 2,
                         py: 0.5,
                         mb: 3,

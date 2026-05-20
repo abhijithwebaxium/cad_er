@@ -61,7 +61,7 @@ export default function SurveyList() {
       if (activePurpose) {
         navigate(`/survey/road-survey/${activePurpose._id}/rows`);
       } else {
-        navigate(`/survey/road-survey/${survey._id}`);
+        navigate(`/survey/road-survey/continue-survey/${survey._id}`);
       }
     } catch (err) {
       dispatch(

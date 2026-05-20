@@ -404,7 +404,7 @@ export default function FieldBook() {
             sx={{ py: 1, px: 2, fontSize: 12, minWidth: "78px" }}
             onClick={() =>
               navigate(
-                `/survey/road-survey/${
+                `/survey/road-survey/continue-survey/${
                   purpose?.surveyId?._id || purpose?.surveyId || survey?._id
                 }`,
                 { state: { fromPL: true } }

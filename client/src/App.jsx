@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/home";
 import SurveyLanding from "./pages/survey";
 import RoadSurveyForm from "./pages/survey/RoadSurveyForm";
+import ContinueSurveyForm from "./pages/survey/ContinueSurveyForm";
 import RootLayout from "./layout/RootLayout";
 import RoadSurveyRowsForm from "./pages/survey/RoadSurveyRowsForm";
 import Unauthorized from "./pages/errors/Unauthorized";
@@ -101,7 +102,7 @@ function App() {
                   <Route path=":id/report" element={<Report />} />
                   <Route path="road-survey">
                     <Route index element={<RoadSurveyForm />} />
-                    <Route path=":id" element={<RoadSurveyForm />} />
+                    <Route path="continue-survey/:id" element={<ContinueSurveyForm />} />
                     <Route path=":id/rows" element={<RoadSurveyRowsForm />} />
                     <Route path=":id/field-book" element={<FieldBook />} />
                     <Route path=":id/report" element={<CrossSectionReport />} />

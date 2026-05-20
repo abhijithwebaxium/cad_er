@@ -6,6 +6,8 @@ import {
   checkSurveyExists,
   getAllSurvey,
   createSurvey,
+  queueSurvey,
+  completeSurvey,
   getSurvey,
   updateSurvey,
   deleteSurvey,
@@ -38,7 +40,9 @@ router.get("/purposes", getAllSurveyPurpose);
 // 🔹 Survey routes
 router.get("/", getAllSurvey);
 router.post("/", createSurvey);
+router.post("/queue", queueSurvey);
 router.patch("/:id/end", endSurvey);
+router.patch("/:id/complete", completeSurvey);
 router.get("/:id", getSurvey);
 router.patch("/:id", updateSurvey);
 router.delete("/:id", deleteSurvey);

@@ -5,8 +5,8 @@ const SurveySchema = new Schema(
   {
     type: { type: String, default: "Road Survey", index: true, trim: true },
     project: { type: String, required: true, trim: true },
-    agreementNo: { type: String, required: true, trim: true },
-    contractor: { type: String, required: true, trim: true },
+    agreementNo: { type: String, trim: true },
+    contractor: { type: String, trim: true },
     department: { type: String, trim: true },
     division: { type: String, trim: true },
     subDivision: { type: String, trim: true },
@@ -29,10 +29,10 @@ const SurveySchema = new Schema(
       isBranchEnd: { type: Boolean, default: false },
       currentBranch: { type: Types.ObjectId, ref: "Survey" },
     },
-    instrumentNo: { type: String, required: true, trim: true },
-    chainageMultiple: { type: Number, required: true },
-    separator: { type: String, required: true },
-    reducedLevel: { type: String, required: true, trim: true },
+    instrumentNo: { type: String, trim: true },
+    chainageMultiple: { type: Number },
+    separator: { type: String },
+    reducedLevel: { type: String, trim: true },
     createdBy: { type: Types.ObjectId, ref: "User", required: true },
     isSurveyFinish: { type: Boolean, default: false, index: true },
     DateOfSurvey: { type: Date, default: Date.now },
@@ -46,10 +46,18 @@ const SurveySchema = new Schema(
     assistant3: { type: String, trim: true },
     assistant4: { type: String, trim: true },
     assistant5: { type: String, trim: true },
+    // Legacy scheduling date
     scheduledDate: Date,
+    // Queue scheduling fields
+    proposalScheduleDate: Date,
+    proposalDeadline: Date,
+    location: { type: String, trim: true },
+    finalScheduleDate: Date,
+    finalDeadline: Date,
   },
   { timestamps: true },
 );
+
 
 // --- Virtuals ---
 SurveySchema.virtual("purposes", {

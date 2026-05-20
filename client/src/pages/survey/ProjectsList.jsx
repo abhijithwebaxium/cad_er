@@ -172,12 +172,20 @@ export default function ProjectsList() {
       if (!survey) throw Error("Something went wrong");
       if (survey.isSurveyFinish) throw Error("The survey already finished");
 
+      // Scheduled survey → open Create Project form at Step 2
+      if (survey.status === "Scheduled") {
+        navigate("/survey/road-survey", {
+          state: { surveyId: survey._id, step: 2 },
+        });
+        return;
+      }
+
       const activePurpose = survey.purposes?.find((p) => !p.isPurposeFinish);
 
       if (activePurpose) {
         navigate(`/survey/road-survey/${activePurpose._id}/rows`);
       } else {
-        navigate(`/survey/road-survey/${survey._id}`);
+        navigate(`/survey/road-survey/continue-survey/${survey._id}`);
       }
     } catch (err) {
       dispatch(
@@ -188,6 +196,7 @@ export default function ProjectsList() {
       );
     }
   };
+
 
   const handleClose = () => {
     setLink("");
@@ -498,57 +507,54 @@ export default function ProjectsList() {
                       }
                       details={
                         <Stack>
-                          {fieldsToMap
-                            ?.filter(
-                              (item) =>
-                                item.value !== "Field Book" &&
-                                item.value !== "Reports",
-                            )
-                            .map(({ key, value, type }, idx) => (
-                              <Item key={idx}>
-                                {value}
-
-                                {type === "Icon" ? (
-                                  value === "Field Book" ? (
-                                    <Box
-                                      onClick={() =>
-                                        handleClickFiledBook(survey._id)
-                                      }
-                                    >
-                                      {key}
-                                    </Box>
-                                  ) : (
-                                    <Link to={getLink(survey, value)}>
-                                      {key}
-                                    </Link>
-                                  )
-                                ) : (
-                                  <Typography
-                                    color={
-                                      key === "lastPurpose"
-                                        ? colors[
-                                            survey[key]?.includes("Initial")
-                                              ? "Initial"
-                                              : survey[key]?.includes("Final")
-                                                ? "Final"
-                                                : ""
-                                          ]
-                                        : ""
-                                    }
-                                    fontSize={14}
-                                    fontWeight={700}
-                                  >
-                                    {type === "Date"
-                                      ? new Date(
-                                          survey[key],
-                                        )?.toLocaleDateString("en-IN")
-                                      : type === "constant"
-                                        ? key
-                                        : survey[key]}
-                                  </Typography>
-                                )}
-                              </Item>
-                            ))}
+                          <Item>
+                            <Typography fontSize={14} fontWeight={600} color="rgba(0, 0, 0, 0.54)">
+                              Proposal Schedule Date
+                            </Typography>
+                            <Typography fontSize={14} fontWeight={700}>
+                              {survey.proposalScheduleDate
+                                ? new Date(survey.proposalScheduleDate).toLocaleDateString("en-IN")
+                                : "N/A"}
+                            </Typography>
+                          </Item>
+                          <Item>
+                            <Typography fontSize={14} fontWeight={600} color="rgba(0, 0, 0, 0.54)">
+                              Deadline
+                            </Typography>
+                            <Typography fontSize={14} fontWeight={700}>
+                              {survey.proposalDeadline
+                                ? new Date(survey.proposalDeadline).toLocaleDateString("en-IN")
+                                : "N/A"}
+                            </Typography>
+                          </Item>
+                          <Item>
+                            <Typography fontSize={14} fontWeight={600} color="rgba(0, 0, 0, 0.54)">
+                              Location
+                            </Typography>
+                            <Typography fontSize={14} fontWeight={700}>
+                              {survey.location || "N/A"}
+                            </Typography>
+                          </Item>
+                          {survey.finalScheduleDate && (
+                            <Item>
+                              <Typography fontSize={14} fontWeight={600} color="rgba(0, 0, 0, 0.54)">
+                                Final Schedule Date
+                              </Typography>
+                              <Typography fontSize={14} fontWeight={700}>
+                                {new Date(survey.finalScheduleDate).toLocaleDateString("en-IN")}
+                              </Typography>
+                            </Item>
+                          )}
+                          {survey.finalDeadline && (
+                            <Item>
+                              <Typography fontSize={14} fontWeight={600} color="rgba(0, 0, 0, 0.54)">
+                                Final Deadline
+                              </Typography>
+                              <Typography fontSize={14} fontWeight={700}>
+                                {new Date(survey.finalDeadline).toLocaleDateString("en-IN")}
+                              </Typography>
+                            </Item>
+                          )}
                         </Stack>
                       }
                       expandIcon={

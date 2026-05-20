@@ -12,6 +12,15 @@ export const createSurvey = (formData) => {
   return axiosInstance.post("surveys", formData);
 };
 
+export const queueSurvey = (formData) => {
+  return axiosInstance.post("surveys/queue", formData);
+};
+
+export const completeSurvey = (id, formData) => {
+  return axiosInstance.patch(`surveys/${id}/complete`, formData);
+};
+
+
 export const getSurvey = (id) => {
   return axiosInstance.get(`surveys/${id}`);
 };
