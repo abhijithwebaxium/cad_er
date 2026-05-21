@@ -88,151 +88,113 @@ const initialDetails = {
   secondaryEntry: "",
 };
 
-const drawPDFHeader = (doc, surveyInfo, reportDetails) => {
-  // Centered Headers
+const drawPDFHeader = (doc, surveyInfo, reportDetails, tableData) => {
+  // 1. Header
+  const layerName = reportDetails?.initialEntry || "INITIAL LEVEL";
+  const headerText = `${layerName} - PROFILE, SECTIONS & QUANTITY`.toUpperCase();
+  
+  const isInitial = layerName.toLowerCase().includes("initial");
+  
+  doc.setFont("helvetica", "bold").setFontSize(16);
+  if (isInitial) {
+    doc.setTextColor(0, 128, 0); // green
+  } else {
+    doc.setTextColor(255, 0, 0); // red
+  }
+  
+  doc.text(headerText, 105, 30, { align: "center" });
+
+  // 2. Department or Client Details
+  doc.setFont("helvetica", "normal").setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  
+  const isGovt = surveyInfo?.projectType !== "Private" && surveyInfo?.projectType !== "private";
+  const deptOrClient = isGovt ? (surveyInfo?.department || "IRRIGATION DEPARTMENT") : (surveyInfo?.client || "CLIENT DETAILS");
+  doc.text(deptOrClient.toUpperCase(), 105, 40, { align: "center" });
+
+  // 3. Instrument Model and Serial No.
+  doc.setFontSize(10);
+  const instrumentModel = surveyInfo?.instrumentNo || "BOSCH GOL 32D Professional";
+  const serialNo = "122240174"; // Defaulting to the one in previous code if not in surveyInfo
+  
+  doc.text(`INSTRUMENT MODEL: ${instrumentModel}`, 15, 55);
+  doc.text(`SERIAL NO: ${serialNo}`, 195, 55, { align: "right" });
+
+  // 4. Name of work
   doc.setFont("helvetica", "bold").setFontSize(14);
-  doc.setTextColor(26, 26, 26);
-  doc.text(
-    (surveyInfo?.department || "IRRIGATION DEPARTMENT").toUpperCase(),
-    105,
-    15,
-    { align: "center" },
-  );
+  const workName = surveyInfo?.project || "NAME OF WORK";
+  const splitWorkName = doc.splitTextToSize(workName.toUpperCase(), 180);
+  doc.text(splitWorkName, 105, 70, { align: "center" });
+  
+  let currentY = 70 + (splitWorkName.length * 6) + 15;
+  
+  // 5. LF Book Registered No & 6. Agreement No
+  doc.setFont("helvetica", "normal").setFontSize(11);
+  doc.text("LF Book Registered No:", 15, currentY);
+  doc.text("__________________________________________________", 65, currentY);
+  currentY += 10;
+  
+  doc.text("Agreement No:", 15, currentY);
+  const agreementText = surveyInfo?.agreementNo || "__________________________________________________";
+  doc.text(agreementText, 65, currentY);
+  currentY += 15;
 
-  doc.setFont("helvetica", "italic").setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text("(Government of Kerala)", 105, 21, { align: "center" });
+  // 7. Client Management / Hierarchy node
+  doc.text("Division:", 15, currentY);
+  doc.text(surveyInfo?.division || "________________________________", 45, currentY);
+  currentY += 8;
+  
+  doc.text("Sub-Division:", 15, currentY);
+  doc.text(surveyInfo?.subDivision || "________________________________", 45, currentY);
+  currentY += 8;
+  
+  doc.text("Section:", 15, currentY);
+  doc.text(surveyInfo?.section || "________________________________", 45, currentY);
+  currentY += 8;
+  
+  doc.text("Contractor:", 15, currentY);
+  doc.text(surveyInfo?.contractor || "________________________________", 45, currentY);
+  currentY += 20;
 
-  const phaseTitle = `${reportDetails?.initialEntry} -${" "}
-    ${reportDetails?.secondaryEntry}`;
-  doc.setFont("helvetica", "bold").setFontSize(12);
-  doc.setTextColor(211, 47, 47); // Crimson red
-  doc.text(`${phaseTitle}`, 105, 30, {
-    align: "center",
+  // 8. QUANTITY STATEMENT / ABSTRACT Table
+  let quantityText = "-";
+  if (tableData) {
+     const cut = Number(tableData?.totalCuttingVolume || 0);
+     const fill = Number(tableData?.totalFillingVolume || 0);
+     if (cut > 0 && fill > 0) {
+       quantityText = `Cut: ${cut.toFixed(3)}, Fill: ${fill.toFixed(3)}`;
+     } else if (cut > 0) {
+       quantityText = `${cut.toFixed(3)}`;
+     } else if (fill > 0) {
+       quantityText = `${fill.toFixed(3)}`;
+     } else {
+       quantityText = "0.000";
+     }
+  }
+
+  doc.setFont("helvetica", "bold").setFontSize(11);
+  doc.text("QUANTITY STATEMENT / ABSTRACT", 105, currentY, { align: "center" });
+  currentY += 5;
+
+  autoTable(doc, {
+    startY: currentY,
+    margin: { left: 15, right: 15 },
+    head: [['SL. No.', 'Page No.', 'Layers / Profiles', 'Quantity / QTY', 'Units']],
+    body: [
+      ['1', '', layerName, quantityText, 'Cubic Meters']
+    ],
+    theme: 'grid',
+    styles: { fontSize: 10, halign: 'center', valign: 'middle' },
+    headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
   });
 
-  // Instrument Details Section (No Border)
+  currentY = doc.lastAutoTable.finalY + 40;
 
-  doc.setFont("helvetica", "bold").setFontSize(7.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("INSTRUMENT TYPE:", 13, 41);
-  doc.text("PART NO:", 13, 49);
-  doc.text("INSTRUMENT MODEL:", 105, 41);
-  doc.text("SL NO:", 105, 49);
-
-  doc.setFont("helvetica", "normal").setFontSize(7.5);
-  doc.setTextColor(80, 80, 80);
-  doc.text("Auto Level Readings (Degree)", 45, 41);
-  doc.text("0 601 068 5F0", 45, 49);
-  doc.text(surveyInfo?.instrumentNo || "BOSCH GOL 32D Professional", 138, 41);
-  doc.text("122240174", 138, 49);
-
-  // Work Details with Underlines
-  doc.setFont("helvetica", "bold").setFontSize(8.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("Name of Work", 10, 62);
-
-  // Values
-  doc.setFont("helvetica", "normal").setFontSize(8);
-  doc.setTextColor(30, 30, 30);
-
-  // Wrap work name if it is long
-  const workName =
-    surveyInfo?.project ||
-    "GENERAL-ROAD WORK -REPAIR WORKS TO MAIN ROAD CONNECTING PEECHI DAM AND KERI-GENERAL CIVIL WORK";
-  const splitWorkName = doc.splitTextToSize(workName, 155);
-  doc.text(splitWorkName, 43, 62);
-  // Underline for Name of Work
-  const lineCount = splitWorkName.length || 1;
-  const workUnderlineY = 62 + (lineCount - 1) * 4 + 3.5;
-  doc.setDrawColor(180, 180, 180).setLineWidth(0.4); // Thicker line
-  doc.line(42, workUnderlineY, 200, workUnderlineY);
-
-  const yAgreement = workUnderlineY + 8.5;
-  doc.setFont("helvetica", "bold").setFontSize(8.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("Agreement No", 10, yAgreement);
-  doc.setFont("helvetica", "normal").setFontSize(8);
-  doc.setTextColor(30, 30, 30);
-  const agreementText = surveyInfo?.agreementNo
-    ? `: ${surveyInfo.agreementNo}`
-    : ": _____________________________________________________________________________________";
-  doc.text(agreementText, 43, yAgreement);
-  doc.setDrawColor(180, 180, 180).setLineWidth(0.2);
-  doc.line(42, yAgreement + 2.5, 200, yAgreement + 2.5);
-
-  const contractorText = surveyInfo?.contractor
-    ? `: ${surveyInfo.contractor}`
-    : ": _____________________________________________________________________________________";
-  const yContractor = yAgreement + 9.5;
-  doc.setFont("helvetica", "bold").setFontSize(8.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("Name of Contractor", 10, yContractor);
-  doc.setFont("helvetica", "normal").setFontSize(8);
-  doc.setTextColor(30, 30, 30);
-  doc.text(contractorText, 43, yContractor);
-  doc.line(42, yContractor + 2.5, 200, yContractor + 2.5);
-
-  const divisionText = surveyInfo?.division
-    ? `: ${surveyInfo.division}`
-    : ": _____________________________________________________________________________________";
-  const yDivision = yContractor + 9.5;
-  doc.setFont("helvetica", "bold").setFontSize(8.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("Division", 10, yDivision);
-  doc.setFont("helvetica", "normal").setFontSize(8);
-  doc.setTextColor(30, 30, 30);
-  doc.text(divisionText, 43, yDivision);
-  doc.line(42, yDivision + 2.5, 200, yDivision + 2.5);
-
-  const subDivText = surveyInfo?.subDivision
-    ? `: ${surveyInfo.subDivision}`
-    : ": _____________________________________________________________________________________";
-  const ySubDiv = yDivision + 9.5;
-  doc.setFont("helvetica", "bold").setFontSize(8.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("Sub-Division", 10, ySubDiv);
-  doc.setFont("helvetica", "normal").setFontSize(8);
-  doc.setTextColor(30, 30, 30);
-  doc.text(subDivText, 43, ySubDiv);
-  doc.line(42, ySubDiv + 2.5, 200, ySubDiv + 2.5);
-
-  const sectionText = surveyInfo?.section
-    ? `: ${surveyInfo.section}`
-    : ": _____________________________________________________________________________________";
-  const ySection = ySubDiv + 9.5;
-  doc.setFont("helvetica", "bold").setFontSize(8.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("Section", 10, ySection);
-  doc.setFont("helvetica", "normal").setFontSize(8);
-  doc.setTextColor(30, 30, 30);
-  doc.text(sectionText, 43, ySection);
-  doc.line(42, ySection + 2.5, 200, ySection + 2.5);
-
-  // Declaration
-  const yDecl = ySection + 8.5;
-  doc.setFont("helvetica", "bold").setFontSize(8.5);
-  doc.setTextColor(50, 50, 50);
-  doc.text("Declaration ,", 10, yDecl);
-
-  doc.setFont("helvetica", "normal").setFontSize(7.5);
-  doc.setTextColor(60, 60, 60);
-  const declText =
-    "I, the Assistant Engineer certify that levels recorded from page _____ to _____ of Level Field book [REG No.:_______________________] were taken personally by me from ____/____/_______ to ____/____/_______.";
-  const splitDecl = doc.splitTextToSize(declText, 190);
-  doc.text(splitDecl, 10, yDecl + 5);
-
-  // Sign Off
-  const ySign = yDecl + 17;
-  doc.setFont("helvetica", "normal").setFontSize(10);
-  doc.setTextColor(30, 30, 30);
-  doc.text("X", 155, ySign);
-  doc.line(145, ySign + 2, 195, ySign + 2);
-  doc.setFont("helvetica", "bold").setFontSize(7.5);
-  doc.text("Assistant Engineer", 170, ySign + 6, { align: "center" });
-
-  // Reset text color to default black
-  doc.setTextColor(0, 0, 0);
+  // 9. Signatory
+  doc.setFont("helvetica", "bold").setFontSize(10);
+  doc.text("Assistant Engineer", 30, currentY, { align: "center" });
+  doc.text("Assistant Executive Engineer", 105, currentY, { align: "center" });
+  doc.text("Executive Engineer", 180, currentY, { align: "center" });
 };
 
 const exportPdf = async ({
@@ -287,7 +249,7 @@ const exportPdf = async ({
     const contentWidth = pageTotalWidth - margin * 2;
 
     // Draw the cover page alone on the first page
-    drawPDFHeader(doc, surveyInfo, reportDetails);
+    drawPDFHeader(doc, surveyInfo, reportDetails, tableData);
     updateProgress("Cover page generated");
 
     // ===== VOLUME REPORT =====
@@ -565,41 +527,52 @@ const exportPdf = async ({
     const infoBoxHeight = 42;
     const chartGap = 4;
 
-    const drawGraphInfoSection = () => {
-      const left = chartPageMargin;
-      const bottom = pageTotalHeight - chartPageMargin;
-      const top = bottom - infoBoxHeight;
-      const width = chartContentWidth;
+    const drawGraphInfoSection = (availableTop, availableBottom) => {
+      const L_W = availableBottom - availableTop;
+      const L_H = infoBoxHeight;
+      const mapX = (lx, ly) => pageTotalWidth - chartPageMargin - infoBoxHeight + ly;
+      const mapY = (lx, ly) => availableBottom - lx;
 
       const labelColWidth = 32;
       const descColWidth = 55;
-      const approvalStartX = left + labelColWidth + descColWidth;
-      const remainingWidth = width - (labelColWidth + descColWidth);
+      const approvalStartX = labelColWidth + descColWidth;
+      const remainingWidth = L_W - (labelColWidth + descColWidth);
 
       const mainApprovalColWidth = remainingWidth / 4;
       const subColLabelWidth = mainApprovalColWidth * 0.65;
-      const rowHeight = infoBoxHeight / 5;
+      const rowHeight = L_H / 5;
 
       doc.setDrawColor(0).setLineWidth(0.2);
-      doc.line(left, top, left + width, top);
-      doc.line(left + labelColWidth, top, left + labelColWidth, bottom);
-      doc.line(approvalStartX, top, approvalStartX, bottom);
+
+      const drawLine = (x1, y1, x2, y2) => {
+        doc.line(mapX(x1, y1), mapY(x1, y1), mapX(x2, y2), mapY(x2, y2));
+      };
+
+      const drawText = (text, lx, ly, options = {}) => {
+        doc.text(text, mapX(lx, ly), mapY(lx, ly), { ...options, angle: 90 });
+      };
+
+      drawLine(0, 0, L_W, 0); // Top
+      drawLine(0, L_H, L_W, L_H); // Bottom (to separate from page edge or chart)
+      drawLine(labelColWidth, 0, labelColWidth, L_H);
+      drawLine(approvalStartX, 0, approvalStartX, L_H);
 
       for (let i = 0; i < 4; i++) {
         const colX = approvalStartX + mainApprovalColWidth * i;
-        if (i > 0) doc.line(colX, top, colX, bottom);
-        doc.line(colX + subColLabelWidth, top, colX + subColLabelWidth, bottom);
+        if (i > 0) drawLine(colX, 0, colX, L_H);
+        drawLine(colX + subColLabelWidth, 0, colX + subColLabelWidth, L_H);
       }
       for (let i = 1; i < 5; i++) {
-        doc.line(left, top + rowHeight * i, left + width, top + rowHeight * i);
+        drawLine(0, rowHeight * i, L_W, rowHeight * i);
       }
 
       const headers = ["CONTRACTOR", "CONSULTANT", "CSML", "KMRL"];
       doc.setFont("helvetica", "bold").setFontSize(5.5);
       headers.forEach((h, i) => {
-        const centerX =
-          approvalStartX + mainApprovalColWidth * i + subColLabelWidth / 2;
-        doc.text(h, centerX, top + rowHeight / 2 + 1, { align: "center" });
+        const colX = approvalStartX + mainApprovalColWidth * i;
+        const textWidth = doc.getTextWidth(h);
+        const startX = colX + (subColLabelWidth - textWidth) / 2;
+        drawText(h, startX, rowHeight / 2 + 1);
       });
 
       const labels = [
@@ -611,14 +584,13 @@ const exportPdf = async ({
       ];
 
       labels.forEach((item, i) => {
-        const yPos = top + rowHeight * i + rowHeight / 2 + 1;
+        const yPos = rowHeight * i + rowHeight / 2 + 1;
         doc.setFont("helvetica", "bold").setFontSize(7);
-        doc.text(item.label, left + 2, yPos);
+        drawText(item.label, 2, yPos);
         doc.setFont("helvetica", "normal");
         const splitValue = doc.splitTextToSize(item.value, descColWidth - 4);
-        doc.text(splitValue, left + labelColWidth + 2, yPos);
+        drawText(splitValue, labelColWidth + 2, yPos);
       });
-      // (Status labels logic same as before...)
     };
 
     for (let i = 0; i < chartItems.length; i++) {
@@ -636,41 +608,54 @@ const exportPdf = async ({
         logging: false,
       });
 
+      // Rotate canvas -90 degrees so it fits portrait page vertically
+      const rotatedCanvas = document.createElement("canvas");
+      rotatedCanvas.width = canvas.height;
+      rotatedCanvas.height = canvas.width;
+      const ctx = rotatedCanvas.getContext("2d");
+      ctx.translate(0, canvas.width);
+      ctx.rotate(-Math.PI / 2);
+      ctx.drawImage(canvas, 0, 0);
+
       // Optimization 3: Use JPEG at 0.75 quality instead of PNG
-      const imgData = canvas.toDataURL("image/jpeg", 0.75);
+      const imgData = rotatedCanvas.toDataURL("image/jpeg", 0.75);
       doc.addPage();
 
-      // Master Border
+      const availableTop = chartPageMargin + 14;
+      const availableBottom = pageTotalHeight - chartPageMargin;
+      const availableHeight = availableBottom - availableTop;
+
+      doc.setFont("helvetica", "bold").setFontSize(11);
+      // doc.text(
+      //   "Plotting and Quantity Report",
+      //   pageTotalWidth / 2,
+      //   chartPageMargin + 8,
+      //   { align: "center" },
+      // );
+
+      // Master Border around the entire content area (chart + table)
       doc.setDrawColor(0).setLineWidth(0.4);
       doc.rect(
         chartPageMargin,
-        chartPageMargin,
+        availableTop,
         chartContentWidth,
-        chartContentHeight,
+        availableHeight
       );
 
-      doc.setFont("helvetica", "bold").setFontSize(11);
-      doc.text(
-        "Plotting and Quantity Report",
-        pageTotalWidth / 2,
-        chartPageMargin + 8,
-        { align: "center" },
-      );
+      const availableLeft = chartPageMargin;
+      const tableWidth = infoBoxHeight;
+      const availableRight = pageTotalWidth - chartPageMargin - tableWidth - chartGap;
+      const availableWidth = availableRight - availableLeft;
 
-      const availableTop = chartPageMargin + 14;
-      const availableBottom =
-        pageTotalHeight - chartPageMargin - infoBoxHeight - chartGap;
-      const availableHeight = availableBottom - availableTop;
+      let imgWidth = availableWidth - 2;
+      let imgHeight = (rotatedCanvas.height * imgWidth) / rotatedCanvas.width;
 
-      let imgWidth = chartContentWidth - 2;
-      let imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      if (imgHeight > availableHeight) {
-        imgHeight = availableHeight;
-        imgWidth = (canvas.width * imgHeight) / canvas.height;
+      if (imgHeight > availableHeight - 2) {
+        imgHeight = availableHeight - 2;
+        imgWidth = (rotatedCanvas.width * imgHeight) / rotatedCanvas.height;
       }
 
-      const x = chartPageMargin + (chartContentWidth - imgWidth) / 2;
+      const x = availableLeft + (availableWidth - imgWidth) / 2;
       const y = availableTop + (availableHeight - imgHeight) / 2;
 
       // Optimization 4: Use 'FAST' compression alias
@@ -685,7 +670,7 @@ const exportPdf = async ({
         "FAST",
       );
 
-      drawGraphInfoSection();
+      drawGraphInfoSection(availableTop, availableBottom);
 
       // Cleanup to free memory
       canvas.width = 0;
@@ -1317,7 +1302,7 @@ const PlottingAndQuantityReport = () => {
   }, []);
 
   return (
-    <Box p={2}>
+    <Box p={2} sx={{ maxWidth: '210mm', margin: '0 auto' }}>
       <ExportLoader
         open={loading}
         progress={progress?.percent}
@@ -1377,330 +1362,161 @@ const PlottingAndQuantityReport = () => {
           },
         }}
       >
-        {/* Centered Department & Subtitle */}
+        {/* Centered Layer Name */}
         <Box sx={{ textAlign: "center", mb: 3 }}>
           <Typography
             variant="h5"
             sx={{
-              fontWeight: 700,
-              letterSpacing: "1.5px",
-              color: "#0f172a",
+              fontWeight: 800,
+              color: reportDetails?.current?.initialEntry?.toLowerCase().includes("initial") ? "green" : "red",
               fontSize: { xs: "1.2rem", sm: "1.5rem" },
-              mb: 0.5,
+              mb: 1,
               textTransform: "uppercase",
             }}
           >
-            {survey?.department || "IRRIGATION DEPARTMENT"}
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              fontStyle: "italic",
-              color: "#64748b",
-              fontSize: { xs: "0.85rem", sm: "0.95rem" },
-              mb: 3,
-            }}
-          >
-            (Government of Kerala)
+            {reportDetails?.current?.initialEntry || "INITIAL LEVEL"} - PROFILE, SECTIONS & QUANTITY
           </Typography>
 
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              color: "#334155",
+              fontSize: { xs: "1rem", sm: "1.1rem" },
+              mb: 3,
+              textTransform: "uppercase",
+            }}
+          >
+            {survey?.projectType !== "Private" && survey?.projectType !== "private"
+              ? (survey?.department || "IRRIGATION DEPARTMENT")
+              : (survey?.client || "CLIENT DETAILS")}
+          </Typography>
+        </Box>
+
+        {/* Instrument Details */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={6}>
+            <Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>
+              INSTRUMENT MODEL: <span style={{ fontWeight: 400, color: "#334155" }}>{survey?.instrumentNo || "BOSCH GOL 32D Professional"}</span>
+            </Typography>
+          </Grid>
+          <Grid item xs={6} sx={{ textAlign: "right" }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>
+              SERIAL NO: <span style={{ fontWeight: 400, color: "#334155" }}>{survey?.serialNo || "122240174"}</span>
+            </Typography>
+          </Grid>
+        </Grid>
+
+        {/* Name of Work */}
+        <Box sx={{ textAlign: "center", mb: 4 }}>
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 800,
-              color: "#dc2626", // Red-600
-              letterSpacing: "1px",
-              fontSize: { xs: "1.1rem", sm: "1.35rem" },
-              mt: 2,
-              mb: 3,
+              fontWeight: 700,
+              color: "#1e293b",
+              fontSize: { xs: "1.1rem", sm: "1.25rem" },
               textTransform: "uppercase",
             }}
           >
-            {reportDetails?.current?.initialEntry} -{" "}
-            {reportDetails.current.secondaryEntry}
+            {survey?.project || "NAME OF WORK"}
           </Typography>
         </Box>
 
-        {/* Instrument Details Grid Box */}
-        <Box
-          sx={{
-            borderTop: "1px solid #e2e8f0",
-            borderBottom: "1px solid #e2e8f0",
-            py: 2,
-            mb: 4,
-          }}
-        >
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 700, color: "#475569" }}
-                >
-                  INSTRUMENT TYPE:
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#334155" }}>
-                  Auto Level Readings (Degree)
-                </Typography>
-              </Stack>
+        {/* LF Book & Agreement No */}
+        <Stack spacing={2} sx={{ mb: 4 }}>
+          <Grid container alignItems="center" spacing={1}>
+            <Grid item xs={12} sm={3}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>LF Book Registered No:</Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 700, color: "#475569" }}
-                >
-                  INSTRUMENT MODEL:
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#334155" }}>
-                  {survey?.instrumentNo || "BOSCH GOL 32D Professional"}
-                </Typography>
-              </Stack>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 700, color: "#475569" }}
-                >
-                  PART NO:
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#334155" }}>
-                  0 601 068 5F0
-                </Typography>
-              </Stack>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 700, color: "#475569" }}
-                >
-                  SL NO:
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#334155" }}>
-                  122240174
-                </Typography>
-              </Stack>
+            <Grid item xs={12} sm={9}>
+              <Typography variant="body2" sx={{ color: "#334155" }}>__________________________________________________</Typography>
             </Grid>
           </Grid>
-        </Box>
-
-        {/* Work & Contract Details */}
-        <Stack spacing={2.5} sx={{ mb: 4 }}>
-          <Box>
-            <Grid container alignItems="flex-start" spacing={1}>
-              <Grid item xs={12} sm={2.5}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
-                >
-                  Name of Work
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={9.5}
-                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ color: "#1e293b", fontWeight: 600, lineHeight: 1.5 }}
-                >
-                  {survey?.project ||
-                    "GENERAL-ROAD WORK -REPAIR WORKS TO MAIN ROAD CONNECTING PEECHI DAM AND KERI-GENERAL CIVIL WORK"}
-                </Typography>
-              </Grid>
+          <Grid container alignItems="center" spacing={1}>
+            <Grid item xs={12} sm={3}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>Agreement No:</Typography>
             </Grid>
-          </Box>
-
-          <Box>
-            <Grid container alignItems="center" spacing={1}>
-              <Grid item xs={12} sm={2.5}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
-                >
-                  Agreement No
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={9.5}
-                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
-              >
-                <Typography variant="body2" sx={{ color: "#1e293b" }}>
-                  {survey?.agreementNo
-                    ? `: ${survey.agreementNo}`
-                    : ": _____________________________________________________________________________________"}
-                </Typography>
-              </Grid>
+            <Grid item xs={12} sm={9}>
+              <Typography variant="body2" sx={{ color: "#334155" }}>{survey?.agreementNo || "__________________________________________________"}</Typography>
             </Grid>
-          </Box>
-
-          <Box>
-            <Grid container alignItems="center" spacing={1}>
-              <Grid item xs={12} sm={2.5}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
-                >
-                  Name of Contractor
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={9.5}
-                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
-              >
-                <Typography variant="body2" sx={{ color: "#1e293b" }}>
-                  {survey?.contractor
-                    ? `: ${survey.contractor}`
-                    : ": _____________________________________________________________________________________"}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
-
-          <Box>
-            <Grid container alignItems="center" spacing={1}>
-              <Grid item xs={12} sm={2.5}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
-                >
-                  Division
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={9.5}
-                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
-              >
-                <Typography variant="body2" sx={{ color: "#1e293b" }}>
-                  {survey?.division
-                    ? `: ${survey.division}`
-                    : ": _____________________________________________________________________________________"}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
-
-          <Box>
-            <Grid container alignItems="center" spacing={1}>
-              <Grid item xs={12} sm={2.5}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
-                >
-                  Sub-Division
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={9.5}
-                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
-              >
-                <Typography variant="body2" sx={{ color: "#1e293b" }}>
-                  {survey?.subDivision
-                    ? `: ${survey.subDivision}`
-                    : ": _____________________________________________________________________________________"}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
-
-          <Box>
-            <Grid container alignItems="center" spacing={1}>
-              <Grid item xs={12} sm={2.5}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, color: "#475569", py: 0.5 }}
-                >
-                  Section
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={9.5}
-                sx={{ borderBottom: "1px solid #cbd5e1", pb: 0.5 }}
-              >
-                <Typography variant="body2" sx={{ color: "#1e293b" }}>
-                  {survey?.section
-                    ? `: ${survey.section}`
-                    : ": _____________________________________________________________________________________"}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
+          </Grid>
         </Stack>
 
-        {/* Declaration & AE Sign Box */}
-        <Box sx={{ mt: 4, pt: 3, borderTop: "1px dashed #e2e8f0" }}>
-          <Typography
-            variant="subtitle2"
-            sx={{ fontWeight: 700, mb: 1, color: "#334155" }}
-          >
-            Declaration ,
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "#475569",
-              lineHeight: 1.8,
-              fontSize: "0.9rem",
-            }}
-          >
-            I, the Assistant Engineer certify that levels recorded from page{" "}
-            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </span>{" "}
-            to{" "}
-            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </span>{" "}
-            of Level Field book [REG No.:{" "}
-            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </span>
-            ] were taken personally by me from{" "}
-            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </span>{" "}
-            to{" "}
-            <span style={{ textDecoration: "underline", fontWeight: "bold" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </span>
-            .
-          </Typography>
+        {/* Client Management / Hierarchy */}
+        <Stack spacing={2} sx={{ mb: 5 }}>
+          <Grid container alignItems="center" spacing={1}>
+            <Grid item xs={12} sm={3}><Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>Division:</Typography></Grid>
+            <Grid item xs={12} sm={9}><Typography variant="body2" sx={{ color: "#334155" }}>{survey?.division || "________________________________"}</Typography></Grid>
+          </Grid>
+          <Grid container alignItems="center" spacing={1}>
+            <Grid item xs={12} sm={3}><Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>Sub-Division:</Typography></Grid>
+            <Grid item xs={12} sm={9}><Typography variant="body2" sx={{ color: "#334155" }}>{survey?.subDivision || "________________________________"}</Typography></Grid>
+          </Grid>
+          <Grid container alignItems="center" spacing={1}>
+            <Grid item xs={12} sm={3}><Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>Section:</Typography></Grid>
+            <Grid item xs={12} sm={9}><Typography variant="body2" sx={{ color: "#334155" }}>{survey?.section || "________________________________"}</Typography></Grid>
+          </Grid>
+          <Grid container alignItems="center" spacing={1}>
+            <Grid item xs={12} sm={3}><Typography variant="body2" sx={{ fontWeight: 700, color: "#475569" }}>Contractor:</Typography></Grid>
+            <Grid item xs={12} sm={9}><Typography variant="body2" sx={{ color: "#334155" }}>{survey?.contractor || "________________________________"}</Typography></Grid>
+          </Grid>
+        </Stack>
 
-          {/* Assistant Engineer Signbox */}
-          <Box
-            sx={{ display: "flex", justifyContent: "flex-end", mt: 4, pr: 2 }}
-          >
-            <Stack spacing={0.5} sx={{ width: "220px", textAlign: "center" }}>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: "normal", mb: 0, color: "#1e293b" }}
-              >
-                X
-              </Typography>
-              <Box sx={{ borderTop: "1px solid #1e293b", pt: 0.5 }}>
-                <Typography
-                  variant="caption"
-                  sx={{ fontWeight: 700, color: "#334155", display: "block" }}
-                >
-                  Assistant Engineer
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
+        {/* QUANTITY STATEMENT / ABSTRACT Table */}
+        <Box sx={{ mb: 5 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#1e293b", textAlign: "center", mb: 2 }}>
+            QUANTITY STATEMENT / ABSTRACT
+          </Typography>
+          <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e2e8f0" }}>
+            <Table size="small">
+              <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+                <TableRow>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>SL. No.</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Page No.</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Layers / Profiles</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Quantity / QTY</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 700 }}>Units</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell align="center">1</TableCell>
+                  <TableCell align="center"></TableCell>
+                  <TableCell align="center">{reportDetails?.current?.initialEntry || "INITIAL LEVEL"}</TableCell>
+                  <TableCell align="center">
+                    {(() => {
+                      const cut = Number(tableData?.totalCuttingVolume || 0);
+                      const fill = Number(tableData?.totalFillingVolume || 0);
+                      if (cut > 0 && fill > 0) return `Cut: ${cut.toFixed(3)}, Fill: ${fill.toFixed(3)}`;
+                      if (cut > 0) return `${cut.toFixed(3)}`;
+                      if (fill > 0) return `${fill.toFixed(3)}`;
+                      return "0.000";
+                    })()}
+                  </TableCell>
+                  <TableCell align="center">Cubic Meters</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+
+        {/* Signatory Box */}
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 6, pt: 4 }}>
+          <Stack spacing={0.5} sx={{ textAlign: "center" }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: "#334155" }}>
+              Assistant Engineer
+            </Typography>
+          </Stack>
+          <Stack spacing={0.5} sx={{ textAlign: "center" }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: "#334155" }}>
+              Assistant Executive Engineer
+            </Typography>
+          </Stack>
+          <Stack spacing={0.5} sx={{ textAlign: "center" }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: "#334155" }}>
+              Executive Engineer
+            </Typography>
+          </Stack>
         </Box>
       </Paper>
 
@@ -2030,6 +1846,9 @@ const PlottingAndQuantityReport = () => {
         }}
         mt={2}
       >
+        <Typography fontSize="12px" textAlign={"center"} mb={2}>
+          L.S
+        </Typography>
         {selectedLs && selectedLs?.series?.length && (
           <Box className="pdf-chart-item" sx={{ width: "100%" }}>
             <CrossSectionChart

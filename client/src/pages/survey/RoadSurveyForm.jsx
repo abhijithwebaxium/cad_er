@@ -88,6 +88,13 @@ const step1Fields = [
     hidden: false,
   },
   {
+    label: "Contractor*",
+    name: "contractor",
+    type: "text",
+    size: 6,
+    hidden: true,
+  },
+  {
     label: "Consultant*",
     name: "consultant",
     type: "text",
@@ -100,6 +107,8 @@ const step1Fields = [
     type: "text",
     hidden: true,
   },
+  { label: "Agreement no*", name: "agreementNo", type: "text" },
+  { label: "Instrument number*", name: "instrumentNo", type: "text", size: 6 },
   {
     label: "Engineer / Surveyor",
     name: "engineerSurveyor",
@@ -115,9 +124,6 @@ const step1Fields = [
 
 // ─── Step 2 Fields ────────────────────────────────────────────────────────────
 const step2Fields = [
-  { label: "Agreement no*", name: "agreementNo", type: "text" },
-  { label: "Contractor*", name: "contractor", type: "text", size: 6 },
-  { label: "Instrument number*", name: "instrumentNo", type: "text", size: 6 },
   { label: "Reduced level*", name: "reducedLevel", type: "number" },
   { label: "Back sight*", name: "backSight", type: "number", size: 6 },
   { label: "Remark*", name: "remark", type: "text", size: 6 },
@@ -126,6 +132,7 @@ const step2Fields = [
     name: "chainageMultiple",
     mode: "solo-create",
     options: [5, 10, 20, 30, 50].map((n) => ({ label: n, value: n })),
+    size: 6,
   },
   {
     label: "Select separator*",
@@ -200,6 +207,12 @@ const buildStep1Schema = (category) =>
       category === "privateProject"
         ? Yup.string().required("Client is required")
         : Yup.string().nullable(),
+    contractor:
+      category === "privateProject"
+        ? Yup.string().required("Contractor is required")
+        : Yup.string().nullable(),
+    agreementNo: Yup.string().required("Agreement no is required"),
+    instrumentNo: Yup.string().required("Instrument number is required"),
     engineerSurveyor: Yup.string().nullable(),
     assistant1: Yup.string().nullable(),
     assistant2: Yup.string().nullable(),
@@ -209,9 +222,6 @@ const buildStep1Schema = (category) =>
   });
 
 const step2Schema = Yup.object().shape({
-  agreementNo: Yup.string().required("Agreement no is required"),
-  contractor: Yup.string().required("Contractor is required"),
-  instrumentNo: Yup.string().required("Instrument number is required"),
   backSight: Yup.number()
     .typeError("Backsight is required")
     .required("Backsight is required"),
@@ -274,7 +284,7 @@ const RoadSurveyForm = () => {
     if (["department", "division", "subDivision", "section"].includes(f.name)) {
       return { ...f, hidden: category !== "publicProject" };
     }
-    if (["consultant", "client"].includes(f.name)) {
+    if (["consultant", "client", "contractor"].includes(f.name)) {
       return { ...f, hidden: category !== "privateProject" };
     }
     return f;

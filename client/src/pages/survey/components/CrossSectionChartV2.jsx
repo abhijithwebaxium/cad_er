@@ -23,6 +23,7 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
   const [width, setWidth] = useState(window.innerWidth);
 
   const calcWidth = () => {
+    const effectiveWidth = Math.min(width, 794);
     const isLs = selectedCs.type === "ls";
 
     const length = isLs
@@ -31,9 +32,9 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
 
     const subtractValue = isLs ? 30 : 70;
 
-    const isWidth = width > length * 90;
+    const isWidth = effectiveWidth > length * 90;
 
-    return isWidth ? width - 30 : length * 90 - subtractValue;
+    return isWidth ? effectiveWidth - 30 : length * 90 - subtractValue;
   };
 
   useEffect(() => {

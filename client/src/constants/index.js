@@ -117,7 +117,7 @@ export const proposalCode = {
 export const v1ChartOptions = {
   id: "v1",
   config: {
-    displayModeBar: true,
+    displayModeBar: false,
     scrollZoom: false,
     doubleClick: false,
     displaylogo: false,
