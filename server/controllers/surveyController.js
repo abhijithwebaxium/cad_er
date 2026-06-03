@@ -119,12 +119,11 @@ const createSurvey = async (req, res, next) => {
       !backSight ||
       !chainageMultiple ||
       !separator ||
-      !agreementNo ||
-      !contractor
+      !agreementNo
     ) {
       throw createHttpError(
         400,
-        "All fields (Project, Purpose, Instrument No, Reduced Level, Back Sight, Chainage Multiple, Agreement No, Contractor, department) are required",
+        "All fields (Project, Purpose, Instrument No, Reduced Level, Back Sight, Chainage Multiple, Agreement No, department) are required",
       );
     }
 
@@ -1722,8 +1721,97 @@ const generateSurveyPurpose = async (req, res, next) => {
     const safeQuantity = Number(quantity);
     const lastReading = readingsToCreate.at(-1);
     const doHaveCamper = csCamper > 0 ? Number(csCamper) : null;
-    const limit =
-      Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 0;
+
+    // ─── Binary-Search Solver helpers ────────────────────────────────────────
+    //
+    // We need to find the single Proposed Road Level (PRL) whose total fill
+    // volume — computed with the Average End Area method — equals the target
+    // BOQ quantity.
+    //
+    // Cross-section area at each chainage (trapezoidal fill body):
+    //   h    = subgradeLevel − OGL  (fill depth; 0 for cut sections)
+    //   Area = (formationWidth + sideSlope × h) × h
+    //
+    // Volume between consecutive chainages:
+    //   V = distance × (Area_i + Area_{i+1}) / 2   (Average End Area)
+    //
+    // cSection → formation width  ("B")
+    // csSlop   → side slope ratio ("S", e.g. 2 for a 2:1 slope)
+    // totalCrustThickness is omitted here because the OGL values stored in
+    // the survey are already the top-of-subgrade readings in this workflow;
+    // the PRL itself is what we solve for and it equals the subgrade level.
+
+    const formationWidth = cSection ? Number(cSection) : roadWidth;
+    const sideSlope = csSlop ? Number(csSlop) : 0;
+
+    /**
+     * Build a flat list of { chainage_m, avgOGL } for all Chainage rows
+     * using the separator stored on the survey document.
+     */
+    const oglPoints = readingsToCreate.map((r) => {
+      const [km, m] = r.chainage.split(survey.separator).map(Number);
+      const chainageMeters = km * 1000 + m;
+
+      const levels = r.reducedLevels.map(Number);
+      const avgOGL = levels.reduce((a, b) => a + b, 0) / levels.length;
+
+      return { chainage: chainageMeters, ogl: avgOGL, reading: r };
+    });
+
+    /**
+     * Computes total fill volume (m³) for a given starting PRL using the
+     * Average End Area method with a trapezoidal cross-section.
+     */
+    const calculateVolumeForPRL = (prl) => {
+      const areas = oglPoints.map(({ chainage, ogl }) => {
+        // PRL is constant (zero gradient assumed). If you ever add gradient
+        // support, adjust: prl + chainage * gradient
+        const depth = prl - ogl; // fill depth (negative = cut → ignore)
+        if (depth <= 0) return 0;
+        // Trapezoidal fill cross-section: (B + S·h) × h
+        return (formationWidth + sideSlope * depth) * depth;
+      });
+
+      let totalVolume = 0;
+      for (let i = 0; i < areas.length - 1; i++) {
+        const dist = oglPoints[i + 1].chainage - oglPoints[i].chainage;
+        totalVolume += dist * ((areas[i] + areas[i + 1]) / 2);
+      }
+      return totalVolume;
+    };
+
+    /**
+     * Binary-search solver: returns the PRL that yields exactly targetVolume.
+     * Bounds are set wide enough to always bracket the solution.
+     */
+    const solveForPRL = (targetVolume) => {
+      let lo = -100;
+      let hi = 5000;
+      const tolerance = 0.01; // accurate to within 0.01 m³
+      const maxIterations = 100;
+
+      let bestPRL = (lo + hi) / 2;
+
+      for (let i = 0; i < maxIterations; i++) {
+        bestPRL = (lo + hi) / 2;
+        const vol = calculateVolumeForPRL(bestPRL);
+
+        if (Math.abs(vol - targetVolume) <= tolerance) break;
+
+        if (vol < targetVolume) {
+          lo = bestPRL; // need more fill → raise the road
+        } else {
+          hi = bestPRL; // too much fill → lower the road
+        }
+      }
+
+      return bestPRL;
+    };
+
+    // Only use the solver when the cross-section slope mode is active and
+    // we have the necessary geometry parameters.
+    const useSolver = !!(cSection && csSlop);
+    const solvedPRL = useSolver ? solveForPRL(safeQuantity) : null;
 
     const bulkOps = readingsToCreate.map((reading) => {
       const reducedLevels = [];
@@ -1758,7 +1846,6 @@ const generateSurveyPurpose = async (req, res, next) => {
 
           // Helper to safely get value from map even if key format varies
           const getLevel = (num) => {
-            // Try different common precisions or the raw string
             return (
               sourceMap[num.toFixed(3)] ||
               sourceMap[num.toFixed(2)] ||
@@ -1767,7 +1854,7 @@ const generateSurveyPurpose = async (req, res, next) => {
             );
           };
 
-          // 2. Add the NEW lower boundary (-2.8)
+          // 2. Add the NEW lower boundary
           result[lowerBound.toFixed(3)] = calculateInterpolation(
             lowerBound,
             originalOffsets,
@@ -1781,7 +1868,7 @@ const generateSurveyPurpose = async (req, res, next) => {
             }
           });
 
-          // 4. Add the NEW upper boundary (2.8)
+          // 4. Add the NEW upper boundary
           result[upperBound.toFixed(3)] = calculateInterpolation(
             upperBound,
             originalOffsets,
@@ -1801,18 +1888,13 @@ const generateSurveyPurpose = async (req, res, next) => {
             }
           }
 
-          // If x is exactly an existing offset, just return that level
           if (x === x1) return getLevelFn(x1);
           if (x === x2) return getLevelFn(x2);
-
           if (x1 === undefined || x2 === undefined) return "0.000";
 
           const y1 = parseFloat(getLevelFn(x1));
           const y2 = parseFloat(getLevelFn(x2));
-
-          // Formula: y = y1 + (x - x1) * (y2 - y1) / (x2 - x1)
           const y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1));
-
           return y.toFixed(3);
         };
 
@@ -1830,14 +1912,22 @@ const generateSurveyPurpose = async (req, res, next) => {
           (acc, curr) => acc + Number(curr),
           0,
         );
-
         const avgReadingReducedLevel =
           totalReadingReducedLevel / interpolatedReducedLevels.length;
 
-        const height = safeQuantity / (limit * avgProposalTotalWidth);
+        // ── Proposed level per offset ──────────────────────────────────────
+        // When the solver is active, every offset in this chainage gets the
+        // same solved PRL as its centre-line proposed level (the camber drop
+        // is still applied to the edge offsets).  When the solver is not
+        // active we fall back to the legacy simple-height formula.
+        const baseLevel = useSolver
+          ? solvedPRL
+          : avgReadingReducedLevel +
+            safeQuantity / (Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1) /
+            avgProposalTotalWidth;
 
         interpolatedReducedLevels.forEach((_, idx) => {
-          let value = avgReadingReducedLevel + height;
+          let value = useSolver ? baseLevel : avgReadingReducedLevel + (safeQuantity / ((Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1) * avgProposalTotalWidth));
 
           if (
             doHaveCamper &&
@@ -1847,40 +1937,26 @@ const generateSurveyPurpose = async (req, res, next) => {
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
-
           reducedLevels.push(rounded.toFixed(3));
         });
-
-        // for (const [offset, level] of Object.entries(finalMap)) {
-        //   let value = Number(level);
-
-        //   if (
-        //     doHaveCamper &&
-        //     (count === 0 || count === reading.reducedLevels.length - 1)
-        //   ) {
-        //     value -= (roadWidth / 2) * (doHaveCamper / 100);
-        //   }
-
-        //   const rounded = Math.round(value / 0.005) * 0.005;
-
-        //   reducedLevels.push(rounded.toFixed(3));
-        //   offsets.push(offset);
-
-        //   count++;
-        // }
       } else {
         const totalReadingReducedLevel = reading.reducedLevels.reduce(
           (acc, curr) => acc + Number(curr),
           0,
         );
-
         const avgReadingReducedLevel =
           totalReadingReducedLevel / reading.reducedLevels.length;
 
-        const height = safeQuantity / (limit * roadWidth);
+        // ── Proposed level per offset ──────────────────────────────────────
+        // Solver path: use the globally solved PRL as the proposed centre-line
+        // level.  Legacy path: simple rectangle formula.
+        const limit =
+          Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1;
 
         reading.reducedLevels.forEach((_, idx) => {
-          let value = avgReadingReducedLevel + height;
+          let value = useSolver
+            ? solvedPRL
+            : avgReadingReducedLevel + safeQuantity / (limit * roadWidth);
 
           if (
             doHaveCamper &&
@@ -1890,7 +1966,6 @@ const generateSurveyPurpose = async (req, res, next) => {
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
-
           reducedLevels.push(rounded.toFixed(3));
         });
 
