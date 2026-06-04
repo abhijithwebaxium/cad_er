@@ -1920,20 +1920,34 @@ const generateSurveyPurpose = async (req, res, next) => {
         // same solved PRL as its centre-line proposed level (the camber drop
         // is still applied to the edge offsets).  When the solver is not
         // active we fall back to the legacy simple-height formula.
+        //
+        // Camber compensation: applying camber lowers the 2 edge offsets,
+        // which reduces the average level (and thus volume) below target.
+        // We raise the base by (2 × camberDrop) / numOffsets so the average
+        // across all offsets stays exactly at the intended level.
+        const numInterpolatedOffsets = interpolatedReducedLevels.length;
+        const camberDrop = doHaveCamper
+          ? (avgProposalTotalWidth / 2) * (doHaveCamper / 100)
+          : 0;
+        const camberComp = doHaveCamper
+          ? (2 * camberDrop) / numInterpolatedOffsets
+          : 0;
+
+        const limit = Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1;
         const baseLevel = useSolver
-          ? solvedPRL
+          ? solvedPRL + camberComp
           : avgReadingReducedLevel +
-            safeQuantity / (Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1) /
-            avgProposalTotalWidth;
+            (safeQuantity / (limit * avgProposalTotalWidth)) +
+            camberComp;
 
         interpolatedReducedLevels.forEach((_, idx) => {
-          let value = useSolver ? baseLevel : avgReadingReducedLevel + (safeQuantity / ((Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1) * avgProposalTotalWidth));
+          let value = baseLevel;
 
           if (
             doHaveCamper &&
             (idx === 0 || idx === interpolatedReducedLevels.length - 1)
           ) {
-            value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
+            value -= camberDrop;
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
@@ -1950,19 +1964,31 @@ const generateSurveyPurpose = async (req, res, next) => {
         // ── Proposed level per offset ──────────────────────────────────────
         // Solver path: use the globally solved PRL as the proposed centre-line
         // level.  Legacy path: simple rectangle formula.
+        //
+        // Camber compensation: applying camber lowers the 2 edge offsets,
+        // which reduces the average level (and thus volume) below target.
+        // We raise the base by (2 × camberDrop) / numOffsets so the average
+        // across all offsets stays exactly at the intended level.
         const limit =
           Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1;
+        const numOffsets = reading.reducedLevels.length;
+        const camberDrop = doHaveCamper
+          ? (avgProposalTotalWidth / 2) * (doHaveCamper / 100)
+          : 0;
+        const camberComp = doHaveCamper
+          ? (2 * camberDrop) / numOffsets
+          : 0;
 
         reading.reducedLevels.forEach((_, idx) => {
           let value = useSolver
-            ? solvedPRL
-            : avgReadingReducedLevel + safeQuantity / (limit * roadWidth);
+            ? solvedPRL + camberComp
+            : avgReadingReducedLevel + safeQuantity / (limit * roadWidth) + camberComp;
 
           if (
             doHaveCamper &&
             (idx === 0 || idx === reading.reducedLevels.length - 1)
           ) {
-            value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
+            value -= camberDrop;
           }
 
           const rounded = Math.round(value / 0.005) * 0.005;
