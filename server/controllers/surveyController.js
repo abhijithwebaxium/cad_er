@@ -1758,18 +1758,42 @@ const generateSurveyPurpose = async (req, res, next) => {
       return { chainage: chainageMeters, ogl: avgOGL, reading: r };
     });
 
+    // Camber drop = camber% × half-formation-width (constant at every chainage)
+    const camberDrop = doHaveCamper
+      ? (formationWidth / 2) * (doHaveCamper / 100)
+      : 0;
+
     /**
      * Computes total fill volume (m³) for a given starting PRL using the
-     * Average End Area method with a trapezoidal cross-section.
+     * Average End Area method with a cambered trapezoidal cross-section.
+     *
+     * With camber the cross-section is no longer a plain trapezoid:
+     *   centerDepth (h)  = PRL − OGL          (depth at crown)
+     *   edgeDepth  (he)  = h − camberDrop      (depth at road edge)
+     *
+     *   Central area = (B × h) − (0.5 × B × camberDrop)   ← rectangle minus camber triangle
+     *   Side area    = S × he²                              ← both side triangles combined
+     *   Total area   = centralArea + sideArea
+     *
+     * When doHaveCamper is 0 / null the formula reduces to the plain
+     * trapezoid: (B + S·h) × h  (same as before).
      */
     const calculateVolumeForPRL = (prl) => {
-      const areas = oglPoints.map(({ chainage, ogl }) => {
-        // PRL is constant (zero gradient assumed). If you ever add gradient
-        // support, adjust: prl + chainage * gradient
-        const depth = prl - ogl; // fill depth (negative = cut → ignore)
-        if (depth <= 0) return 0;
-        // Trapezoidal fill cross-section: (B + S·h) × h
-        return (formationWidth + sideSlope * depth) * depth;
+      const areas = oglPoints.map(({ ogl }) => {
+        const h = prl - ogl; // fill depth at crown (negative = cut → skip)
+        if (h <= 0) return 0;
+
+        if (doHaveCamper) {
+          const he = h - camberDrop; // depth at road edge
+          if (he <= 0) return 0;    // edge meets ground before formation width
+
+          const centralArea = formationWidth * h - 0.5 * formationWidth * camberDrop;
+          const sideArea    = sideSlope * he * he;
+          return centralArea + sideArea;
+        }
+
+        // No camber → plain trapezoid
+        return (formationWidth + sideSlope * h) * h;
       });
 
       let totalVolume = 0;
@@ -1916,29 +1940,14 @@ const generateSurveyPurpose = async (req, res, next) => {
           totalReadingReducedLevel / interpolatedReducedLevels.length;
 
         // ── Proposed level per offset ──────────────────────────────────────
-        // When the solver is active, every offset in this chainage gets the
-        // same solved PRL as its centre-line proposed level (the camber drop
-        // is still applied to the edge offsets).  When the solver is not
-        // active we fall back to the legacy simple-height formula.
-        //
-        // Camber compensation: applying camber lowers the 2 edge offsets,
-        // which reduces the average level (and thus volume) below target.
-        // We raise the base by (2 × camberDrop) / numOffsets so the average
-        // across all offsets stays exactly at the intended level.
-        const numInterpolatedOffsets = interpolatedReducedLevels.length;
-        const camberDrop = doHaveCamper
-          ? (avgProposalTotalWidth / 2) * (doHaveCamper / 100)
-          : 0;
-        const camberComp = doHaveCamper
-          ? (2 * camberDrop) / numInterpolatedOffsets
-          : 0;
-
+        // The solver already found the PRL that yields exactly the target
+        // volume with camber baked into the area formula, so we use solvedPRL
+        // directly as the crown level — no extra camberComp shift needed.
+        // Edge offsets (first and last) are lowered by camberDrop.
         const limit = Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1;
         const baseLevel = useSolver
-          ? solvedPRL + camberComp
-          : avgReadingReducedLevel +
-            (safeQuantity / (limit * avgProposalTotalWidth)) +
-            camberComp;
+          ? solvedPRL
+          : avgReadingReducedLevel + (safeQuantity / (limit * avgProposalTotalWidth));
 
         interpolatedReducedLevels.forEach((_, idx) => {
           let value = baseLevel;
@@ -1962,27 +1971,17 @@ const generateSurveyPurpose = async (req, res, next) => {
           totalReadingReducedLevel / reading.reducedLevels.length;
 
         // ── Proposed level per offset ──────────────────────────────────────
-        // Solver path: use the globally solved PRL as the proposed centre-line
-        // level.  Legacy path: simple rectangle formula.
-        //
-        // Camber compensation: applying camber lowers the 2 edge offsets,
-        // which reduces the average level (and thus volume) below target.
-        // We raise the base by (2 × camberDrop) / numOffsets so the average
-        // across all offsets stays exactly at the intended level.
+        // Solver path: solvedPRL is the crown level that already yields the
+        // target volume with camber in the area formula — use it directly.
+        // Legacy path: simple rectangle formula (no solver, no camber adj).
+        // Edge offsets (first and last) are lowered by camberDrop.
         const limit =
           Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1;
-        const numOffsets = reading.reducedLevels.length;
-        const camberDrop = doHaveCamper
-          ? (avgProposalTotalWidth / 2) * (doHaveCamper / 100)
-          : 0;
-        const camberComp = doHaveCamper
-          ? (2 * camberDrop) / numOffsets
-          : 0;
 
         reading.reducedLevels.forEach((_, idx) => {
           let value = useSolver
-            ? solvedPRL + camberComp
-            : avgReadingReducedLevel + safeQuantity / (limit * roadWidth) + camberComp;
+            ? solvedPRL
+            : avgReadingReducedLevel + safeQuantity / (limit * roadWidth);
 
           if (
             doHaveCamper &&
