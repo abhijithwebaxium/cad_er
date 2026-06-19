@@ -1808,10 +1808,134 @@ const generateSurveyPurpose = async (req, res, next) => {
       return bestPRL;
     };
 
-    // Only use the solver when the cross-section slope mode is active and
-    // we have the necessary geometry parameters.
+    // Only use the formula-based solver when side-slope geometry is provided.
     const useSolver = !!(cSection && csSlop);
     const solvedPRL = useSolver ? solveForPRL(safeQuantity) : null;
+
+    // ─── Cross-Section Solver (new method) ───────────────────────────────────
+    //
+    // More accurate alternative that uses the actual per-offset OGL readings
+    // at every chainage instead of an averaged OGL with a fixed trapezoidal
+    // formula.  The fill area at each cross-section is computed by integrating
+    // fill depths across the measured offsets with the Trapezoidal Rule,
+    // which naturally handles cambered roads at every offset (not just edges).
+    //
+    // Activated when:
+    //   • formula === "cross-section"  (explicit request from client)
+    //   • OR camber is specified without a side-slope (camber-only profiles)
+
+    /**
+     * Returns the proposed subgrade level at each offset for a given
+     * centerline PRL, applying camber drop proportionally from the center.
+     */
+    const getProposedLevelsAtOffsets = (centerPRL, numericOffsets, camberPercent) =>
+      numericOffsets.map((offset) => {
+        if (camberPercent > 0) {
+          return centerPRL - (camberPercent / 100) * Math.abs(offset);
+        }
+        return centerPRL;
+      });
+
+    /**
+     * Computes the fill area at a single cross-section using the Trapezoidal
+     * Rule across the measured offsets.
+     * Only positive depths (fill) are counted; cut zones return 0.
+     */
+    const calcXSFillArea = (oglProfile, proposedLevels, numericOffsets) => {
+      const oglMap = {};
+      oglProfile.forEach((p) => { oglMap[p.offset] = p.ogl; });
+
+      const depths = numericOffsets.map((offset, i) => {
+        const ogl = oglMap[offset];
+        if (ogl === undefined) return 0;
+        const depth = proposedLevels[i] - ogl;
+        return depth > 0 ? depth : 0;
+      });
+
+      let area = 0;
+      for (let i = 0; i < numericOffsets.length - 1; i++) {
+        area +=
+          ((depths[i] + depths[i + 1]) / 2) *
+          (numericOffsets[i + 1] - numericOffsets[i]);
+      }
+      return area;
+    };
+
+    // Build per-offset OGL data from the actual survey readings
+    const xsChainageData = readingsToCreate.map((r) => {
+      const [km, m] = r.chainage.split(survey.separator).map(Number);
+      const chainageMeters = km * 1000 + m;
+      const numericOffsets = r.offsets.map(Number);
+      const oglProfile = r.reducedLevels.map((rl, i) => ({
+        offset: numericOffsets[i],
+        ogl: Number(rl),
+      }));
+      return { chainage: chainageMeters, oglProfile, numericOffsets };
+    });
+
+    /**
+     * Total fill volume for a given centerline PRL using the cross-section
+     * method (Trapezoidal Rule per cross-section + Average End Area between
+     * chainages).
+     */
+    const calculateVolumeXS = (prl) => {
+      const camberPct = doHaveCamper || 0;
+      const areas = xsChainageData.map(({ oglProfile, numericOffsets }) => {
+        const proposedLevels = getProposedLevelsAtOffsets(
+          prl,
+          numericOffsets,
+          camberPct,
+        );
+        return calcXSFillArea(oglProfile, proposedLevels, numericOffsets);
+      });
+
+      let totalVolume = 0;
+      for (let i = 0; i < xsChainageData.length - 1; i++) {
+        const dist =
+          xsChainageData[i + 1].chainage - xsChainageData[i].chainage;
+        totalVolume += dist * ((areas[i] + areas[i + 1]) / 2);
+      }
+      return totalVolume;
+    };
+
+    /**
+     * Binary-search solver using the cross-section volume function.
+     * 200 iterations gives sub-millimetre PRL accuracy.
+     */
+    const solveForPRL_XS = (targetVolume) => {
+      let lo = -100;
+      let hi = 5000;
+      const tolerance = 0.01;
+      const maxIter = 200;
+      let bestPRL = (lo + hi) / 2;
+
+      for (let i = 0; i < maxIter; i++) {
+        bestPRL = (lo + hi) / 2;
+        const vol = calculateVolumeXS(bestPRL);
+        if (Math.abs(vol - targetVolume) <= tolerance) break;
+        if (vol < targetVolume) lo = bestPRL;
+        else hi = bestPRL;
+      }
+      return bestPRL;
+    };
+
+    // Use the cross-section solver whenever offset data is available.
+    // This solver uses the exact same per-offset Trapezoidal Rule that the
+    // frontend VolumeReport uses to display volumes — guaranteeing that the
+    // stored proposed levels will reproduce the target quantity on the report.
+    //
+    // The formula-based solver (B+Sh)h uses averaged OGL with a geometric
+    // formula that diverges from the frontend calculation, causing a systematic
+    // shortfall (e.g. 97.96 instead of 100). It is kept only as a fallback
+    // for rows that have no offset readings.
+    const hasOffsetData =
+      xsChainageData.length > 1 &&
+      xsChainageData[0]?.numericOffsets?.length > 1;
+
+    const useCrossSectionSolver = hasOffsetData || formula === "cross-section";
+    const crossSectionPRL = useCrossSectionSolver
+      ? solveForPRL_XS(safeQuantity)
+      : null;
 
     const bulkOps = readingsToCreate.map((reading) => {
       const reducedLevels = [];
@@ -1916,29 +2040,53 @@ const generateSurveyPurpose = async (req, res, next) => {
           totalReadingReducedLevel / interpolatedReducedLevels.length;
 
         // ── Proposed level per offset ──────────────────────────────────────
-        // When the solver is active, every offset in this chainage gets the
-        // same solved PRL as its centre-line proposed level (the camber drop
-        // is still applied to the edge offsets).  When the solver is not
-        // active we fall back to the legacy simple-height formula.
-        const baseLevel = useSolver
-          ? solvedPRL
-          : avgReadingReducedLevel +
-            safeQuantity / (Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1) /
-            avgProposalTotalWidth;
+        // Priority:
+        //   1. Cross-section solver → per-offset PRL with camber at every point
+        //   2. Formula-based solver → flat PRL + edge camber adjustment
+        //   3. Legacy simple-height formula
+        if (useCrossSectionSolver) {
+          // Use the solved PRL and apply camber at every offset, not just edges
+          const numericOffsets = offsets.map(Number);
+          const proposedLevels = getProposedLevelsAtOffsets(
+            crossSectionPRL,
+            numericOffsets,
+            doHaveCamper || 0,
+          );
+          proposedLevels.forEach((level) => {
+            const rounded = Math.ceil(level / 0.005) * 0.005;
+            reducedLevels.push(rounded.toFixed(3));
+          });
+        } else {
+          const baseLevel = useSolver
+            ? solvedPRL
+            : avgReadingReducedLevel +
+              safeQuantity /
+                (Number(
+                  lastReading?.chainage?.split(survey.separator || "/")?.[1],
+                ) || 1) /
+                avgProposalTotalWidth;
 
-        interpolatedReducedLevels.forEach((_, idx) => {
-          let value = useSolver ? baseLevel : avgReadingReducedLevel + (safeQuantity / ((Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1) * avgProposalTotalWidth));
+          interpolatedReducedLevels.forEach((_, idx) => {
+            let value = useSolver
+              ? baseLevel
+              : avgReadingReducedLevel +
+                safeQuantity /
+                  ((Number(
+                    lastReading?.chainage?.split(survey.separator || "/")?.[1],
+                  ) || 1) *
+                    avgProposalTotalWidth);
 
-          if (
-            doHaveCamper &&
-            (idx === 0 || idx === interpolatedReducedLevels.length - 1)
-          ) {
-            value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
-          }
+            if (
+              doHaveCamper &&
+              (idx === 0 || idx === interpolatedReducedLevels.length - 1)
+            ) {
+              value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
+            }
 
-          const rounded = Math.round(value / 0.005) * 0.005;
-          reducedLevels.push(rounded.toFixed(3));
-        });
+            const rounded = Math.round(value / 0.005) * 0.005;
+            reducedLevels.push(rounded.toFixed(3));
+          });
+        }
       } else {
         const totalReadingReducedLevel = reading.reducedLevels.reduce(
           (acc, curr) => acc + Number(curr),
@@ -1948,26 +2096,43 @@ const generateSurveyPurpose = async (req, res, next) => {
           totalReadingReducedLevel / reading.reducedLevels.length;
 
         // ── Proposed level per offset ──────────────────────────────────────
-        // Solver path: use the globally solved PRL as the proposed centre-line
-        // level.  Legacy path: simple rectangle formula.
+        // Priority:
+        //   1. Cross-section solver → per-offset PRL with camber at every point
+        //   2. Formula-based solver → flat PRL + edge camber adjustment
+        //   3. Legacy simple rectangle formula
         const limit =
           Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1;
 
-        reading.reducedLevels.forEach((_, idx) => {
-          let value = useSolver
-            ? solvedPRL
-            : avgReadingReducedLevel + safeQuantity / (limit * roadWidth);
+        if (useCrossSectionSolver) {
+          // Apply camber at every offset using the same function used in volume
+          // computation, so proposed levels are consistent with the solver.
+          const numericOffsets = reading.offsets.map(Number);
+          const proposedLevels = getProposedLevelsAtOffsets(
+            crossSectionPRL,
+            numericOffsets,
+            doHaveCamper || 0,
+          );
+          proposedLevels.forEach((level) => {
+            const rounded = Math.ceil(level / 0.005) * 0.005;
+            reducedLevels.push(rounded.toFixed(3));
+          });
+        } else {
+          reading.reducedLevels.forEach((_, idx) => {
+            let value = useSolver
+              ? solvedPRL
+              : avgReadingReducedLevel + safeQuantity / (limit * roadWidth);
 
-          if (
-            doHaveCamper &&
-            (idx === 0 || idx === reading.reducedLevels.length - 1)
-          ) {
-            value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
-          }
+            if (
+              doHaveCamper &&
+              (idx === 0 || idx === reading.reducedLevels.length - 1)
+            ) {
+              value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
+            }
 
-          const rounded = Math.round(value / 0.005) * 0.005;
-          reducedLevels.push(rounded.toFixed(3));
-        });
+            const rounded = Math.round(value / 0.005) * 0.005;
+            reducedLevels.push(rounded.toFixed(3));
+          });
+        }
 
         offsets.push(...reading.offsets);
       }
