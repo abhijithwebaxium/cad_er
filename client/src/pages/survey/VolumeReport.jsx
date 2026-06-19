@@ -122,20 +122,20 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
 
       ...(showArea?.cutting
         ? [
-          row.cuttingAreaSqMtr,
-          row.cuttingPrevArea,
-          row.cuttingAvgSqrMtr,
-          row.cuttingVolumeCubicMtr,
-        ]
+            row.cuttingAreaSqMtr,
+            row.cuttingPrevArea,
+            row.cuttingAvgSqrMtr,
+            row.cuttingVolumeCubicMtr,
+          ]
         : []),
 
       ...(showArea?.filling
         ? [
-          row.fillingAreaSqMtr,
-          row.fillingPrevArea,
-          row.fillingAvgSqrMtr,
-          row.fillingVolumeCubicMtr,
-        ]
+            row.fillingAreaSqMtr,
+            row.fillingPrevArea,
+            row.fillingAvgSqrMtr,
+            row.fillingVolumeCubicMtr,
+          ]
         : []),
     ]);
   });
@@ -151,22 +151,22 @@ const exportVolumeReportPdf = ({ tableData, reportDetails, showArea }) => {
 
     ...(showArea?.cutting
       ? [
-        { content: "", colSpan: 2 },
-        {
-          content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
-          styles: { fontStyle: "bold", halign: "center" },
-        },
-      ]
+          { content: "", colSpan: 2 },
+          {
+            content: Number(tableData?.totalCuttingVolume)?.toFixed(3),
+            styles: { fontStyle: "bold", halign: "center" },
+          },
+        ]
       : []),
 
     ...(showArea?.filling
       ? [
-        { content: "", colSpan: showArea?.cutting ? 3 : 2 },
-        {
-          content: Number(tableData?.totalFillingVolume)?.toFixed(3),
-          styles: { fontStyle: "bold", halign: "center" },
-        },
-      ]
+          { content: "", colSpan: showArea?.cutting ? 3 : 2 },
+          {
+            content: Number(tableData?.totalFillingVolume)?.toFixed(3),
+            styles: { fontStyle: "bold", halign: "center" },
+          },
+        ]
       : []),
   ]);
 
@@ -335,7 +335,7 @@ const VolumeReport = () => {
     sortedEntries.sort(
       (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type),
     );
-
+    console.log(sortedEntries[1]);
     initialEntry = sortedEntries[0];
     secondaryEntry = sortedEntries[1];
 
@@ -344,6 +344,7 @@ const VolumeReport = () => {
     reportDetails.current = {
       initialEntry: shortType(initialEntry.type),
       secondaryEntry: shortType(secondaryEntry.type),
+      secondaryEntryQuantity: secondaryEntry.quantity,
     };
 
     const initialRows = initialEntry?.rows ?? [];
@@ -405,10 +406,10 @@ const VolumeReport = () => {
           !isCutting || idx === 0
             ? "0.000"
             : (
-              (Number(cuttingMtr) +
-                Number(prevReadings[idx - 1]?.cuttingMtr || 0)) /
-              2
-            ).toFixed(3);
+                (Number(cuttingMtr) +
+                  Number(prevReadings[idx - 1]?.cuttingMtr || 0)) /
+                2
+              ).toFixed(3);
 
         const fillingMtr = isCutting ? "0.000" : (propRL - initRL).toFixed(3);
 
@@ -416,10 +417,10 @@ const VolumeReport = () => {
           isCutting || idx === 0
             ? "0.000"
             : (
-              (Number(fillingMtr) +
-                Number(prevReadings[idx - 1]?.fillingMtr || 0)) /
-              2
-            ).toFixed(3);
+                (Number(fillingMtr) +
+                  Number(prevReadings[idx - 1]?.fillingMtr || 0)) /
+                2
+              ).toFixed(3);
 
         const dataDoc = {
           offset: entry,
@@ -609,19 +610,19 @@ const VolumeReport = () => {
       "",
       ...(showArea?.cutting
         ? [
-          "Area Sq. Mtrs",
-          "Previous Area",
-          "Average Sq. Mtrs",
-          "Volume Cubic Meters",
-        ]
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
         : []),
       ...(showArea?.filling
         ? [
-          "Area Sq. Mtrs",
-          "Previous Area",
-          "Average Sq. Mtrs",
-          "Volume Cubic Meters",
-        ]
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
         : []),
     ]);
 
@@ -695,19 +696,19 @@ const VolumeReport = () => {
 
         ...(showArea?.cutting
           ? [
-            entry.cuttingAreaSqMtr,
-            entry.cuttingPrevArea,
-            entry.cuttingAvgSqrMtr,
-            entry.cuttingVolumeCubicMtr,
-          ]
+              entry.cuttingAreaSqMtr,
+              entry.cuttingPrevArea,
+              entry.cuttingAvgSqrMtr,
+              entry.cuttingVolumeCubicMtr,
+            ]
           : []),
         ...(showArea?.filling
           ? [
-            entry.fillingAreaSqMtr,
-            entry.fillingPrevArea,
-            entry.fillingAvgSqrMtr,
-            entry.fillingVolumeCubicMtr,
-          ]
+              entry.fillingAreaSqMtr,
+              entry.fillingPrevArea,
+              entry.fillingAvgSqrMtr,
+              entry.fillingVolumeCubicMtr,
+            ]
           : []),
       ]);
 
@@ -737,17 +738,17 @@ const VolumeReport = () => {
 
       ...(showArea?.cutting
         ? [
-          "",
-          "", // colSpan={2}
-          Number(tableData?.totalCuttingVolume)?.toFixed(3),
-        ]
+            "",
+            "", // colSpan={2}
+            Number(tableData?.totalCuttingVolume)?.toFixed(3),
+          ]
         : []),
 
       ...(showArea?.filling
         ? [
-          ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
-          Number(tableData?.totalFillingVolume)?.toFixed(3),
-        ]
+            ...(showArea?.cutting ? ["", "", ""] : ["", ""]), // dynamic colSpan
+            Number(tableData?.totalFillingVolume)?.toFixed(3),
+          ]
         : []),
     ]);
     totalRow.eachCell((cell) => {
@@ -834,19 +835,19 @@ const VolumeReport = () => {
       "",
       ...(showCutting
         ? [
-          "Area Sq. Mtrs",
-          "Previous Area",
-          "Average Sq. Mtrs",
-          "Volume Cubic Meters",
-        ]
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
         : []),
       ...(showFilling
         ? [
-          "Area Sq. Mtrs",
-          "Previous Area",
-          "Average Sq. Mtrs",
-          "Volume Cubic Meters",
-        ]
+            "Area Sq. Mtrs",
+            "Previous Area",
+            "Average Sq. Mtrs",
+            "Volume Cubic Meters",
+          ]
         : []),
     ]);
 
@@ -883,35 +884,35 @@ const VolumeReport = () => {
         row.width,
         ...(showCutting
           ? [
-            formatArea(row.cuttingAreaSqMtr, "cutting"),
-            row.cuttingPrevArea,
-            formatAvg(
-              row.cuttingAvgSqrMtr,
-              row.cuttingAreaSqMtr,
+              formatArea(row.cuttingAreaSqMtr, "cutting"),
               row.cuttingPrevArea,
-            ),
-            formatVol(
-              row.cuttingVolumeCubicMtr,
-              row.cuttingAvgSqrMtr,
-              row.difference,
-            ),
-          ]
+              formatAvg(
+                row.cuttingAvgSqrMtr,
+                row.cuttingAreaSqMtr,
+                row.cuttingPrevArea,
+              ),
+              formatVol(
+                row.cuttingVolumeCubicMtr,
+                row.cuttingAvgSqrMtr,
+                row.difference,
+              ),
+            ]
           : []),
         ...(showFilling
           ? [
-            formatArea(row.fillingAreaSqMtr, "filling"),
-            row.fillingPrevArea,
-            formatAvg(
-              row.fillingAvgSqrMtr,
-              row.fillingAreaSqMtr,
+              formatArea(row.fillingAreaSqMtr, "filling"),
               row.fillingPrevArea,
-            ),
-            formatVol(
-              row.fillingVolumeCubicMtr,
-              row.fillingAvgSqrMtr,
-              row.difference,
-            ),
-          ]
+              formatAvg(
+                row.fillingAvgSqrMtr,
+                row.fillingAreaSqMtr,
+                row.fillingPrevArea,
+              ),
+              formatVol(
+                row.fillingVolumeCubicMtr,
+                row.fillingAvgSqrMtr,
+                row.difference,
+              ),
+            ]
           : []),
       ]);
     });
@@ -1179,7 +1180,7 @@ const VolumeReport = () => {
         Volume Report Between {reportDetails.current.initialEntry} and{" "}
         {reportDetails.current.secondaryEntry}
       </Typography>
-
+      {console.log(survey)}
       <TableContainer component={Paper} sx={{ maxHeight: "90vh" }}>
         <Table sx={{ minWidth: 650 }} size="small">
           <TableHead
@@ -1395,6 +1396,27 @@ const VolumeReport = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* 🚧 DEV ONLY — Remove before production */}
+      <Typography
+        sx={{
+          mt: 2,
+          px: 1.5,
+          py: 0.75,
+          display: "inline-block",
+          fontSize: 12,
+          fontFamily: "monospace",
+          bgcolor: "#fff8e1",
+          border: "1px dashed #f9a825",
+          borderRadius: 1,
+          color: "#e65100",
+        }}
+      >
+        🚧 DEV ONLY &nbsp;|&nbsp; Quantity:{" "}
+        <strong>
+          {JSON.stringify(reportDetails.current.secondaryEntryQuantity)}
+        </strong>
+      </Typography>
     </Box>
   );
 };
