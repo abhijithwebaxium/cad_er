@@ -384,8 +384,7 @@ const LongitudinalSectionReport = () => {
               left: 0,
               right: 0,
               height: "6px",
-              background:
-                "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
+              background: "linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%)",
             }}
           />
 
@@ -396,7 +395,12 @@ const LongitudinalSectionReport = () => {
             spacing={2}
             mb={4}
           >
-            <Typography variant="h6" fontSize={20} fontWeight={800} color="#1e293b">
+            <Typography
+              variant="h6"
+              fontSize={20}
+              fontWeight={800}
+              color="#1e293b"
+            >
               LONGITUDINAL SECTION
             </Typography>
             <Box textAlign={"end"}>
@@ -408,33 +412,33 @@ const LongitudinalSectionReport = () => {
               />
             </Box>
           </Stack>
-      <Box
-        sx={{
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        {selectedCs && selectedCs?.series?.length && (
-          <CrossSectionChart
-            selectedCs={selectedCs}
-            chartOptions={chartOptions}
-            pdfRef={pdfRef}
-          />
-        )}
+          <Box
+            sx={{
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {selectedCs && selectedCs?.series?.length && (
+              <CrossSectionChart
+                selectedCs={selectedCs}
+                chartOptions={chartOptions}
+                pdfRef={pdfRef}
+              />
+            )}
 
-        {/* Footer */}
-        <Typography
-          variant="caption"
-          sx={{ mt: 1, fontStyle: "italic", color: "text.secondary" }}
-        >
-          [Hor Scale – 1 in 150 : Ver Scale – 1 in 150]
-        </Typography>
+            {/* Footer */}
+            <Typography
+              variant="caption"
+              sx={{ mt: 1, fontStyle: "italic", color: "text.secondary" }}
+            >
+              [Hor Scale – 1 in 150 : Ver Scale – 1 in 150]
+            </Typography>
+          </Box>
+        </Paper>
       </Box>
-    </Paper>
-  </Box>
-</Box>
+    </Box>
   );
 };
 
