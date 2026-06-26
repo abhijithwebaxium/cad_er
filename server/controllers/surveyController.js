@@ -1708,6 +1708,7 @@ const generateSurveyPurpose = async (req, res, next) => {
           status: "Finished",
           isPurposeFinish: true,
           purposeFinishDate: new Date(),
+          pls: basePurpose?.pls,
         },
       ],
       { session },
@@ -1758,18 +1759,36 @@ const generateSurveyPurpose = async (req, res, next) => {
       return { chainage: chainageMeters, ogl: avgOGL, reading: r };
     });
 
+    // Calculate centerline initial RLs to find the average and maximum initial RLs
+    const plsVal = Number(basePurpose?.pls || 0);
+    const centerlineInitialRLs = readingsToCreate.map((r) => {
+      const idx = r.offsets?.findIndex((o) => Number(o) === plsVal);
+      const safeIdx = idx === -1 || idx === undefined ? Math.round(r.offsets.length / 2) : idx;
+      const val = r.reducedLevels[safeIdx];
+      return val !== null && val !== undefined && val !== "" ? Number(val) : null;
+    }).filter(v => v !== null);
+
+    const averageInitialRL = centerlineInitialRLs.length
+      ? centerlineInitialRLs.reduce((a, b) => a + b, 0) / centerlineInitialRLs.length
+      : 0;
+
+    const maxInitialRL = centerlineInitialRLs.length
+      ? Math.max(...centerlineInitialRLs)
+      : 0;
+
+    // Enforce design level is strictly higher than average (or higher than the max initial RL of the section)
+    const proposedRLBuffer = 0.05; // 5 cm buffer
+    const minProposedRL = Math.max(averageInitialRL + proposedRLBuffer, maxInitialRL + proposedRLBuffer);
+
     /**
-     * Computes total fill volume (m³) for a given starting PRL using the
-     * Average End Area method with a trapezoidal cross-section.
+     * Computes total fill volume (m³) for a given height difference h
+     * using the Average End Area method with a trapezoidal cross-section.
      */
-    const calculateVolumeForPRL = (prl) => {
-      const areas = oglPoints.map(({ chainage, ogl }) => {
-        // PRL is constant (zero gradient assumed). If you ever add gradient
-        // support, adjust: prl + chainage * gradient
-        const depth = prl - ogl; // fill depth (negative = cut → ignore)
-        if (depth <= 0) return 0;
+    const calculateVolumeForH = (h) => {
+      const areas = oglPoints.map(() => {
+        if (h <= 0) return 0;
         // Trapezoidal fill cross-section: (B + S·h) × h
-        return (formationWidth + sideSlope * depth) * depth;
+        return (formationWidth + sideSlope * h) * h;
       });
 
       let totalVolume = 0;
@@ -1781,36 +1800,35 @@ const generateSurveyPurpose = async (req, res, next) => {
     };
 
     /**
-     * Binary-search solver: returns the PRL that yields exactly targetVolume.
-     * Bounds are set wide enough to always bracket the solution.
+     * Binary-search solver: returns the thickness H that yields exactly targetVolume.
      */
-    const solveForPRL = (targetVolume) => {
-      let lo = -100;
-      let hi = 5000;
+    const solveForH = (targetVolume) => {
+      let lo = 0.005; // 5mm minimum thickness
+      let hi = 100;
       const tolerance = 0.01; // accurate to within 0.01 m³
       const maxIterations = 100;
 
-      let bestPRL = (lo + hi) / 2;
+      let bestH = (lo + hi) / 2;
 
       for (let i = 0; i < maxIterations; i++) {
-        bestPRL = (lo + hi) / 2;
-        const vol = calculateVolumeForPRL(bestPRL);
+        bestH = (lo + hi) / 2;
+        const vol = calculateVolumeForH(bestH);
 
         if (Math.abs(vol - targetVolume) <= tolerance) break;
 
         if (vol < targetVolume) {
-          lo = bestPRL; // need more fill → raise the road
+          lo = bestH; // need more fill → increase thickness
         } else {
-          hi = bestPRL; // too much fill → lower the road
+          hi = bestH; // too much fill → decrease thickness
         }
       }
 
-      return bestPRL;
+      return bestH;
     };
 
     // Only use the formula-based solver when side-slope geometry is provided.
     const useSolver = !!(cSection && csSlop);
-    const solvedPRL = useSolver ? solveForPRL(safeQuantity) : null;
+    const solvedH = useSolver ? solveForH(safeQuantity) : null;
 
     // ─── Cross-Section Solver (new method) ───────────────────────────────────
     //
@@ -1874,15 +1892,22 @@ const generateSurveyPurpose = async (req, res, next) => {
     });
 
     /**
-     * Total fill volume for a given centerline PRL using the cross-section
-     * method (Trapezoidal Rule per cross-section + Average End Area between
-     * chainages).
+     * Total fill volume for a given constant centerline thickness h using the cross-section
+     * method (Trapezoidal Rule per cross-section + Average End Area between chainages).
      */
-    const calculateVolumeXS = (prl) => {
+    const calculateVolumeXS = (h) => {
       const camberPct = doHaveCamper || 0;
       const areas = xsChainageData.map(({ oglProfile, numericOffsets }) => {
+        // Find centerline OGL (at offset plsVal, default to middle index if not found)
+        const oglMap = {};
+        oglProfile.forEach((p) => { oglMap[p.offset] = p.ogl; });
+        const centerlineOGL = oglMap[plsVal] !== undefined ? oglMap[plsVal] : (oglProfile[Math.round(oglProfile.length / 2)]?.ogl || 0);
+
+        // Centerline proposed level is centerlineOGL + h
+        const centerPRL = centerlineOGL + h;
+
         const proposedLevels = getProposedLevelsAtOffsets(
-          prl,
+          centerPRL,
           numericOffsets,
           camberPct,
         );
@@ -1899,24 +1924,23 @@ const generateSurveyPurpose = async (req, res, next) => {
     };
 
     /**
-     * Binary-search solver using the cross-section volume function.
-     * 200 iterations gives sub-millimetre PRL accuracy.
+     * Binary-search solver using the cross-section volume function to find thickness h.
      */
-    const solveForPRL_XS = (targetVolume) => {
-      let lo = -100;
-      let hi = 5000;
+    const solveForH_XS = (targetVolume) => {
+      let lo = 0.005; // 5mm minimum thickness
+      let hi = 100;
       const tolerance = 0.01;
       const maxIter = 200;
-      let bestPRL = (lo + hi) / 2;
+      let bestH = (lo + hi) / 2;
 
       for (let i = 0; i < maxIter; i++) {
-        bestPRL = (lo + hi) / 2;
-        const vol = calculateVolumeXS(bestPRL);
+        bestH = (lo + hi) / 2;
+        const vol = calculateVolumeXS(bestH);
         if (Math.abs(vol - targetVolume) <= tolerance) break;
-        if (vol < targetVolume) lo = bestPRL;
-        else hi = bestPRL;
+        if (vol < targetVolume) lo = bestH;
+        else hi = bestH;
       }
-      return bestPRL;
+      return bestH;
     };
 
     // Use the cross-section solver whenever offset data is available.
@@ -1933,8 +1957,8 @@ const generateSurveyPurpose = async (req, res, next) => {
       xsChainageData[0]?.numericOffsets?.length > 1;
 
     const useCrossSectionSolver = hasOffsetData || formula === "cross-section";
-    const crossSectionPRL = useCrossSectionSolver
-      ? solveForPRL_XS(safeQuantity)
+    const crossSectionH = useCrossSectionSolver
+      ? solveForH_XS(safeQuantity)
       : null;
 
     const bulkOps = readingsToCreate.map((reading) => {
@@ -2039,16 +2063,23 @@ const generateSurveyPurpose = async (req, res, next) => {
         const avgReadingReducedLevel =
           totalReadingReducedLevel / interpolatedReducedLevels.length;
 
+        // Find centerline OGL for the current reading
+        const centerlineOGLKey = Object.keys(finalMap).find((k) => Number(k) === plsVal);
+        const centerlineOGL = centerlineOGLKey !== undefined
+          ? Number(finalMap[centerlineOGLKey])
+          : avgReadingReducedLevel;
+
         // ── Proposed level per offset ──────────────────────────────────────
         // Priority:
         //   1. Cross-section solver → per-offset PRL with camber at every point
         //   2. Formula-based solver → flat PRL + edge camber adjustment
         //   3. Legacy simple-height formula
         if (useCrossSectionSolver) {
-          // Use the solved PRL and apply camber at every offset, not just edges
+          // Use the solved thickness and apply camber at every offset, not just edges
           const numericOffsets = offsets.map(Number);
+          const centerPRL = centerlineOGL + crossSectionH;
           const proposedLevels = getProposedLevelsAtOffsets(
-            crossSectionPRL,
+            centerPRL,
             numericOffsets,
             doHaveCamper || 0,
           );
@@ -2058,7 +2089,7 @@ const generateSurveyPurpose = async (req, res, next) => {
           });
         } else {
           const baseLevel = useSolver
-            ? solvedPRL
+            ? centerlineOGL + solvedH
             : avgReadingReducedLevel +
               safeQuantity /
                 (Number(
@@ -2095,6 +2126,12 @@ const generateSurveyPurpose = async (req, res, next) => {
         const avgReadingReducedLevel =
           totalReadingReducedLevel / reading.reducedLevels.length;
 
+        // Find centerline OGL for the current reading
+        const centerlineOGLKey = reading.offsets.find((o) => Number(o) === plsVal);
+        const centerlineOGL = centerlineOGLKey !== undefined
+          ? Number(reading.reducedLevels[reading.offsets.indexOf(centerlineOGLKey)])
+          : avgReadingReducedLevel;
+
         // ── Proposed level per offset ──────────────────────────────────────
         // Priority:
         //   1. Cross-section solver → per-offset PRL with camber at every point
@@ -2107,8 +2144,9 @@ const generateSurveyPurpose = async (req, res, next) => {
           // Apply camber at every offset using the same function used in volume
           // computation, so proposed levels are consistent with the solver.
           const numericOffsets = reading.offsets.map(Number);
+          const centerPRL = centerlineOGL + crossSectionH;
           const proposedLevels = getProposedLevelsAtOffsets(
-            crossSectionPRL,
+            centerPRL,
             numericOffsets,
             doHaveCamper || 0,
           );
@@ -2119,7 +2157,7 @@ const generateSurveyPurpose = async (req, res, next) => {
         } else {
           reading.reducedLevels.forEach((_, idx) => {
             let value = useSolver
-              ? solvedPRL
+              ? centerlineOGL + solvedH
               : avgReadingReducedLevel + safeQuantity / (limit * roadWidth);
 
             if (
