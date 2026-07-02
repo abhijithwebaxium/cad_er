@@ -21,6 +21,12 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
+        // Force the new SW to activate immediately without waiting
+        // These are baked directly into sw.js, independent of registerType
+        skipWaiting: true,
+        clientsClaim: true,
+        // Unique cacheId per build ensures sw.js content ALWAYS changes between deployments
+        cacheId: `cader-${Date.now()}`,
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,

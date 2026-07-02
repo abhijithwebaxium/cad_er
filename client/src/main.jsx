@@ -21,12 +21,34 @@ if ("serviceWorker" in navigator) {
     .then((reg) => {
       console.log("Service Worker registered:", reg.scope);
 
+      // If there's already a new SW waiting (stuck from previous "prompt" mode),
+      // send it SKIP_WAITING immediately to unblock it
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      // Immediately trigger an update check on every page load
+      // (don't wait for browser's built-in 24h update check interval)
+      reg.update();
+
       // Check for updates every 1 hour
       setInterval(() => reg.update(), 60 * 60 * 1000);
 
       // Check for updates when the user switches back to the tab
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") reg.update();
+      });
+
+      // Also handle if a new SW becomes waiting AFTER page load
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed") {
+              newWorker.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        }
       });
     })
     .catch((err) => {
