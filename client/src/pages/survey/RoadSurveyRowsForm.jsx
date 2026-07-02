@@ -53,7 +53,7 @@ import AddBreak from "./components/AddBreak";
 import { GiCrossroad } from "react-icons/gi";
 import { PiRoadHorizonFill } from "react-icons/pi";
 import { MdAddRoad } from "react-icons/md";
-import { FaLocationArrow } from "react-icons/fa";
+import { FaLocationArrow, FaWater } from "react-icons/fa";
 import { GrSafariOption } from "react-icons/gr";
 const colors = {
   Initial: "green",
@@ -152,23 +152,34 @@ const pauseSurveyAlertData = {
 const initialFormValues = {
   type: "Chainage",
   chainage: "",
+  basis: "Readings",
   roadWidth: "",
   spacing: "",
-  intermediateOffsets: [{ intermediateSight: "", offset: "", remark: "" }],
+  intermediateOffsets: [
+    { intermediateSight: "", offset: "", remark: "", mode: "R" },
+  ],
   intermediateSight: "",
   foreSight: "",
   backSight: "",
   remark: "",
+  observation: "",
 };
 
 const values = {
-  Chainage: ["chainage", "roadWidth", "spacing", "intermediateOffsets"],
+  Chainage: ["chainage", "basis", "roadWidth", "spacing", "intermediateOffsets"],
+  "Water Level": ["chainage", "roadWidth", "spacing", "intermediateOffsets"],
   CP: ["foreSight", "backSight", "remark"],
   TBM: ["intermediateSight", "remark"],
 };
 
 const inputDetails = [
   { label: "Chainage*", name: "chainage", placeholder: "0/000", type: "text" },
+  {
+    label: "Basis*",
+    name: "basis",
+    type: "select",
+    options: ["Readings", "Soundings"],
+  },
   { label: "Road width*", name: "roadWidth", type: "number", size: 6 },
   { label: "Spacing*", name: "spacing", type: "number", size: 6 },
   { label: "Fore sight*", name: "foreSight", type: "number", size: 6 },
@@ -206,18 +217,26 @@ const RoadSurveyRowsForm = () => {
   const [openEnterBranch, setOpenEnterBranch] = useState(false);
   const [upcomingBranches, setUpcomingBranches] = useState([]);
 
+  const isWaterWay = purpose?.surveyId?.type === "Water Way";
+
   const schema = Yup.object().shape({
     type: Yup.string().required("Type is required"),
 
     chainage: Yup.string().when("type", {
-      is: "Chainage",
+      is: (val) => val === "Chainage" || val === "Water Level",
       then: (schema) =>
-        schema
-          .required("Chainage is required")
-          .matches(
-            /^\d+(\/|\+|,)\d+(\.\d{1,3})?$/,
-            "Invalid chainage format. Use ####/###.### or '####+###.###' or '####,###.###'",
-          ),
+          schema
+            .required("Chainage is required")
+            .matches(
+              /^\d+(\/|\+|,)\d+(\.\d{1,3})?$/,
+              "Invalid chainage format. Use ####/###.### or '####+###.###' or '####,###.###'",
+            ),
+      otherwise: (schema) => schema.nullable(),
+    }),
+
+    basis: Yup.string().when("type", {
+      is: "Chainage",
+      then: (schema) => schema.required("Basis is required"),
       otherwise: (schema) => schema.nullable(),
     }),
 
@@ -226,11 +245,19 @@ const RoadSurveyRowsForm = () => {
         originalValue === "" ? null : value,
       )
       .when("type", {
-        is: "Chainage",
+        is: (val) => val === "Chainage" || val === "Water Level",
         then: (schema) =>
           schema
-            .typeError("Road width is required")
-            .required("Road width is required"),
+            .typeError(
+              isWaterWay
+                ? "Water way width is required"
+                : "Road width is required",
+            )
+            .required(
+              isWaterWay
+                ? "Water way width is required"
+                : "Road width is required",
+            ),
         otherwise: (schema) => schema.nullable(),
       }),
 
@@ -239,7 +266,7 @@ const RoadSurveyRowsForm = () => {
         originalValue === "" ? null : value,
       )
       .when("type", {
-        is: "Chainage",
+        is: (val) => val === "Chainage" || val === "Water Level",
         then: (schema) =>
           schema
             .typeError("Spacing is required")
@@ -279,7 +306,7 @@ const RoadSurveyRowsForm = () => {
         }),
       )
       .when("type", {
-        is: "Chainage",
+        is: (val) => val === "Chainage" || val === "Water Level",
         then: (schema) =>
           schema
             .min(1, "At least one row is required")
@@ -515,7 +542,7 @@ const RoadSurveyRowsForm = () => {
         setFormValues({
           ...initialFormValues,
           intermediateOffsets: [
-            { intermediateSight: "", offset: "", remark: "" },
+            { intermediateSight: "", offset: "", remark: "", mode: "R" },
           ],
         });
 
@@ -538,16 +565,22 @@ const RoadSurveyRowsForm = () => {
   };
 
   const updateInputData = () => {
+    const isWaterWay = purpose?.surveyId?.type === "Water Way";
     const filteredInputData = inputDetails
       ?.map((d) => {
+        let label = d.label;
+        if (isWaterWay && rowType === "Water Level" && d.name === "roadWidth") {
+          label = "Water way width*";
+        }
         if (rowType === "CP" && d.name === "backSight") {
           return {
             ...d,
+            label,
             disabled: purpose?.status !== "Paused",
           };
         }
 
-        return d;
+        return { ...d, label };
       })
       ?.filter((d) => values[rowType]?.includes(d.name));
 
@@ -607,6 +640,8 @@ const RoadSurveyRowsForm = () => {
       (o) => o.intermediateSight.length,
     );
 
+    const defaultMode = formValues.basis === "Soundings" ? "S" : "R";
+
     intermediateOffsets
       ?.sort((a, b) => a - b)
       ?.forEach((entry, i) => {
@@ -617,12 +652,14 @@ const RoadSurveyRowsForm = () => {
             offset: entry,
             intermediateSight: "",
             remark: parsedEntry < 0 ? "LHS" : parsedEntry === 0 ? "PLS" : "RHS",
+            mode: defaultMode,
           };
         } else {
           updatedRows[i].offset = entry;
           updatedRows[i].intermediateSight =
             updatedRows[i].intermediateSight || "";
           updatedRows[i].remark = updatedRows[i].remark;
+          updatedRows[i].mode = updatedRows[i].mode || defaultMode;
         }
       });
 
@@ -701,11 +738,12 @@ const RoadSurveyRowsForm = () => {
   };
 
   const handleAddRow = () => {
+    const defaultMode = formValues.basis === "Soundings" ? "S" : "R";
     setFormValues((prev) => ({
       ...prev,
       intermediateOffsets: [
         ...(formValues.intermediateOffsets || []),
-        { intermediateSight: "", offset: "", remark: "" },
+        { intermediateSight: "", offset: "", remark: "", mode: defaultMode },
       ],
     }));
 
@@ -736,7 +774,9 @@ const RoadSurveyRowsForm = () => {
           const prevChainage = purpose?.rows?.at(-1)?.chainage;
 
           const filteredInitialSurvey =
-            initialSurvey?.rows?.filter((r) => r.type === "Chainage") ?? [];
+            initialSurvey?.rows?.filter(
+              (r) => r.type === "Chainage" || r.type === "Water Level",
+            ) ?? [];
 
           const currentIndex = filteredInitialSurvey.findIndex(
             (r) => r.chainage === prevChainage,
@@ -759,7 +799,7 @@ const RoadSurveyRowsForm = () => {
           currentReading = nextReading;
         } else {
           currentReading = initialSurvey?.rows?.find(
-            (r) => r.type === "Chainage",
+            (r) => r.type === "Chainage" || r.type === "Water Level",
           );
         }
 
@@ -768,6 +808,7 @@ const RoadSurveyRowsForm = () => {
             chainage: currentReading?.chainage || "",
             roadWidth: currentReading?.roadWidth || "",
             spacing: currentReading?.spacing || "",
+            basis: currentReading?.basis || "Readings",
           };
 
           setFormValues((prev) => ({
@@ -777,7 +818,10 @@ const RoadSurveyRowsForm = () => {
         }
       } else {
         const isFirstChainage = purpose?.rows?.find(
-          (r) => r.type === "Chainage" || r.type === "Break",
+          (r) =>
+            r.type === "Chainage" ||
+            r.type === "Water Level" ||
+            r.type === "Break",
         );
 
         if (!isFirstChainage) {
@@ -787,11 +831,17 @@ const RoadSurveyRowsForm = () => {
           }));
         } else {
           const lastChainage = purpose?.rows
-            ?.filter((r) => r.type === "Chainage" || r.type === "Break")
+            ?.filter(
+              (r) =>
+                r.type === "Chainage" ||
+                r.type === "Water Level" ||
+                r.type === "Break",
+            )
             ?.at(-1);
 
           const lastChainageDigit =
-            lastChainage.type === "Chainage"
+            lastChainage.type === "Chainage" ||
+            lastChainage.type === "Water Level"
               ? lastChainage.chainage
               : lastChainage.to;
 
@@ -815,6 +865,7 @@ const RoadSurveyRowsForm = () => {
             chainage: nextChainage,
             roadWidth: Number(lastChainage?.roadWidth) || "",
             spacing: lastChainage?.spacing || "",
+            basis: lastChainage?.basis || "Readings",
           }));
         }
       }
@@ -828,7 +879,7 @@ const RoadSurveyRowsForm = () => {
   const handleSubmit = async () => {
     setBtnLoading(true);
     try {
-      if (rowType === "Chainage" && page === 0) {
+      if ((rowType === "Chainage" || rowType === "Water Level") && page === 0) {
         const pickItems = ["chainage", "roadWidth", "spacing"];
 
         const isProposal = purpose.phase === "Proposal";
@@ -883,23 +934,24 @@ const RoadSurveyRowsForm = () => {
 
       let payload = null;
 
-      if (rowType === "Chainage") {
+      if (rowType === "Chainage" || rowType === "Water Level") {
         const sortedOffsets = [...(formValues.intermediateOffsets || [])].sort(
-          (a, b) => a.offset - b.offset,
+          (a, b) => Number(a.offset) - Number(b.offset),
         );
 
         payload = {
           ...formValues,
-          reducedLevels:
-            purpose.phase !== "Proposal"
-              ? []
-              : sortedOffsets.map((r) => r.reducedLevel),
-          intermediateSight:
-            purpose.phase === "Proposal"
-              ? []
-              : sortedOffsets.map((r) => r.intermediateSight),
-          offsets: sortedOffsets.map((r) => r.offset),
-          remark: sortedOffsets.map((r) => r.remark),
+          intermediateOffsets: sortedOffsets.map((r) => ({
+            is:
+              purpose.phase === "Proposal"
+                ? ""
+                : String(r.intermediateSight || ""),
+            rl:
+              purpose.phase === "Proposal" ? String(r.reducedLevel || "") : "",
+            offset: String(r.offset || ""),
+            remark: String(r.remark || ""),
+            mode: r.mode || "S",
+          })),
         };
       } else {
         payload = { ...formValues, chainage: null };
@@ -918,7 +970,7 @@ const RoadSurveyRowsForm = () => {
         setFormValues({
           ...initialFormValues,
           intermediateOffsets: [
-            { intermediateSight: "", offset: "", remark: "" },
+            { intermediateSight: "", offset: "", remark: "", mode: "R" },
           ],
           remark:
             rowType === "CP"
@@ -928,7 +980,7 @@ const RoadSurveyRowsForm = () => {
 
         getNewChainage(purposeDoc);
 
-        if (rowType === "Chainage") {
+        if (rowType === "Chainage" || rowType === "Water Level") {
           setPage(0);
         }
 
@@ -936,7 +988,11 @@ const RoadSurveyRowsForm = () => {
           (purpose.type === "Initial Level" && rowType === "TBM") ||
           purpose.status === "Paused"
         ) {
-          setRowType("Chainage");
+          setRowType(
+            purpose?.surveyId?.type === "Water Way"
+              ? "Water Level"
+              : "Chainage",
+          );
         }
 
         setPurpose(purposeDoc);
@@ -1087,7 +1143,13 @@ const RoadSurveyRowsForm = () => {
     if (purpose.phase === "Actual") {
       const newReading = {
         type: rowType,
-        intermediateSight: values.map((v) => v.intermediateSight),
+        intermediateOffsets: values.map((v) => ({
+          is: v.intermediateSight || "",
+          rl: v.reducedLevel || "",
+          offset: v.offset || "",
+          remark: v.remark || "",
+          mode: v.mode || "S",
+        })),
       };
       const calculatedData = getLastRlAndHi(
         purpose.surveyId,
@@ -1172,12 +1234,15 @@ const RoadSurveyRowsForm = () => {
       (r) => r.chainage === formValues.chainage,
     );
 
-    const safeProposal = newRow?.reducedLevels || [];
+    const safeProposal = (newRow?.intermediateOffsets || []).map((e) => e.rl);
 
     const newData = {
       name: findPurpose.type,
       color: getColor(findPurpose.type),
-      data: makeSeries(newRow?.offsets, safeProposal),
+      data: makeSeries(
+        (newRow?.intermediateOffsets || []).map((e) => e.offset),
+        safeProposal,
+      ),
     };
 
     let minY = Math.min(...safeProposal);
@@ -1299,7 +1364,7 @@ const RoadSurveyRowsForm = () => {
           setFormValues((prev) => ({
             ...prev,
             foreSight: lastRow.foreSight,
-            remark: lastRow.remarks[0],
+            remark: lastRow.remark || lastRow.remarks?.[0] || "",
           }));
           setRowType("CP");
         } else {
@@ -1348,7 +1413,7 @@ const RoadSurveyRowsForm = () => {
 
       {/* Main Form Layout Container */}
       <Container maxWidth="md">
-        {rowType === "Chainage" &&
+        {(rowType === "Chainage" || rowType === "Water Level") &&
           page === 1 &&
           selectedCs &&
           selectedCs?.series && (
@@ -1730,25 +1795,35 @@ const RoadSurveyRowsForm = () => {
                           width: "100%",
                         }}
                       >
-                        <BasicInput
-                          {...input}
-                          value={formValues[input.name] || ""}
-                          error={(formErrors && formErrors[input.name]) || ""}
-                          warning={
-                            (formWarnings && formWarnings[input.name]) || ""
-                          }
-                          sx={{ width: "100%" }}
-                          onChange={(e) => handleInputChange(e)}
-                          disabled={input.disabled}
-                        />
+                        {input.type === "select" ? (
+                          <BasicSelect
+                            {...input}
+                            value={formValues[input.name] || ""}
+                            error={(formErrors && formErrors[input.name]) || ""}
+                            onChange={(e) => handleInputChange(e)}
+                          />
+                        ) : (
+                          <BasicInput
+                            {...input}
+                            value={formValues[input.name] || ""}
+                            error={(formErrors && formErrors[input.name]) || ""}
+                            warning={
+                              (formWarnings && formWarnings[input.name]) || ""
+                            }
+                            sx={{ width: "100%" }}
+                            onChange={(e) => handleInputChange(e)}
+                            disabled={input.disabled}
+                          />
+                        )}
                       </Box>
                     </Grid>
                   ))}
 
                 {/* ✅ Dynamic Intermediate + Offset Rows */}
-                {page === 1 && rowType === "Chainage" && (
-                  <Grid size={{ xs: 12 }}>
-                    {/* <Stack direction={'row'} alignItems={'center'}>
+                {page === 1 &&
+                  (rowType === "Chainage" || rowType === "Water Level") && (
+                    <Grid size={{ xs: 12 }}>
+                      {/* <Stack direction={'row'} alignItems={'center'}>
                   <BasicCheckbox
                     checked={autoOffset}
                     onChange={(e) => handleChangeAutoOffset(e)}
@@ -1758,161 +1833,354 @@ const RoadSurveyRowsForm = () => {
                   </Typography>
                 </Stack> */}
 
-                    <Stack
-                      direction={"row"}
-                      justifyContent={"space-between"}
-                      alignItems={"center"}
-                    >
-                      <Typography
-                        fontSize={"16px"}
-                        fontWeight={600}
-                        color="black"
-                        mb={1}
+                      <Stack
+                        direction={"row"}
+                        justifyContent={"space-between"}
+                        alignItems={"center"}
                       >
-                        Chainage: {formValues.chainage}
-                      </Typography>
+                        <Typography
+                          fontSize={"16px"}
+                          fontWeight={600}
+                          color="black"
+                          mb={1}
+                        >
+                          Chainage: {formValues.chainage}
+                        </Typography>
 
-                      <Box sx={addButtonSx} onClick={handleAddRow}>
-                        <IoAdd size={18} />
-                        Add Row
-                      </Box>
-                    </Stack>
+                        <Box sx={addButtonSx} onClick={handleAddRow}>
+                          <IoAdd size={18} />
+                          Add Row
+                        </Box>
+                      </Stack>
 
-                    <Stack spacing={2}>
-                      {formValues.intermediateOffsets.map((row, idx) => (
-                        <Stack key={idx} spacing={1}>
-                          <Stack
-                            key={idx}
-                            direction={"row"}
-                            alignItems={"end"}
-                            spacing={1}
-                            width={"100%"}
+                      {/* ── Column headers ── */}
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: rowType === "Chainage" ? "1fr 32px 70px 1fr 28px" : "1fr 70px 1fr 28px",
+                            sm: rowType === "Chainage" ? "90px 32px 90px 1fr 32px" : "90px 90px 1fr 32px",
+                          },
+                          gap: { xs: "4px", sm: "6px" },
+                          px: 1,
+                          pb: 0.5,
+                        }}
+                      >
+                        {[
+                          purpose.phase === "Proposal" ? "RL*" : "IS*",
+                          rowType === "Chainage" ? "Basis" : null,
+                          "Offset*",
+                          "Remark*",
+                          "",
+                        ].filter(Boolean).map((h, i) => (
+                          <Typography
+                            key={i}
+                            variant="caption"
+                            sx={{
+                              fontWeight: 700,
+                              color: "text.secondary",
+                              fontSize: { xs: 9, sm: 11 },
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
                           >
-                            {purpose.phase === "Proposal" ? (
-                              <BasicInput
-                                label={idx === 0 ? "RL*" : ""}
-                                type="number"
-                                name="intermediateOffsets"
-                                value={row.reducedLevel || ""}
-                                error={
-                                  formErrors &&
-                                  formErrors[
-                                    `intermediateOffsets[${idx}].reducedLevel`
-                                  ]
-                                }
-                                sx={{ width: "100%" }}
-                                onChange={(e) =>
-                                  handleInputChange(e, idx, "reducedLevel")
-                                }
-                              />
-                            ) : (
-                              <BasicInput
-                                label={idx === 0 ? "IS*" : ""}
-                                type="number"
-                                name="intermediateOffsets"
-                                value={row.intermediateSight || ""}
-                                error={
-                                  formErrors &&
-                                  formErrors[
-                                    `intermediateOffsets[${idx}].intermediateSight`
-                                  ]
-                                }
-                                warning={
-                                  formWarnings &&
-                                  formWarnings[
-                                    `intermediateOffsets[${idx}].intermediateSight`
-                                  ] &&
-                                  "disable-label"
-                                }
-                                sx={{ width: "100%" }}
-                                onChange={(e) =>
-                                  handleInputChange(e, idx, "intermediateSight")
-                                }
-                              />
-                            )}
+                            {h}
+                          </Typography>
+                        ))}
+                      </Box>
 
-                            <BasicInput
-                              label={idx === 0 ? "Offset*" : ""}
-                              type="number"
-                              name="intermediateOffsets"
-                              value={row.offset}
-                              onChange={(e) =>
-                                handleInputChange(e, idx, "offset")
-                              }
-                              error={
-                                formErrors &&
-                                formErrors[`intermediateOffsets[${idx}].offset`]
-                              }
-                            />
-                            <BasicInput
-                              label={idx === 0 ? "Remark*" : ""}
-                              type="text"
-                              name="intermediateOffsets"
-                              value={row.remark}
-                              onChange={(e) =>
-                                handleInputChange(e, idx, "remark")
-                              }
-                              error={
-                                formErrors &&
-                                formErrors[`intermediateOffsets[${idx}].remark`]
-                              }
-                            />
-                            <Box>
-                              {idx ===
-                              formValues.intermediateOffsets?.length - 1 ? (
-                                <Stack direction={"row"} spacing={1}>
-                                  {formValues.intermediateOffsets?.length >
-                                    1 && (
-                                    <Box
-                                      className="remove-new-sight"
-                                      onClick={() => handleRemoveRow(idx)}
-                                    >
-                                      <IoIosRemove
-                                        fontSize={"24px"}
-                                        color="rgb(231 0 0)"
-                                      />
-                                    </Box>
-                                  )}
-                                </Stack>
+                      <Stack spacing={0.75}>
+                        {formValues.intermediateOffsets.map((row, idx) => (
+                          <Box key={idx}>
+                            <Box
+                              sx={{
+                                display: "grid",
+                                gridTemplateColumns: {
+                                  xs: rowType === "Chainage" ? "1fr 32px 70px 1fr 28px" : "1fr 70px 1fr 28px",
+                                  sm: rowType === "Chainage" ? "90px 32px 90px 1fr 32px" : "90px 90px 1fr 32px",
+                                },
+                                gap: { xs: "4px", sm: "6px" },
+                                alignItems: "center",
+                                px: 1,
+                                py: 0.75,
+                                borderRadius: 2,
+                                bgcolor: idx % 2 === 0 ? "#f8f9ff" : "#fff",
+                                border: "1px solid",
+                                borderColor: "rgba(99,102,241,0.1)",
+                                transition: "box-shadow 0.2s",
+                                "&:hover": {
+                                  boxShadow: "0 2px 8px rgba(99,102,241,0.12)",
+                                },
+                              }}
+                            >
+                              {/* IS / RL input */}
+                              {purpose.phase === "Proposal" ? (
+                                <BasicInput
+                                  type="number"
+                                  name="intermediateOffsets"
+                                  value={row.reducedLevel || ""}
+                                  error={
+                                    formErrors &&
+                                    formErrors[
+                                      `intermediateOffsets[${idx}].reducedLevel`
+                                    ]
+                                  }
+                                  sx={{
+                                    padding: "8px 0px",
+                                    "& input": {
+                                      px: 1,
+                                      py: 0.75,
+                                      fontSize: 13,
+                                    },
+                                  }}
+                                  onChange={(e) =>
+                                    handleInputChange(e, idx, "reducedLevel")
+                                  }
+                                />
                               ) : (
+                                <BasicInput
+                                  type="number"
+                                  name="intermediateOffsets"
+                                  value={row.intermediateSight || ""}
+                                  error={
+                                    formErrors &&
+                                    formErrors[
+                                      `intermediateOffsets[${idx}].intermediateSight`
+                                    ]
+                                  }
+                                  warning={
+                                    formWarnings &&
+                                    formWarnings[
+                                      `intermediateOffsets[${idx}].intermediateSight`
+                                    ] &&
+                                    "disable-label"
+                                  }
+                                  sx={{
+                                    padding: "8px 0px",
+                                    "& input": {
+                                      px: 1,
+                                      py: 0.75,
+                                      fontSize: 13,
+                                    },
+                                  }}
+                                  onChange={(e) =>
+                                    handleInputChange(
+                                      e,
+                                      idx,
+                                      "intermediateSight",
+                                    )
+                                  }
+                                />
+                              )}
+
+                              {/* S / R segmented switch — vertical */}
+                              {rowType === "Chainage" && (
                                 <Box
-                                  className="remove-new-sight"
-                                  onClick={() => handleRemoveRow(idx)}
+                                  onClick={() => {
+                                    const updated = [
+                                      ...formValues.intermediateOffsets,
+                                    ];
+                                    updated[idx] = {
+                                      ...updated[idx],
+                                      mode: updated[idx].mode === "S" ? "R" : "S",
+                                    };
+                                    setFormValues((prev) => ({
+                                      ...prev,
+                                      intermediateOffsets: updated,
+                                    }));
+                                  }}
+                                  sx={{
+                                    position: "relative",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    width: 28,
+                                    height: 44,
+                                    borderRadius: "14px",
+                                    bgcolor: "#e8e9f3",
+                                    cursor: "pointer",
+                                    userSelect: "none",
+                                    border: "1.5px solid",
+                                    borderColor:
+                                      row.mode === "R"
+                                        ? "rgba(139,90,43,0.18)"
+                                        : "rgba(2,132,199,0.18)",
+                                    transition: "border-color 0.2s",
+                                    "&:hover": {
+                                      borderColor:
+                                        row.mode === "R"
+                                          ? "rgba(139,90,43,0.4)"
+                                          : "rgba(2,132,199,0.4)",
+                                    },
+                                  }}
                                 >
-                                  <IoIosRemove
-                                    fontSize={"24px"}
-                                    color="rgb(231 0 0)"
+                                  {/* Sliding thumb — moves top/bottom */}
+                                  <Box
+                                    sx={{
+                                      position: "absolute",
+                                      left: 2,
+                                      top:
+                                        row.mode === "R" ? 2 : "calc(50% - 1px)",
+                                      width: "calc(100% - 4px)",
+                                      height: "calc(50% - 1px)",
+                                      borderRadius: "11px",
+                                      bgcolor:
+                                        row.mode === "R" ? "#8b5a2b" : "#0284c7", // R = brown (ground/land), S = blue (water)
+                                      boxShadow:
+                                        row.mode === "R"
+                                          ? "0 2px 6px rgba(139,90,43,0.45)"
+                                          : "0 2px 6px rgba(2,132,199,0.45)",
+                                      transition:
+                                        "top 0.22s cubic-bezier(.4,0,.2,1), background 0.22s",
+                                    }}
                                   />
+                                  <Typography
+                                    sx={{
+                                      position: "relative",
+                                      zIndex: 1,
+                                      flex: 1,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      width: "100%",
+                                      fontSize: 10,
+                                      fontWeight: 800,
+                                      letterSpacing: 0.5,
+                                      color:
+                                        row.mode === "R"
+                                          ? "#fff"
+                                          : "rgba(80,80,120,0.55)",
+                                      transition: "color 0.2s",
+                                    }}
+                                  >
+                                    R
+                                  </Typography>
+                                  <Typography
+                                    sx={{
+                                      position: "relative",
+                                      zIndex: 1,
+                                      flex: 1,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      width: "100%",
+                                      fontSize: 10,
+                                      fontWeight: 800,
+                                      letterSpacing: 0.5,
+                                      color:
+                                        row.mode === "S"
+                                          ? "#fff"
+                                          : "rgba(80,80,120,0.55)",
+                                      transition: "color 0.2s",
+                                    }}
+                                  >
+                                    S
+                                  </Typography>
                                 </Box>
                               )}
-                            </Box>
-                          </Stack>
-                          {formWarnings &&
-                            formWarnings[
-                              `intermediateOffsets[${idx}].intermediateSight`
-                            ] && (
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  mb: 0.5,
-                                  color: "warning.main",
-                                }}
-                              >
-                                {
-                                  formWarnings[
-                                    `intermediateOffsets[${idx}].intermediateSight`
+
+                              {/* Offset input */}
+                              <BasicInput
+                                type="number"
+                                name="intermediateOffsets"
+                                value={row.offset}
+                                onChange={(e) =>
+                                  handleInputChange(e, idx, "offset")
+                                }
+                                error={
+                                  formErrors &&
+                                  formErrors[
+                                    `intermediateOffsets[${idx}].offset`
                                   ]
                                 }
-                              </Typography>
-                            )}
-                        </Stack>
-                      ))}
-                    </Stack>
-                  </Grid>
-                )}
-                {((page === 0 && rowType !== "Chainage") || page === 1) && (
+                                sx={{
+                                  padding: "8px 0px",
+                                  "& input": { px: 1, py: 0.75, fontSize: 13 },
+                                }}
+                              />
+
+                              {/* Remark input */}
+                              <BasicInput
+                                type="text"
+                                name="intermediateOffsets"
+                                value={row.remark}
+                                onChange={(e) =>
+                                  handleInputChange(e, idx, "remark")
+                                }
+                                error={
+                                  formErrors &&
+                                  formErrors[
+                                    `intermediateOffsets[${idx}].remark`
+                                  ]
+                                }
+                                sx={{
+                                  padding: "8px 0px",
+                                  "& input": { px: 1, py: 0.75, fontSize: 13 },
+                                }}
+                              />
+
+                              {/* Delete button */}
+                              <Box
+                                onClick={() => handleRemoveRow(idx)}
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: "50%",
+                                  cursor:
+                                    formValues.intermediateOffsets.length <= 1
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  opacity:
+                                    formValues.intermediateOffsets.length <= 1
+                                      ? 0.3
+                                      : 1,
+                                  color: "#ef4444",
+                                  transition: "background 0.15s",
+                                  "&:hover":
+                                    formValues.intermediateOffsets.length > 1
+                                      ? { bgcolor: "rgba(239,68,68,0.1)" }
+                                      : {},
+                                }}
+                              >
+                                <IoIosRemove fontSize={"20px"} />
+                              </Box>
+                            </Box>
+
+                            {/* Inline warning */}
+                            {formWarnings &&
+                              formWarnings[
+                                `intermediateOffsets[${idx}].intermediateSight`
+                              ] && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{ ml: 1, color: "warning.main" }}
+                                >
+                                  {
+                                    formWarnings[
+                                      `intermediateOffsets[${idx}].intermediateSight`
+                                    ]
+                                  }
+                                </Typography>
+                              )}
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Grid>
+                  )}
+                {((page === 0 &&
+                  rowType !== "Chainage" &&
+                  rowType !== "Water Level") ||
+                  page === 1) && (
                   <Grid width={"100%"}>
-                    <ObservationNotes />
+                    <ObservationNotes
+                      value={formValues.observation}
+                      onChange={(val) =>
+                        setFormValues((prev) => ({ ...prev, observation: val }))
+                      }
+                    />
                   </Grid>
                 )}
               </Grid>
@@ -1968,6 +2236,16 @@ const RoadSurveyRowsForm = () => {
                         icon: <MdAddRoad fontSize="20px" />,
                         onClick: () => handleChangeRowType("Chainage"),
                       },
+                      ...(isWaterWay
+                        ? [
+                            {
+                              label: "WL",
+                              value: "Water Level",
+                              icon: <FaWater fontSize="20px" />,
+                              onClick: () => handleChangeRowType("Water Level"),
+                            },
+                          ]
+                        : []),
                       {
                         label: "CP",
                         value: "CP",

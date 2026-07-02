@@ -855,7 +855,7 @@ const PlottingAndQuantityReport = () => {
       if (!initialEntry?.rows?.length) return;
 
       const allFormattedData = initialEntry.rows
-        ?.filter((row) => row.type === "Chainage")
+        ?.filter((row) => row.type === "Chainage" || row.type === "Water Level")
         .map((row) => buildCsData(row))
         .filter(Boolean);
 
@@ -869,7 +869,7 @@ const PlottingAndQuantityReport = () => {
     const initialEntry = lsTableData[0];
     if (!initialEntry?.rows?.length) return;
 
-    const row = initialEntry.rows.filter((row) => row.type === "Chainage");
+    const row = initialEntry.rows.filter((row) => row.type === "Chainage" || row.type === "Water Level");
     if (!row.length) return;
 
     const pls = Number(initialEntry.pls || 0);
@@ -913,7 +913,7 @@ const PlottingAndQuantityReport = () => {
       for (let i = 1; i < lsTableData.length; i++) {
         const table = lsTableData[i];
 
-        const newRow = table?.rows?.filter((r) => r.type === "Chainage") || [];
+        const newRow = table?.rows?.filter((r) => r.type === "Chainage" || r.type === "Water Level") || [];
         if (!newRow.length) continue;
 
         const safeProposal = newRow.map((r) => {
@@ -1077,9 +1077,9 @@ const PlottingAndQuantityReport = () => {
       totalFillingVolume: 0,
     };
 
-    // Process only "Chainage" rows
+    // Process only "Chainage" and "Water Level" rows
     const filteredInitialRows = initialRows.filter(
-      (row) => row.type === "Chainage",
+      (row) => row.type === "Chainage" || row.type === "Water Level",
     );
 
     const areaReport = [];

@@ -86,6 +86,7 @@ const createSurvey = async (req, res, next) => {
       body: {
         project,
         purpose,
+        type,
         instrumentNo,
         reducedLevel,
         backSight,
@@ -162,6 +163,7 @@ const createSurvey = async (req, res, next) => {
         {
           project,
           createdBy: userId,
+          type: type || "Road Survey",
           instrumentNo,
           chainageMultiple,
           separator,
@@ -211,7 +213,7 @@ const createSurvey = async (req, res, next) => {
           createdBy: userId,
           type: "Instrument setup",
           backSight: Number(backSight).toFixed(3),
-          remarks: [remark || "TBM - 1"],
+          remark: remark || "TBM - 1",
           reducedLevels: [Number(reducedLevel).toFixed(3)],
           heightOfInstrument: Number(
             Number(reducedLevel) + Number(backSight),
@@ -271,6 +273,7 @@ const queueSurvey = async (req, res, next) => {
       body: {
         project,
         purpose,
+        type,
         department,
         division,
         subDivision,
@@ -302,7 +305,12 @@ const queueSurvey = async (req, res, next) => {
       );
     }
 
-    const isPublicProject = !!(department && division && subDivision && section);
+    const isPublicProject = !!(
+      department &&
+      division &&
+      subDivision &&
+      section
+    );
     const isPrivateProject = !!(consultant && client);
 
     if (!isPublicProject && !isPrivateProject) {
@@ -316,7 +324,10 @@ const queueSurvey = async (req, res, next) => {
       project,
       createdBy: userId,
       status: "Scheduled",
-      ...(isPublicProject ? { department, division, subDivision, section } : {}),
+      type: type || "Road Survey",
+      ...(isPublicProject
+        ? { department, division, subDivision, section }
+        : {}),
       ...(isPrivateProject ? { consultant, client } : {}),
       engineerSurveyor,
       assistant1,
@@ -426,7 +437,7 @@ const completeSurvey = async (req, res, next) => {
           createdBy: userId,
           type: "Instrument setup",
           backSight: Number(backSight).toFixed(3),
-          remarks: [remark || "TBM - 1"],
+          remark: remark || "TBM - 1",
           reducedLevels: [Number(reducedLevel).toFixed(3)],
           heightOfInstrument: Number(
             Number(reducedLevel) + Number(backSight),
@@ -514,7 +525,7 @@ const getSurvey = async (req, res, next) => {
   }
 };
 
-const updateSurvey = () => { };
+const updateSurvey = () => {};
 const deleteSurvey = async (req, res, next) => {
   try {
     const {
@@ -567,9 +578,10 @@ const createSurveyRow = async (req, res, next) => {
         chainage,
         roadWidth,
         spacing,
-        offsets,
-        reducedLevels,
+        basis,
+        intermediateOffsets,
         remark,
+        observation,
       },
     } = req;
 
@@ -605,7 +617,7 @@ const createSurveyRow = async (req, res, next) => {
     if (!survey || survey.deleted)
       throw createHttpError(404, "Survey not found or has been deleted");
 
-    if (type === "Chainage") {
+    if (type === "Chainage" || type === "Water Level") {
       const isChainageExist = await SurveyRow.findOne({
         purposeId: id,
         chainage: chainage?.trim(),
@@ -621,12 +633,11 @@ const createSurveyRow = async (req, res, next) => {
 
     // 🔹 Validate type and required fields (same as before)
     const types = {
-      Chainage: ["chainage", "roadWidth", "spacing", "offsets"],
+      Chainage: ["chainage", "roadWidth", "spacing", "intermediateOffsets"],
+      "Water Level": ["chainage", "roadWidth", "spacing", "intermediateOffsets"],
       CP: ["foreSight", "backSight"],
       TBM: ["intermediateSight"],
     };
-
-    types["Chainage"].push(isProposal ? "reducedLevels" : "intermediateSight");
 
     if (!type || !Object.keys(types).includes(type))
       throw createHttpError(400, `Invalid or missing row type: ${type}`);
@@ -641,21 +652,15 @@ const createSurveyRow = async (req, res, next) => {
         `Missing required fields: ${missing.join(", ")}`,
       );
 
-    // 🔹 Remarks logic
-    const remarks = [];
-    if (type === "Chainage") {
-      remarks.push(...remark);
-    } else {
-      remarks.push(remark);
-    }
-
     const initialSurvey = survey.purposes?.find(
       (p) => p.type === "Initial Level",
     );
 
     if (isProposal) {
       const filteredInitialSurvey =
-        initialSurvey?.rows?.filter((entry) => entry.type === "Chainage") || [];
+        initialSurvey?.rows?.filter(
+          (entry) => entry.type === "Chainage" || entry.type === "Water Level",
+        ) || [];
 
       const totalReadings = filteredInitialSurvey.length;
       const currentIndex = filteredInitialSurvey.findIndex(
@@ -671,31 +676,48 @@ const createSurveyRow = async (req, res, next) => {
       }
     }
 
+    // Sort intermediateOffsets by numeric offset value
+    const sortedOffsets = (intermediateOffsets || []).sort(
+      (a, b) => Number(a.offset) - Number(b.offset),
+    );
+
     const newReading = {
       type,
       purposeId: purpose._id,
       createdBy: userId,
-      chainage: type === "Chainage" ? chainage : undefined,
-      spacing: type === "Chainage" ? spacing : undefined,
+      chainage:
+        type === "Chainage" || type === "Water Level" ? chainage : undefined,
+      spacing:
+        type === "Chainage" || type === "Water Level" ? spacing : undefined,
       roadWidth: roadWidth ? Number(roadWidth).toFixed(3) : undefined,
+      basis: type === "Chainage" ? basis : undefined,
 
       backSight: backSight ? Number(backSight).toFixed(3) : undefined,
       foreSight: foreSight ? Number(foreSight).toFixed(3) : undefined,
 
-      reducedLevels: isProposal
-        ? (reducedLevels || []).map((n) => Number(n).toFixed(3))
-        : [],
+      // For Chainage/WL rows: store as intermediateOffsets array of objects
+      ...(type === "Chainage" || type === "Water Level"
+        ? {
+            intermediateOffsets: sortedOffsets.map((entry) => ({
+              is: isProposal ? "" : Number(entry.is || 0).toFixed(3),
+              offset: Number(entry.offset || 0).toFixed(3),
+              remark: entry.remark || "",
+              mode: entry.mode || "S",
+            })),
+            reducedLevels: isProposal
+              ? (reducedLevels || []).map((n) => Number(n).toFixed(3))
+              : [],
+          }
+        : {}),
 
+      // TBM uses scalar IS array
       intermediateSight:
-        type === "Chainage"
-          ? (intermediateSight || []).map((n) => Number(n).toFixed(3))
-          : intermediateSight
-            ? [intermediateSight]
-            : undefined,
+        type === "TBM" && intermediateSight ? [intermediateSight] : undefined,
 
-      offsets: (offsets || []).map((n) => Number(n).toFixed(3)),
+      // Non-Chainage rows use scalar remark
+      ...(type !== "Chainage" && type !== "Water Level" ? { remark } : {}),
 
-      remarks,
+      observation: observation || "",
     };
 
     if (!isProposal) {
@@ -1079,7 +1101,7 @@ const createSurveyPurpose = async (req, res, next) => {
             createdBy: userId,
             type: "Instrument setup",
             backSight: Number(backSight).toFixed(3),
-            remarks: ["TBM - 1"],
+            remark: "TBM - 1",
             reducedLevels: [Number(reducedLevel).toFixed(3)],
             heightOfInstrument: Number(
               Number(reducedLevel) + Number(backSight),
@@ -1138,8 +1160,9 @@ const getAllSurveyPurpose = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: purposes.length,
-      message: `${purposes.length} survey purpose${purposes.length > 1 ? "s" : ""
-        } found`,
+      message: `${purposes.length} survey purpose${
+        purposes.length > 1 ? "s" : ""
+      } found`,
       purposes,
     });
   } catch (err) {
@@ -1317,9 +1340,9 @@ const updateSurveyRow = async (req, res, next) => {
       body: {
         type,
         chainage,
+        basis,
         intermediateSight,
-        reducedLevels,
-        offsets,
+        intermediateOffsets,
         foreSight,
         backSight,
         remark,
@@ -1344,8 +1367,7 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.heightOfInstrument = Number(
         Number(isRowExist.reducedLevels[0]) + Number(backSight),
       ).toFixed(3);
-
-      isRowExist.remarks[0] = remark;
+      isRowExist.remark = remark;
     }
 
     if (type === "TBM") {
@@ -1358,7 +1380,7 @@ const updateSurveyRow = async (req, res, next) => {
 
       isRowExist.reducedLevels[0] = newRL.toFixed(3);
       isRowExist.intermediateSight[0] = newIS.toFixed(3);
-      isRowExist.remarks[0] = remark;
+      isRowExist.remark = remark;
     }
 
     if (type === "CP") {
@@ -1377,32 +1399,49 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.heightOfInstrument = newHI.toFixed(3);
       isRowExist.backSight = newBS.toFixed(3);
       isRowExist.foreSight = newFS.toFixed(3);
-      isRowExist.remarks[0] = remark;
+      isRowExist.remark = remark;
     }
 
-    if (type === "Chainage") {
-      const prevRL = Number(isRowExist.reducedLevels?.[0] ?? 0);
-      const prevIS = Number(isRowExist.intermediateSight?.[0] ?? 0);
-
-      const prevRowHI = prevRL + prevIS;
-
+    if (type === "Chainage" || type === "Water Level") {
       const isProposal = isPurposeExist.phase === "Proposal";
+      const existingHI = Number(isRowExist.heightOfInstrument || 0);
 
-      isRowExist.chainage = chainage;
-
-      isRowExist.reducedLevels = isProposal
-        ? (reducedLevels || []).map((n) => Number(n).toFixed(3))
-        : (intermediateSight || [])?.map((n) =>
-          (Number(prevRowHI) - Number(n || 0)).toFixed(3),
-        );
-
-      isRowExist.intermediateSight = (intermediateSight || []).map((n) =>
-        Number(n).toFixed(3),
+      const sortedOffsets = (intermediateOffsets || []).sort(
+        (a, b) => Number(a.offset) - Number(b.offset),
       );
 
-      isRowExist.offsets = (offsets || []).map((n) => Number(n).toFixed(3));
+      // Find the last Water Level row before this row
+      const currentRowIndex = isPurposeExist.rows.findIndex(
+        (r) => String(r._id) === String(isRowExist._id),
+      );
+      const rowsBeforeCurrent = isPurposeExist.rows.slice(0, currentRowIndex);
+      const lastWaterLevelRow = [...rowsBeforeCurrent]
+        .filter((r) => r.type === "Water Level")
+        .pop();
+      const lastWaterLevelRL = lastWaterLevelRow
+        ? Number(lastWaterLevelRow.reducedLevels[lastWaterLevelRow.reducedLevels.length - 1] || 0)
+        : null;
 
-      isRowExist.remarks = remark;
+      isRowExist.chainage = chainage;
+      isRowExist.basis = type === "Chainage" ? basis : undefined;
+      
+      // Update top-level reducedLevels array
+      isRowExist.reducedLevels = isProposal
+        ? (req.body.reducedLevels || []).map((n) => Number(n).toFixed(3))
+        : sortedOffsets.map((entry) => {
+            if (type === "Chainage" && entry.mode === "S" && lastWaterLevelRL !== null) {
+              return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
+            } else {
+              return (existingHI - Number(entry.is || 0)).toFixed(3);
+            }
+          });
+
+      isRowExist.intermediateOffsets = sortedOffsets.map((entry) => ({
+        is: isProposal ? "" : Number(entry.is || 0).toFixed(3),
+        offset: Number(entry.offset || 0).toFixed(3),
+        remark: entry.remark || "",
+        mode: entry.mode || "S",
+      }));
     }
 
     await isRowExist.save();
@@ -1629,7 +1668,7 @@ const generateSurveyPurpose = async (req, res, next) => {
 
     // 🔹 Filter chainage rows from base purpose
     const readingsToCreate = basePurpose.rows?.filter(
-      (r) => r.type === "Chainage",
+      (r) => r.type === "Chainage" || r.type === "Water Level",
     );
 
     if (!readingsToCreate?.length) {
@@ -1685,8 +1724,9 @@ const generateSurveyPurpose = async (req, res, next) => {
     }, 0);
 
     const width = Number((totalWidth / readingsToCreate.length).toFixed(3));
-    const avgProposalTotalWidth = Number((proposalTotalWidth / readingsToCreate.length));
-
+    const avgProposalTotalWidth = Number(
+      proposalTotalWidth / readingsToCreate.length,
+    );
 
     // 🔹 Create new proposal purpose
     const [purposeDoc] = await SurveyPurpose.create(
@@ -1753,23 +1793,35 @@ const generateSurveyPurpose = async (req, res, next) => {
       const [km, m] = r.chainage.split(survey.separator).map(Number);
       const chainageMeters = km * 1000 + m;
 
-      const levels = r.reducedLevels.map(Number);
-      const avgOGL = levels.reduce((a, b) => a + b, 0) / levels.length;
+      const levels = (r.intermediateOffsets || []).map((e) => Number(e.rl));
+      const avgOGL = levels.length
+        ? levels.reduce((a, b) => a + b, 0) / levels.length
+        : 0;
 
       return { chainage: chainageMeters, ogl: avgOGL, reading: r };
     });
 
     // Calculate centerline initial RLs to find the average and maximum initial RLs
     const plsVal = Number(basePurpose?.pls || 0);
-    const centerlineInitialRLs = readingsToCreate.map((r) => {
-      const idx = r.offsets?.findIndex((o) => Number(o) === plsVal);
-      const safeIdx = idx === -1 || idx === undefined ? Math.round(r.offsets.length / 2) : idx;
-      const val = r.reducedLevels[safeIdx];
-      return val !== null && val !== undefined && val !== "" ? Number(val) : null;
-    }).filter(v => v !== null);
+    const centerlineInitialRLs = readingsToCreate
+      .map((r) => {
+        const idx = (r.intermediateOffsets || []).findIndex(
+          (e) => Number(e.offset) === plsVal,
+        );
+        const safeIdx =
+          idx === -1 || idx === undefined
+            ? Math.round(r.offsets.length / 2)
+            : idx;
+        const val = r.reducedLevels[safeIdx];
+        return val !== null && val !== undefined && val !== ""
+          ? Number(val)
+          : null;
+      })
+      .filter((v) => v !== null);
 
     const averageInitialRL = centerlineInitialRLs.length
-      ? centerlineInitialRLs.reduce((a, b) => a + b, 0) / centerlineInitialRLs.length
+      ? centerlineInitialRLs.reduce((a, b) => a + b, 0) /
+        centerlineInitialRLs.length
       : 0;
 
     const maxInitialRL = centerlineInitialRLs.length
@@ -1778,7 +1830,10 @@ const generateSurveyPurpose = async (req, res, next) => {
 
     // Enforce design level is strictly higher than average (or higher than the max initial RL of the section)
     const proposedRLBuffer = 0.05; // 5 cm buffer
-    const minProposedRL = Math.max(averageInitialRL + proposedRLBuffer, maxInitialRL + proposedRLBuffer);
+    const minProposedRL = Math.max(
+      averageInitialRL + proposedRLBuffer,
+      maxInitialRL + proposedRLBuffer,
+    );
 
     /**
      * Computes total fill volume (m³) for a given height difference h
@@ -1846,7 +1901,11 @@ const generateSurveyPurpose = async (req, res, next) => {
      * Returns the proposed subgrade level at each offset for a given
      * centerline PRL, applying camber drop proportionally from the center.
      */
-    const getProposedLevelsAtOffsets = (centerPRL, numericOffsets, camberPercent) =>
+    const getProposedLevelsAtOffsets = (
+      centerPRL,
+      numericOffsets,
+      camberPercent,
+    ) =>
       numericOffsets.map((offset) => {
         if (camberPercent > 0) {
           return centerPRL - (camberPercent / 100) * Math.abs(offset);
@@ -1861,7 +1920,9 @@ const generateSurveyPurpose = async (req, res, next) => {
      */
     const calcXSFillArea = (oglProfile, proposedLevels, numericOffsets) => {
       const oglMap = {};
-      oglProfile.forEach((p) => { oglMap[p.offset] = p.ogl; });
+      oglProfile.forEach((p) => {
+        oglMap[p.offset] = p.ogl;
+      });
 
       const depths = numericOffsets.map((offset, i) => {
         const ogl = oglMap[offset];
@@ -1883,10 +1944,12 @@ const generateSurveyPurpose = async (req, res, next) => {
     const xsChainageData = readingsToCreate.map((r) => {
       const [km, m] = r.chainage.split(survey.separator).map(Number);
       const chainageMeters = km * 1000 + m;
-      const numericOffsets = r.offsets.map(Number);
-      const oglProfile = r.reducedLevels.map((rl, i) => ({
-        offset: numericOffsets[i],
-        ogl: Number(rl),
+      const numericOffsets = (r.intermediateOffsets || []).map((e) =>
+        Number(e.offset),
+      );
+      const oglProfile = (r.intermediateOffsets || []).map((e) => ({
+        offset: Number(e.offset),
+        ogl: Number(e.rl),
       }));
       return { chainage: chainageMeters, oglProfile, numericOffsets };
     });
@@ -1900,8 +1963,13 @@ const generateSurveyPurpose = async (req, res, next) => {
       const areas = xsChainageData.map(({ oglProfile, numericOffsets }) => {
         // Find centerline OGL (at offset plsVal, default to middle index if not found)
         const oglMap = {};
-        oglProfile.forEach((p) => { oglMap[p.offset] = p.ogl; });
-        const centerlineOGL = oglMap[plsVal] !== undefined ? oglMap[plsVal] : (oglProfile[Math.round(oglProfile.length / 2)]?.ogl || 0);
+        oglProfile.forEach((p) => {
+          oglMap[p.offset] = p.ogl;
+        });
+        const centerlineOGL =
+          oglMap[plsVal] !== undefined
+            ? oglMap[plsVal]
+            : oglProfile[Math.round(oglProfile.length / 2)]?.ogl || 0;
 
         // Centerline proposed level is centerlineOGL + h
         const centerPRL = centerlineOGL + h;
@@ -1976,8 +2044,8 @@ const generateSurveyPurpose = async (req, res, next) => {
 
       if (isInterpolate) {
         const initialLevelMap = {};
-        reading.offsets.forEach((o, idx) => {
-          initialLevelMap[o] = reading.reducedLevels[idx];
+        (reading.intermediateOffsets || []).forEach((e) => {
+          initialLevelMap[e.offset] = e.rl;
         });
 
         const cropAndInterpolate = (targetWidth, sourceMap) => {
@@ -2064,10 +2132,13 @@ const generateSurveyPurpose = async (req, res, next) => {
           totalReadingReducedLevel / interpolatedReducedLevels.length;
 
         // Find centerline OGL for the current reading
-        const centerlineOGLKey = Object.keys(finalMap).find((k) => Number(k) === plsVal);
-        const centerlineOGL = centerlineOGLKey !== undefined
-          ? Number(finalMap[centerlineOGLKey])
-          : avgReadingReducedLevel;
+        const centerlineOGLKey = Object.keys(finalMap).find(
+          (k) => Number(k) === plsVal,
+        );
+        const centerlineOGL =
+          centerlineOGLKey !== undefined
+            ? Number(finalMap[centerlineOGLKey])
+            : avgReadingReducedLevel;
 
         // ── Proposed level per offset ──────────────────────────────────────
         // Priority:
@@ -2119,18 +2190,23 @@ const generateSurveyPurpose = async (req, res, next) => {
           });
         }
       } else {
-        const totalReadingReducedLevel = reading.reducedLevels.reduce(
-          (acc, curr) => acc + Number(curr),
+        const totalReadingReducedLevel = (reading.intermediateOffsets || []).reduce(
+          (acc, e) => acc + Number(e.rl),
           0,
         );
         const avgReadingReducedLevel =
-          totalReadingReducedLevel / reading.reducedLevels.length;
+          (reading.intermediateOffsets || []).length
+            ? totalReadingReducedLevel / reading.intermediateOffsets.length
+            : 0;
 
         // Find centerline OGL for the current reading
-        const centerlineOGLKey = reading.offsets.find((o) => Number(o) === plsVal);
-        const centerlineOGL = centerlineOGLKey !== undefined
-          ? Number(reading.reducedLevels[reading.offsets.indexOf(centerlineOGLKey)])
-          : avgReadingReducedLevel;
+        const centerlineEntry = (reading.intermediateOffsets || []).find(
+          (e) => Number(e.offset) === plsVal,
+        );
+        const centerlineOGL =
+          centerlineEntry !== undefined
+            ? Number(centerlineEntry.rl)
+            : avgReadingReducedLevel;
 
         // ── Proposed level per offset ──────────────────────────────────────
         // Priority:
@@ -2138,12 +2214,15 @@ const generateSurveyPurpose = async (req, res, next) => {
         //   2. Formula-based solver → flat PRL + edge camber adjustment
         //   3. Legacy simple rectangle formula
         const limit =
-          Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) || 1;
+          Number(lastReading?.chainage?.split(survey.separator || "/")?.[1]) ||
+          1;
 
         if (useCrossSectionSolver) {
           // Apply camber at every offset using the same function used in volume
           // computation, so proposed levels are consistent with the solver.
-          const numericOffsets = reading.offsets.map(Number);
+          const numericOffsets = (reading.intermediateOffsets || []).map((e) =>
+            Number(e.offset),
+          );
           const centerPRL = centerlineOGL + crossSectionH;
           const proposedLevels = getProposedLevelsAtOffsets(
             centerPRL,
@@ -2155,14 +2234,14 @@ const generateSurveyPurpose = async (req, res, next) => {
             reducedLevels.push(rounded.toFixed(3));
           });
         } else {
-          reading.reducedLevels.forEach((_, idx) => {
+          (reading.intermediateOffsets || []).forEach((_, idx) => {
             let value = useSolver
               ? centerlineOGL + solvedH
               : avgReadingReducedLevel + safeQuantity / (limit * roadWidth);
 
             if (
               doHaveCamper &&
-              (idx === 0 || idx === reading.reducedLevels.length - 1)
+              (idx === 0 || idx === (reading.intermediateOffsets || []).length - 1)
             ) {
               value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
             }
@@ -2172,8 +2251,20 @@ const generateSurveyPurpose = async (req, res, next) => {
           });
         }
 
-        offsets.push(...reading.offsets);
+        offsets.push(
+          ...(reading.intermediateOffsets || []).map((e) => e.offset),
+        );
       }
+
+      // Build the new intermediateOffsets for the proposal row
+      const proposalIntermediateOffsets = offsets.map((offset, i) => ({
+        is: "",
+        offset: String(offset),
+        remark:
+          reading.intermediateOffsets?.[i]?.remark ||
+          (isInterpolate?.interpolationMap?.[offset] ?? ""),
+        mode: reading.intermediateOffsets?.[i]?.mode || "S",
+      }));
 
       return {
         insertOne: {
@@ -2181,17 +2272,17 @@ const generateSurveyPurpose = async (req, res, next) => {
             surveyId: id,
             createdBy: userId,
             purposeId: purposeDoc._id,
-            type: "Chainage",
+            type: reading.type,
             chainage: reading.chainage,
             spacing: reading.spacing,
             roadWidth: isInterpolate
               ? Number(isInterpolate.width)
               : reading.roadWidth,
             reducedLevels,
+            intermediateOffsets: proposalIntermediateOffsets,
             heightOfInstrument: reading.heightOfInstrument,
             interpolatedReducedLevels,
-            offsets,
-            remarks: reading.remarks,
+            remark: reading.remark,
           },
         },
       };
@@ -2272,7 +2363,7 @@ const editSurveyPurpose = async (req, res, next) => {
       if (survey.purposes.length > 1)
         throw new Error(
           "Cannot update the survey reduced level because this survey has multiple purposes. " +
-          "Reduced level can only be updated when the survey has a single purpose.",
+            "Reduced level can only be updated when the survey has a single purpose.",
         );
 
       survey.reducedLevel = Number(startRl);
@@ -2295,8 +2386,15 @@ const editSurveyPurpose = async (req, res, next) => {
           break;
 
         case "Chainage":
+        case "Water Level":
+          // Recalculate top-level reducedLevels array
+          row.reducedLevels = (row.intermediateOffsets || []).map((entry) =>
+            (hi - Number(entry.is || 0)).toFixed(3)
+          );
+          break;
+
         case "TBM":
-          row.reducedLevels = row.intermediateSight.map((is) =>
+          row.reducedLevels = (row.intermediateSight || []).map((is) =>
             (hi - Number(is)).toFixed(3),
           );
           break;
@@ -2321,14 +2419,13 @@ const editSurveyPurpose = async (req, res, next) => {
             backSight: r.backSight,
             foreSight: r.foreSight,
             intermediateSight: r.intermediateSight,
-            offsets: r.offsets,
-            remarks: r.remarks,
+            intermediateOffsets: r.intermediateOffsets,
+            remark: r.remark,
           },
         },
       },
     }));
 
-    
     if (ops.length) {
       await SurveyRow.bulkWrite(ops, { session });
     }
@@ -2384,7 +2481,7 @@ const updateReducedLevels = async (req, res, next) => {
       SurveyRow.find({
         _id: { $in: rowIds },
         deleted: false,
-      }).select("_id reducedLevels intermediateSight"),
+      }).select("_id reducedLevels intermediateSight intermediateOffsets"),
     ]);
 
     if (purposesCount !== new Set(purposeIds).size) {
@@ -2411,16 +2508,20 @@ const updateReducedLevels = async (req, res, next) => {
         throw createHttpError(404, "Survey row not found");
       }
 
-      const oldRL = existingRow.reducedLevels || [];
-      const oldIS = existingRow.intermediateSight || [];
+      const isChainage = (existingRow.intermediateOffsets || []).length > 0;
 
-      const hasIntermediateSight = oldIS.length > 0;
+      const oldRL = existingRow.reducedLevels || [];
+      const oldIS = isChainage
+        ? (existingRow.intermediateOffsets || []).map((e) => e.is)
+        : existingRow.intermediateSight || [];
+
+      const hasIS = oldIS.length > 0;
 
       if (oldRL.length !== s.data.length) {
         throw createHttpError(400, "Reduced levels length mismatch");
       }
 
-      if (hasIntermediateSight && oldIS.length !== s.data.length) {
+      if (hasIS && oldIS.length !== s.data.length) {
         throw createHttpError(400, "Intermediate sight length mismatch");
       }
 
@@ -2442,36 +2543,52 @@ const updateReducedLevels = async (req, res, next) => {
         }
 
         const delta = newRLNum - oldRLNum;
-
         newReducedLevels.push(newRLNum.toFixed(3));
 
-        if (hasIntermediateSight) {
+        if (hasIS) {
           const oldISNum = Number(oldIS[i]);
-
           if (Number.isNaN(oldISNum)) {
             throw createHttpError(
               400,
               "Intermediate sight must be a valid number",
             );
           }
-
           newIntermediateSight.push((oldISNum + delta).toFixed(3));
         }
       }
 
-      bulkOps.push({
-        updateOne: {
-          filter: { _id: s._id, deleted: false },
-          update: {
-            $set: {
-              reducedLevels: newReducedLevels,
-              ...(hasIntermediateSight && {
-                intermediateSight: newIntermediateSight,
-              }),
+      if (isChainage) {
+        // Update is inside each intermediateOffsets entry, but save reducedLevels top-level
+        const updatedOffsets = (existingRow.intermediateOffsets || []).map(
+          (entry, i) => ({
+            ...entry.toObject ? entry.toObject() : entry,
+            ...(hasIS ? { is: newIntermediateSight[i] ?? entry.is } : {}),
+          }),
+        );
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: s._id, deleted: false },
+            update: {
+              $set: {
+                reducedLevels: newReducedLevels,
+                intermediateOffsets: updatedOffsets,
+              },
             },
           },
-        },
-      });
+        });
+      } else {
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: s._id, deleted: false },
+            update: {
+              $set: {
+                reducedLevels: newReducedLevels,
+                ...(hasIS && { intermediateSight: newIntermediateSight }),
+              },
+            },
+          },
+        });
+      }
     }
 
     // 6️⃣ Execute bulk update
@@ -2516,7 +2633,7 @@ const createBranch = async (req, res, next) => {
 
     const lastChainageReading = await SurveyRow.findOne({
       purposeId,
-      type: "Chainage",
+      type: { $in: ["Chainage", "Water Level"] },
       deleted: false,
     }).sort({ createdAt: -1, _id: -1 });
 
@@ -2662,7 +2779,7 @@ const createBranch = async (req, res, next) => {
           {
             type: "CP",
             foreSight,
-            remarks: [],
+            remark: "",
             createdBy: userId,
             purposeId: purposeObj._id,
           },
@@ -2816,7 +2933,7 @@ const enterBranch = async (req, res, next) => {
             createdBy: userId,
             type: "Instrument setup",
             backSight: Number(backSight).toFixed(3),
-            remarks: ["TBM - 1"],
+            remark: "TBM - 1",
             reducedLevels: [Number(reducedLevel).toFixed(3)],
             heightOfInstrument: Number(
               Number(reducedLevel) + Number(backSight),

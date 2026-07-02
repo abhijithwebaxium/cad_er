@@ -28,19 +28,19 @@ const cardData = [
   {
     id: 0,
     icon: <FaRoad fontSize={"32px"} color="inherit" />,
-    title: "Road survey",
+    title: "Road Survey",
     color: "#6366f1", // Indigo
   },
   {
     id: 1,
     icon: <FaWater fontSize={"32px"} color="inherit" />,
-    title: "Water way",
+    title: "Water Way",
     color: "#0ea5e9", // Blue
   },
   {
     id: 2,
     icon: <SiLevelsdotfyi fontSize={"32px"} color="inherit" />,
-    title: "Fly level",
+    title: "Fly Level",
     color: "#10b981", // Emerald
   },
 ];
@@ -55,16 +55,18 @@ const Index = () => {
   const handleChangeActive = (value) => setActive(value);
 
   const handleSubmit = () => {
-    if (active > 0) {
+    if (active === 0) {
+      navigate("/survey/road-survey", { state: { type: "Road Survey" } });
+    } else if (active === 1) {
+      navigate("/survey/road-survey", { state: { type: "Water Way" } });
+    } else {
       dispatch(
         showGlobalAlert({
           type: "error",
           message: "Work in progress!",
         }),
       );
-      return;
     }
-    navigate("/survey/road-survey");
   };
 
   useEffect(() => {

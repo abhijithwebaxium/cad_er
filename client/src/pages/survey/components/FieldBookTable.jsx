@@ -36,6 +36,7 @@ export function calculateTableData(survey) {
     branchName = "",
   ) => {
     if (!purposeRows) return;
+    let lastWaterLevelRL = null;
 
     if (isBranch) {
       rows.push({
@@ -67,25 +68,70 @@ export function calculateTableData(survey) {
           break;
         }
 
-        case "Chainage":
+        case "Water Level": {
+          const offsetsList = row.intermediateOffsets || [];
+          offsetsList.forEach((entry, i) => {
+            const rlValue = (context.hi - Number(entry.is || 0)).toFixed(3);
+            lastWaterLevelRL = Number(rlValue);
+            rows.push({
+              rowIndex: pIndex,
+              rowType: row.type,
+              index: i,
+              CH: i === 0 ? (row.chainage ?? "") : "-",
+              BS: "-",
+              IS: entry.is ?? "",
+              FS: "-",
+              HI: context.hi.toFixed(3),
+              RL: rlValue,
+              Offset: entry.offset ?? "-",
+              remarks: entry.remark ?? "",
+              isBranch,
+            });
+          });
+          break;
+        }
+
+        case "Chainage": {
+          const offsetsList = row.intermediateOffsets || [];
+          offsetsList.forEach((entry, i) => {
+            const rlValue =
+              entry.mode === "S" && lastWaterLevelRL !== null
+                ? (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3)
+                : (context.hi - Number(entry.is || 0)).toFixed(3);
+            rows.push({
+              rowIndex: pIndex,
+              rowType: row.type,
+              index: i,
+              CH: i === 0 ? (row.chainage ?? "") : "-",
+              BS: "-",
+              IS: entry.is ?? "",
+              FS: "-",
+              HI: context.hi.toFixed(3),
+              RL: rlValue,
+              Offset: entry.offset ?? "-",
+              remarks: entry.remark ?? "",
+              isBranch,
+            });
+          });
+          break;
+        }
+
         case "TBM": {
           const inter = row.intermediateSight || [];
           inter.forEach((isVal, i) => {
             const rlValue = (context.hi - Number(isVal || 0)).toFixed(3);
             rows.push({
-              // rowIndex must point to the source row index in the purpose.rows array
               rowIndex: pIndex,
               rowType: row.type,
               index: i,
-              CH:
-                row.type === "Chainage" && i === 0 ? (row.chainage ?? "") : "-",
+              CH: "-",
               BS: "-",
               IS: isVal ?? "",
               FS: "-",
               HI: context.hi.toFixed(3),
               RL: rlValue,
-              Offset: (row.offsets && row.offsets[i]) ?? "-",
-              remarks: (row.remarks && row.remarks[i]) ?? "",
+              Offset: "-",
+              remarks: row.remark ?? "",
               isBranch,
             });
           });
@@ -146,7 +192,7 @@ export function calculateTableData(survey) {
     HI: ctx.hi.toFixed(3),
     RL: Number(ctx.rl).toFixed(3),
     Offset: "-",
-    remarks: (row.remarks && row.remarks[0]) ?? "",
+    remarks: row.remark ?? "",
     isBranch,
   });
 

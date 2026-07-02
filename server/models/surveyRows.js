@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
 const { Schema, model, Types } = mongoose;
 
+const intermediateOffsetSchema = new Schema(
+  {
+    is: { type: String, trim: true, default: "" }, // intermediateSight
+    offset: { type: String, trim: true, default: "" },
+    remark: { type: String, trim: true, default: "" },
+    mode: { type: String, enum: ["S", "R"], default: "R" },
+  },
+  { _id: false },
+);
+
 const SurveyRowSchema = new Schema(
   {
     purposeId: {
@@ -11,7 +21,14 @@ const SurveyRowSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["Instrument setup", "Chainage", "TBM", "CP", "Break"],
+      enum: [
+        "Instrument setup",
+        "Chainage",
+        "TBM",
+        "CP",
+        "Break",
+        "Water Level",
+      ],
       required: true,
     },
     upcomingBranches: {
@@ -20,19 +37,36 @@ const SurveyRowSchema = new Schema(
       default: [],
     },
     createdBy: { type: Types.ObjectId, ref: "User", required: true },
+
+    // ── Scalar fields (Instrument setup / CP / TBM) ────────────────────────
     backSight: { type: String, trim: true },
-    reducedLevels: [{ type: String, trim: true }],
     heightOfInstrument: { type: String, trim: true },
-    intermediateSight: [{ type: String, trim: true }],
     foreSight: { type: String, trim: true },
+
+    // Single-element RL array — used by Instrument setup / CP / TBM rows
+    reducedLevels: [{ type: String, trim: true }],
+
+    // Single-element IS array — used by TBM rows only
+    intermediateSight: [{ type: String, trim: true }],
+
+    // Single remark for non-Chainage rows (Instrument setup, TBM, CP)
+    remark: { type: String, trim: true, default: "" },
+
+    // ── Chainage / Water Level fields ──────────────────────────────────────
     chainage: { type: String, trim: true, default: null },
     from: { type: String, trim: true, default: null },
     to: { type: String, trim: true, default: null },
     roadWidth: { type: String, trim: true },
     spacing: { type: String, trim: true },
-    offsets: [{ type: String, trim: true }],
+    basis: { type: String, enum: ["Readings", "Soundings"], default: "Readings" },
+
+    // Array of objects — one per cross-section offset point
+    intermediateOffsets: { type: [intermediateOffsetSchema], default: [] },
+
+    // Proposal-generated interpolated RLs (kept as top-level array)
     interpolatedReducedLevels: [{ type: String, trim: true }],
-    remarks: [{ type: String, trim: true }],
+
+    observation: { type: String, trim: true, default: "" },
     deleted: { type: Boolean, default: false },
   },
   { timestamps: true },

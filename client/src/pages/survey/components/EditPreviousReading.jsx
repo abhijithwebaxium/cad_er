@@ -31,6 +31,7 @@ const initialFormValues = {
 
 const values = {
   Chainage: ['chainage', 'intermediateOffsets'],
+  'Water Level': ['chainage', 'intermediateOffsets'],
   CP: ['foreSight', 'backSight', 'remark'],
   TBM: ['intermediateSight', 'remark'],
   'Instrument setup': ['backSight', 'remark'],
@@ -60,7 +61,7 @@ const EditPreviousReading = ({ open, doc, updateDoc, onCancel, onSubmit }) => {
     type: Yup.string().required('Type is required'),
 
     chainage: Yup.string().when('type', {
-      is: 'Chainage',
+      is: (val) => val === 'Chainage' || val === 'Water Level',
       then: (schema) =>
         schema
           .required('Chainage is required')
@@ -103,7 +104,7 @@ const EditPreviousReading = ({ open, doc, updateDoc, onCancel, onSubmit }) => {
         })
       )
       .when('type', {
-        is: 'Chainage',
+        is: (val) => val === 'Chainage' || val === 'Water Level',
         then: (schema) =>
           schema
             .min(1, 'At least one row is required')
@@ -229,23 +230,20 @@ const EditPreviousReading = ({ open, doc, updateDoc, onCancel, onSubmit }) => {
       await schema.validate(formValues, { abortEarly: false });
       let payload = null;
 
-      if (doc.type === 'Chainage') {
+      if (doc.type === 'Chainage' || doc.type === 'Water Level') {
         const sortedOffsets = [...(formValues.intermediateOffsets || [])].sort(
-          (a, b) => a.offset - b.offset
+          (a, b) => Number(a.offset) - Number(b.offset)
         );
 
         payload = {
           ...formValues,
-          reducedLevels:
-            doc.phase !== 'Proposal'
-              ? []
-              : sortedOffsets.map((r) => r.reducedLevel),
-          intermediateSight:
-            doc.phase === 'Proposal'
-              ? []
-              : sortedOffsets.map((r) => r.intermediateSight),
-          offsets: sortedOffsets.map((r) => r.offset),
-          remark: sortedOffsets.map((r) => r.remark),
+          intermediateOffsets: sortedOffsets.map((r) => ({
+            is: doc.phase === 'Proposal' ? "" : String(r.intermediateSight || ""),
+            rl: doc.phase === 'Proposal' ? String(r.reducedLevel || "") : "",
+            offset: String(r.offset || ""),
+            remark: String(r.remark || ""),
+            mode: r.mode || "R"
+          }))
         };
       } else {
         payload = { ...formValues, chainage: null };
@@ -309,31 +307,29 @@ const EditPreviousReading = ({ open, doc, updateDoc, onCancel, onSubmit }) => {
       });
 
       updatedFormValues.intermediateSight = doc.intermediateSight[0];
-      updatedFormValues.remark = doc.remarks[0];
+      updatedFormValues.remark = doc.remark;
     }
 
     if (doc.type === 'Instrument setup') {
       updatedFormValues.backSight = doc.backSight;
-      updatedFormValues.remark = doc.remarks[0];
+      updatedFormValues.remark = doc.remark;
     }
 
     if (doc.type === 'CP') {
       updatedFormValues.backSight = doc.backSight;
       updatedFormValues.foreSight = doc.foreSight;
-      updatedFormValues.remark = doc.remarks[0];
+      updatedFormValues.remark = doc.remark;
     }
 
-    if (doc.type === 'Chainage') {
+    if (doc.type === 'Chainage' || doc.type === 'Water Level') {
       updatedFormValues.chainage = doc.chainage;
-      updatedFormValues.intermediateOffsets = [];
-
-      doc.intermediateSight?.forEach((i, idx) => {
-        updatedFormValues.intermediateOffsets.push({
-          intermediateSight: i,
-          offset: doc.offsets[idx],
-          remark: doc.remarks[idx],
-        });
-      });
+      updatedFormValues.intermediateOffsets = (doc.intermediateOffsets || []).map((e) => ({
+        intermediateSight: e.is || "",
+        reducedLevel: e.rl || "",
+        offset: e.offset || "",
+        remark: e.remark || "",
+        mode: e.mode || "R"
+      }));
     }
 
     setFormValues((prev) => ({ ...prev, ...updatedFormValues }));
@@ -374,7 +370,7 @@ const EditPreviousReading = ({ open, doc, updateDoc, onCancel, onSubmit }) => {
             ))}
           </Grid>
 
-          {doc.type === 'Chainage' && (
+          {(doc.type === 'Chainage' || doc.type === 'Water Level') && (
             <Stack spacing={2} mt={2}>
               {formValues.intermediateOffsets.map((row, idx) => (
                 <Stack

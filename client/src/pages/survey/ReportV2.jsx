@@ -147,7 +147,7 @@ const ReportV2 = () => {
 
       if (!initialLevel) return;
 
-      const row = initialLevel.rows?.find((row) => row.type === 'Chainage');
+      const row = initialLevel.rows?.find((row) => row.type === 'Chainage' || row.type === 'Water Level');
 
       if (row) handleClickCs(row._id);
     }
@@ -334,7 +334,7 @@ const ReportV2 = () => {
               ?.find((p) => p.type === 'Initial Level')
               ?.rows?.map(
                 (row, index) =>
-                  row.type === 'Chainage' && (
+                  (row.type === 'Chainage' || row.type === 'Water Level') && (
                     <TableRow key={index}>
                       <TableCell>{row.chainage}</TableCell>
                       <TableCell

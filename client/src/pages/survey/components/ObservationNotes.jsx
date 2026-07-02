@@ -23,8 +23,7 @@ import {
   MdDeleteOutline,
 } from "react-icons/md";
 
-const ObservationNotes = () => {
-  const [observation, setObservation] = useState("");
+const ObservationNotes = ({ value = "", onChange }) => {
   const [photo, setPhoto] = useState(null);
 
   // Camera Dialog State
@@ -110,8 +109,8 @@ const ObservationNotes = () => {
             multiline
             minRows={4}
             placeholder="Add your observation here (optional)..."
-            value={observation}
-            onChange={(e) => setObservation(e.target.value)}
+            value={value}
+            onChange={(e) => onChange && onChange(e.target.value)}
             variant="outlined"
             sx={{
               "& .MuiOutlinedInput-root": {

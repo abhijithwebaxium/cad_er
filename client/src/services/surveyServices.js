@@ -1,28 +1,96 @@
 import { axiosInstance } from "../utils/config";
 
+const normalizeRow = (row) => {
+  if (!row) return row;
+  
+  // Normalize remarks for non-chainage rows (backward compatibility)
+  const remarks = row.remarks || [];
+  if (row.type !== "Chainage" && row.type !== "Water Level") {
+    if (row.remark && remarks.length === 0) {
+      remarks.push(row.remark);
+    }
+  }
+
+  // Populate parallel arrays for Chainage/WL rows if intermediateOffsets is present
+  if ((row.type === "Chainage" || row.type === "Water Level") && Array.isArray(row.intermediateOffsets)) {
+    return {
+      ...row,
+      offsets: row.intermediateOffsets.map((e) => e.offset),
+      reducedLevels: row.reducedLevels || [],
+      intermediateSight: row.intermediateOffsets.map((e) => e.is),
+      remarks: row.intermediateOffsets.map((e) => e.remark),
+    };
+  }
+
+  return {
+    ...row,
+    remarks
+  };
+};
+
+const normalizePurpose = (purpose) => {
+  if (!purpose) return purpose;
+  if (Array.isArray(purpose.rows)) {
+    purpose.rows = purpose.rows.map(normalizeRow);
+  }
+  return purpose;
+};
+
+const normalizeSurvey = (survey) => {
+  if (!survey) return survey;
+  if (Array.isArray(survey.purposes)) {
+    survey.purposes = survey.purposes.map(normalizePurpose);
+  }
+  if (Array.isArray(survey.branches)) {
+    survey.branches = survey.branches.map((b) => {
+      if (b.purposes) b.purposes = b.purposes.map(normalizePurpose);
+      return b;
+    });
+  }
+  if (survey.branchDetails?.currentBranch) {
+    normalizeSurvey(survey.branchDetails.currentBranch);
+  }
+  return survey;
+};
+
 export const checkSurveyExists = () => {
   return axiosInstance.get("surveys/exists");
 };
 
-export const getAllSurvey = (params) => {
-  return axiosInstance.get("surveys", { params });
+export const getAllSurvey = async (params) => {
+  const response = await axiosInstance.get("surveys", { params });
+  if (response.data && Array.isArray(response.data.surveys)) {
+    response.data.surveys = response.data.surveys.map(normalizeSurvey);
+  }
+  return response;
 };
 
-export const createSurvey = (formData) => {
-  return axiosInstance.post("surveys", formData);
+export const createSurvey = async (formData) => {
+  const response = await axiosInstance.post("surveys", formData);
+  if (response.data && response.data.survey) {
+    response.data.survey = normalizeSurvey(response.data.survey);
+  }
+  return response;
 };
 
 export const queueSurvey = (formData) => {
   return axiosInstance.post("surveys/queue", formData);
 };
 
-export const completeSurvey = (id, formData) => {
-  return axiosInstance.patch(`surveys/${id}/complete`, formData);
+export const completeSurvey = async (id, formData) => {
+  const response = await axiosInstance.patch(`surveys/${id}/complete`, formData);
+  if (response.data && response.data.survey) {
+    response.data.survey = normalizeSurvey(response.data.survey);
+  }
+  return response;
 };
 
-
-export const getSurvey = (id) => {
-  return axiosInstance.get(`surveys/${id}`);
+export const getSurvey = async (id) => {
+  const response = await axiosInstance.get(`surveys/${id}`);
+  if (response.data && response.data.survey) {
+    response.data.survey = normalizeSurvey(response.data.survey);
+  }
+  return response;
 };
 
 export const updateSurvey = (id) => {
@@ -33,16 +101,25 @@ export const deleteSurvey = (id) => {
   return axiosInstance.delete(`surveys/${id}`);
 };
 
-export const createSurveyRow = (id, formData) => {
-  return axiosInstance.post(`surveys/${id}/rows`, formData);
+export const createSurveyRow = async (id, formData) => {
+  const response = await axiosInstance.post(`surveys/${id}/rows`, formData);
+  if (response.data) {
+    if (response.data.row) response.data.row = normalizeRow(response.data.row);
+    if (response.data.purpose) response.data.purpose = normalizePurpose(response.data.purpose);
+  }
+  return response;
 };
 
 export const endSurvey = (id) => {
   return axiosInstance.patch(`surveys/${id}/end`);
 };
 
-export const updateSurveyRow = (id, rowId, formData) => {
-  return axiosInstance.patch(`surveys/${id}/rows/${rowId}`, formData);
+export const updateSurveyRow = async (id, rowId, formData) => {
+  const response = await axiosInstance.patch(`surveys/${id}/rows/${rowId}`, formData);
+  if (response.data && response.data.row) {
+    response.data.row = normalizeRow(response.data.row);
+  }
+  return response;
 };
 
 export const deleteSurveyRow = (id, rowId) => {
@@ -61,16 +138,28 @@ export const deleteSurveyPurpose = (id) => {
   return axiosInstance.delete(`surveys/${id}/purposes`);
 };
 
-export const generateSurveyPurpose = (id, formData) => {
-  return axiosInstance.post(`surveys/${id}/purposes/generate`, formData);
+export const generateSurveyPurpose = async (id, formData) => {
+  const response = await axiosInstance.post(`surveys/${id}/purposes/generate`, formData);
+  if (response.data && response.data.purpose) {
+    response.data.purpose = normalizePurpose(response.data.purpose);
+  }
+  return response;
 };
 
-export const getSurveyPurpose = (id) => {
-  return axiosInstance.get(`surveys/${id}/purposes`);
+export const getSurveyPurpose = async (id) => {
+  const response = await axiosInstance.get(`surveys/${id}/purposes`);
+  if (response.data && response.data.purpose) {
+    response.data.purpose = normalizePurpose(response.data.purpose);
+  }
+  return response;
 };
 
-export const getFieldBook = (id) => {
-  return axiosInstance.get(`surveys/${id}/purposes/field-book`);
+export const getFieldBook = async (id) => {
+  const response = await axiosInstance.get(`surveys/${id}/purposes/field-book`);
+  if (response.data && response.data.survey) {
+    response.data.survey = normalizeSurvey(response.data.survey);
+  }
+  return response;
 };
 
 export const endSurveyPurpose = (id, finalForesight, pls) => {

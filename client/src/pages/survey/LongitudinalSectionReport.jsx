@@ -213,11 +213,11 @@ const LongitudinalSectionReport = () => {
     if (!initialEntry?.rows?.length) return;
 
     const row = initialEntry.rows.filter(
-      (r) => r.type === "Chainage" || r.type === "Break",
+      (r) => r.type === "Chainage" || r.type === "Water Level" || r.type === "Break",
     );
     if (!row.length) return;
 
-    const filteredRow = row.filter((r) => r.type === "Chainage");
+    const filteredRow = row.filter((r) => r.type === "Chainage" || r.type === "Water Level");
 
     const pls = Number(initialEntry.pls || 0);
     const safeChainages =
@@ -284,7 +284,7 @@ const LongitudinalSectionReport = () => {
     if (tableData.length > 1) {
       for (let i = 1; i < tableData.length; i++) {
         const table = tableData[i];
-        const newRows = table?.rows?.filter((r) => r.type === "Chainage") || [];
+        const newRows = table?.rows?.filter((r) => r.type === "Chainage" || r.type === "Water Level") || [];
         if (!newRows.length) continue;
 
         const proposalLevels = newRows.map(getRlValue);

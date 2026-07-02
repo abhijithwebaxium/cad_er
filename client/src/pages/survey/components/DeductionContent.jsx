@@ -142,7 +142,7 @@ const DeductionContent = ({ purpose, onCancel, onSubmit }) => {
   useEffect(() => {
     const items =
       purpose?.rows
-        ?.filter((r) => r.type === "Chainage")
+        ?.filter((r) => r.type === "Chainage" || r.type === "Water Level")
         ?.map((s) => ({
           label: s.chainage,
           value: s.chainage,

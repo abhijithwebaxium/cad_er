@@ -272,7 +272,10 @@ const RoadSurveyForm = () => {
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
 
   const [category, setCategory] = useState("publicProject");
-  const [formValues, setFormValues] = useState(initialFormValues);
+  const [formValues, setFormValues] = useState(() => ({
+    ...initialFormValues,
+    type: locationState?.type || "Road Survey",
+  }));
   const [formErrors, setFormErrors] = useState(null);
   const [queueValues, setQueueValues] = useState(initialQueueValues);
   const [queueErrors, setQueueErrors] = useState(null);
@@ -449,6 +452,7 @@ const RoadSurveyForm = () => {
         setFormValues((prev) => ({
           ...prev,
           project: s.project || "",
+          type: s.type || "Road Survey",
           purpose: s.purposes?.[0]?.type || "Initial Level",
           department: s.department || "",
           division: s.division || "",

@@ -363,9 +363,9 @@ const VolumeReport = () => {
       totalFillingVolume: 0,
     };
 
-    // Process only "Chainage" rows
+    // Process only "Chainage" and "Water Level" rows
     const filteredInitialRows = initialRows.filter(
-      (row) => row.type === "Chainage" || row.type === "Break",
+      (row) => row.type === "Chainage" || row.type === "Water Level" || row.type === "Break",
     );
 
     filteredInitialRows.forEach((row) => {

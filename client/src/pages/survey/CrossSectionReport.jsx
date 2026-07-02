@@ -374,7 +374,7 @@ const CrossSectionReport = () => {
       setProgress({ percent: 0, message: "Preparing report data...", estimatedTimeLeft: null });
 
       const allFormattedData = initialEntry.rows
-        ?.filter((row) => row.type === "Chainage")
+        ?.filter((row) => row.type === "Chainage" || row.type === "Water Level")
         .map((row) => buildCsData(row))
         .filter(Boolean);
 
@@ -792,7 +792,7 @@ const CrossSectionReport = () => {
 
   useEffect(() => {
     if (tableData.length) {
-      const row = tableData[0].rows?.find((row) => row.type === "Chainage");
+      const row = tableData[0].rows?.find((row) => row.type === "Chainage" || row.type === "Water Level");
 
       if (row) handleClickCs(row._id, "initial");
     }
@@ -938,7 +938,7 @@ const CrossSectionReport = () => {
             <TableBody>
               {tableData[0]?.rows?.map(
                 (row, index) =>
-                  row.type === "Chainage" && (
+                  (row.type === "Chainage" || row.type === "Water Level") && (
                     <Fragment key={index}>
                       <TableRow>
                         <TableCell

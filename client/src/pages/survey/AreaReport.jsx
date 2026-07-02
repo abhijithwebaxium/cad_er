@@ -341,7 +341,7 @@ const AreaReport = () => {
 
     // Process only "Chainage" type rows
     initialRows
-      .filter((row) => row.type === "Chainage" || row.type === "Break")
+      .filter((row) => row.type === "Chainage" || row.type === "Water Level" || row.type === "Break")
       .forEach((row) => {
         const proposedRow = proposedRows?.find(
           (p) => p.chainage === row.chainage,

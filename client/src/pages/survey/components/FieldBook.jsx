@@ -216,6 +216,7 @@ export default function FieldBook() {
           if (i !== rowIndex) return r;
 
           let updatedRow = { ...r };
+          const isChainage = updatedRow.type === "Chainage" || updatedRow.type === "Water Level";
 
           switch (fieldKey) {
             case "CH":
@@ -229,27 +230,56 @@ export default function FieldBook() {
               break;
 
             case "IS":
-              const isArr = Array.isArray(updatedRow.intermediateSight)
-                ? [...updatedRow.intermediateSight]
-                : [];
-              isArr[nestedIndex] = value;
-              updatedRow.intermediateSight = isArr;
+              if (isChainage) {
+                const offsetsList = Array.isArray(updatedRow.intermediateOffsets)
+                  ? [...updatedRow.intermediateOffsets]
+                  : [];
+                if (offsetsList[nestedIndex]) {
+                  offsetsList[nestedIndex] = {
+                    ...offsetsList[nestedIndex],
+                    is: value,
+                  };
+                }
+                updatedRow.intermediateOffsets = offsetsList;
+              } else {
+                const isArr = Array.isArray(updatedRow.intermediateSight)
+                  ? [...updatedRow.intermediateSight]
+                  : [];
+                isArr[nestedIndex] = value;
+                updatedRow.intermediateSight = isArr;
+              }
               break;
 
             case "Offset":
-              const offArr = Array.isArray(updatedRow.offsets)
-                ? [...updatedRow.offsets]
-                : [];
-              offArr[nestedIndex] = value;
-              updatedRow.offsets = offArr;
+              if (isChainage) {
+                const offsetsList = Array.isArray(updatedRow.intermediateOffsets)
+                  ? [...updatedRow.intermediateOffsets]
+                  : [];
+                if (offsetsList[nestedIndex]) {
+                  offsetsList[nestedIndex] = {
+                    ...offsetsList[nestedIndex],
+                    offset: value,
+                  };
+                }
+                updatedRow.intermediateOffsets = offsetsList;
+              }
               break;
 
             case "remarks":
-              const rmArr = Array.isArray(updatedRow.remarks)
-                ? [...updatedRow.remarks]
-                : [];
-              rmArr[nestedIndex ?? 0] = value;
-              updatedRow.remarks = rmArr;
+              if (isChainage) {
+                const offsetsList = Array.isArray(updatedRow.intermediateOffsets)
+                  ? [...updatedRow.intermediateOffsets]
+                  : [];
+                if (offsetsList[nestedIndex]) {
+                  offsetsList[nestedIndex] = {
+                    ...offsetsList[nestedIndex],
+                    remark: value,
+                  };
+                }
+                updatedRow.intermediateOffsets = offsetsList;
+              } else {
+                updatedRow.remark = value;
+              }
               break;
           }
 

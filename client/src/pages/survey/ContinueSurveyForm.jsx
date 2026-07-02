@@ -340,7 +340,7 @@ const ContinueSurveyForm = () => {
       const selected = survey?.purposes?.find((p) => p.type === value);
       const items =
         selected?.rows
-          ?.filter((r) => r.type === "Chainage")
+          ?.filter((r) => r.type === "Chainage" || r.type === "Water Level")
           ?.map((s) => ({
             label: s.chainage,
             value: s.chainage,

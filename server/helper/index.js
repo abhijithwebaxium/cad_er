@@ -47,6 +47,13 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
     rl = Number(purpose?.rows[startIndex]?.reducedLevels[0] || 0);
     hi = Number(purpose?.rows[startIndex]?.heightOfInstrument || 0);
   }
+  // Find the last Water Level row in the purpose's existing rows
+  const lastWaterLevelRow = [...purpose.rows]
+    .filter((r) => r.type === "Water Level")
+    .pop();
+  let lastWaterLevelRL = lastWaterLevelRow
+    ? Number(lastWaterLevelRow.reducedLevels[lastWaterLevelRow.reducedLevels.length - 1] || 0)
+    : null;
 
   // STEP 3: Loop only CP→end or whole thing if no CP
   for (const row of rowsToProcess) {
@@ -57,8 +64,40 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
         finalRLArray = [rl.toFixed(3)];
         break;
 
+      case "Water Level":
+        if (
+          Array.isArray(row.intermediateOffsets) &&
+          row.intermediateOffsets.length
+        ) {
+          const rls = row.intermediateOffsets.map((entry) =>
+            (Number(hi) - Number(entry.is || 0)).toFixed(3),
+          );
+          rl = Number(rls[rls.length - 1]);
+          lastWaterLevelRL = rl;
+          finalRLArray = rls;
+        }
+        break;
+
       case "Chainage":
+        // Use intermediateOffsets[i].is for cross-section rows
+        if (
+          Array.isArray(row.intermediateOffsets) &&
+          row.intermediateOffsets.length
+        ) {
+          const rls = row.intermediateOffsets.map((entry) => {
+            if (entry.mode === "S" && lastWaterLevelRL !== null) {
+              return (Number(lastWaterLevelRL) - Number(entry.is || 0)).toFixed(3);
+            } else {
+              return (Number(hi) - Number(entry.is || 0)).toFixed(3);
+            }
+          });
+          rl = Number(rls[rls.length - 1]);
+          finalRLArray = rls;
+        }
+        break;
+
       case "TBM":
+        // TBM still uses the scalar intermediateSight array (single value)
         if (
           Array.isArray(row.intermediateSight) &&
           row.intermediateSight.length
@@ -66,7 +105,6 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
           const rls = row.intermediateSight.map((isVal) =>
             (Number(hi) - Number(isVal || 0)).toFixed(3),
           );
-
           rl = Number(rls[rls.length - 1]);
           finalRLArray = rls;
         }
