@@ -12,7 +12,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "prompt",
+      injectRegister: false,
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+
 
       // 1. Force the service worker to check for updates more frequently
       devOptions: {
