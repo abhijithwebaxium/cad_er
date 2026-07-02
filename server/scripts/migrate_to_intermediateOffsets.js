@@ -11,8 +11,7 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 import SurveyRow from "../models/surveyRows.js";
 
 async function runMigration() {
-  const mongoUri =
-    process.env.MONGO_URI || "mongodb://localhost:27017/dev-test";
+  const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/test";
   console.log("Connecting to MongoDB:", mongoUri);
 
   await mongoose.connect(mongoUri);
@@ -68,7 +67,7 @@ async function runMigration() {
     }
 
     if (modified) {
-      await row.save();
+      await row.save({ validateBeforeSave: false });
       migratedCount++;
     }
   }
