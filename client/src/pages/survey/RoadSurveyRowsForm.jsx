@@ -218,6 +218,8 @@ const RoadSurveyRowsForm = () => {
   const [upcomingBranches, setUpcomingBranches] = useState([]);
 
   const isWaterWay = purpose?.surveyId?.type === "Water Way";
+  const isRoadSurvey = purpose?.surveyId?.type === "Road Survey";
+  const showBasis = rowType === "Chainage" && !isRoadSurvey;
 
   const schema = Yup.object().shape({
     type: Yup.string().required("Type is required"),
@@ -566,6 +568,7 @@ const RoadSurveyRowsForm = () => {
 
   const updateInputData = () => {
     const isWaterWay = purpose?.surveyId?.type === "Water Way";
+    const isRoadSurvey = purpose?.surveyId?.type === "Road Survey";
     const filteredInputData = inputDetails
       ?.map((d) => {
         let label = d.label;
@@ -582,7 +585,10 @@ const RoadSurveyRowsForm = () => {
 
         return { ...d, label };
       })
-      ?.filter((d) => values[rowType]?.includes(d.name));
+      ?.filter((d) => {
+        if (d.name === "basis" && isRoadSurvey) return false;
+        return values[rowType]?.includes(d.name);
+      });
 
     if (rowType === "TBM") {
       filteredInputData.unshift({
@@ -1858,8 +1864,8 @@ const RoadSurveyRowsForm = () => {
                         sx={{
                           display: "grid",
                           gridTemplateColumns: {
-                            xs: rowType === "Chainage" ? "1fr 32px 70px 1fr 28px" : "1fr 70px 1fr 28px",
-                            sm: rowType === "Chainage" ? "90px 32px 90px 1fr 32px" : "90px 90px 1fr 32px",
+                            xs: showBasis ? "1fr 32px 70px 1fr 28px" : "1fr 70px 1fr 28px",
+                            sm: showBasis ? "90px 32px 90px 1fr 32px" : "90px 90px 1fr 32px",
                           },
                           gap: { xs: "4px", sm: "6px" },
                           px: 1,
@@ -1868,7 +1874,7 @@ const RoadSurveyRowsForm = () => {
                       >
                         {[
                           purpose.phase === "Proposal" ? "RL*" : "IS*",
-                          rowType === "Chainage" ? "Basis" : null,
+                          showBasis ? "Basis" : null,
                           "Offset*",
                           "Remark*",
                           "",
@@ -1896,8 +1902,8 @@ const RoadSurveyRowsForm = () => {
                               sx={{
                                 display: "grid",
                                 gridTemplateColumns: {
-                                  xs: rowType === "Chainage" ? "1fr 32px 70px 1fr 28px" : "1fr 70px 1fr 28px",
-                                  sm: rowType === "Chainage" ? "90px 32px 90px 1fr 32px" : "90px 90px 1fr 32px",
+                                  xs: showBasis ? "1fr 32px 70px 1fr 28px" : "1fr 70px 1fr 28px",
+                                  sm: showBasis ? "90px 32px 90px 1fr 32px" : "90px 90px 1fr 32px",
                                 },
                                 gap: { xs: "4px", sm: "6px" },
                                 alignItems: "center",
@@ -1974,7 +1980,7 @@ const RoadSurveyRowsForm = () => {
                               )}
 
                               {/* S / R segmented switch — vertical */}
-                              {rowType === "Chainage" && (
+                              {showBasis && (
                                 <Box
                                   onClick={() => {
                                     const updated = [
