@@ -14,9 +14,17 @@ import autoTable from "jspdf-autotable";
 import BasicButtons from "../../../components/BasicButton";
 import { MdArrowBackIosNew, MdDownload } from "react-icons/md";
 import { IoIosAddCircleOutline } from "react-icons/io";
-import { Box, Stack, Paper, TableContainer } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Paper,
+  TableContainer,
+  Grid,
+  Typography,
+} from "@mui/material";
 
-import FieldBookTable, { calculateTableData } from "./FieldBookTable";
+import FieldBookTable from "./FieldBookTable";
+import { calculateTableData } from "./calculateTableData";
 import { purposeCode } from "../../../constants";
 import { showAlert } from "../../../redux/alertSlice";
 import BasicMenu from "../../../components/BasicMenu";
@@ -55,53 +63,115 @@ const menuItems = [
   },
 ];
 
-const exportFieldBookPdf = ({ head, tableData }) => {
+const exportFieldBookPdf = ({ head, tableData, survey, purpose }) => {
   const doc = new jsPDF("p", "mm", "a4");
 
+  // Title: centered, bold, italic, uppercase
+  doc.setFont("helvetica", "bolditalic");
+  doc.setFontSize(10);
+  const projectTitle = (survey?.project || "SURVEY PROJECT REPORT").toUpperCase();
+  const splitTitle = doc.splitTextToSize(projectTitle, 180); // 180mm width limit
+  
+  let currentY = 15;
+  splitTitle.forEach((line) => {
+    doc.text(line, 105, currentY, { align: "center" });
+    currentY += 5;
+  });
+  
+  currentY += 5;
+
+  // Metadata block: Date of Survey, Designation, Zone, Stage
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  
+  // Left Column
+  const dateStr = survey?.DateOfSurvey 
+    ? new Date(survey.DateOfSurvey).toLocaleDateString("en-IN") 
+    : "_____________________";
+  const designationStr = survey?.engineerSurveyor || "Assistant Engineer";
+
+  doc.text(`Date of Survey : ${dateStr}`, 15, currentY);
+  doc.text(`Designation    : ${designationStr}`, 15, currentY + 5);
+
+  // Right Column
+  const zoneStr = `"________________________"`;
+  const isInitialLevel = !purpose?.type || purpose?.type === "Initial Level";
+  const stageStr = purpose?.type ? `${purpose.type}s` : "Initial Levels";
+
+  doc.text(`Zone  : ${zoneStr}`, 130, currentY);
+  
+  doc.text(`Stage : `, 130, currentY + 5);
+  
+  // Render stage value with green or red color
+  if (isInitialLevel) {
+    doc.setTextColor(16, 185, 129); // green #10b981
+  } else {
+    doc.setTextColor(239, 68, 68); // red #ef4444
+  }
+  doc.setFont("helvetica", "bold");
+  doc.text(stageStr, 142, currentY + 5);
+  
+  // Reset text color and font
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "normal");
+
+  const tableStartY = currentY + 12;
+
+  // Render Table
   autoTable(doc, {
-    margin: { top: 25 },
+    startY: tableStartY,
+    margin: { left: 15, right: 15 },
     theme: "grid",
     head: [head],
-    body: tableData.map((row) => [
-      row.CH,
-      row.BS,
-      row.IS,
-      row.FS,
-      row.HI,
-      row.RL,
-      row.Offset,
-      row.remarks,
-    ]),
+    body: tableData.map((row) => {
+      // If it is Instrument Setup, show the checkbox symbol ▣ in Offset
+      const offsetVal = row.rowType === "Instrument setup" ? "▣" : (row.Offset || "");
+      return [
+        row.CH || "",
+        row.BS || "",
+        row.IS || "",
+        row.FS || "",
+        row.HI || "",
+        row.RL || "",
+        offsetVal,
+        row.remarks || "",
+      ];
+    }),
     styles: {
       fontSize: 8,
       cellPadding: 2,
       textColor: 0,
       lineWidth: 0.1,
       valign: "middle",
+      halign: "center", // Align all cell text to center!
+      fontStyle: "bold", // Bold all table text!
+      font: "helvetica",
     },
     headStyles: {
-      fontStyle: "bold",
-      halign: "right",
+      fontStyle: "bolditalic", // Bold italic headers
+      halign: "center",
       valign: "middle",
-      fillColor: false,
+      fillColor: [255, 255, 255], // White background
       textColor: 0,
       lineWidth: 0.1,
     },
     columnStyles: {
-      0: { halign: "left" }, // CH
-      1: { halign: "right" }, // BS
-      2: { halign: "right" }, // IS
-      3: { halign: "right" }, // FS
-      4: { halign: "right" }, // HI
-      5: { halign: "right" }, // RL
-      6: { halign: "right" }, // Offset
-      7: { halign: "right" }, // Remarks
+      0: { halign: "center" },
+      1: { halign: "center" },
+      2: { halign: "center" },
+      3: { halign: "center" },
+      4: { halign: "center" },
+      5: { halign: "center" },
+      6: { halign: "center" },
+      7: { halign: "center" },
     },
-    didDrawPage: () => {
-      // ===== TITLE =====
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text("Fieldbook", 105, 15, { align: "center" });
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 7) {
+        const rowData = tableData[data.row.index];
+        if (rowData && rowData.diff !== undefined && rowData.diff !== null) {
+          data.cell.styles.textColor = rowData.diff === 0 ? [16, 185, 129] : [239, 68, 68];
+        }
+      }
     },
   });
 
@@ -130,7 +200,7 @@ export default function FieldBook() {
       exportToExcel();
     }
     if (item.value === "pdf download") {
-      exportFieldBookPdf({ head, tableData });
+      exportFieldBookPdf({ head, tableData, survey, purpose });
     }
   };
 
@@ -216,7 +286,8 @@ export default function FieldBook() {
           if (i !== rowIndex) return r;
 
           let updatedRow = { ...r };
-          const isChainage = updatedRow.type === "Chainage" || updatedRow.type === "Water Level";
+          const isChainage =
+            updatedRow.type === "Chainage" || updatedRow.type === "Water Level";
 
           switch (fieldKey) {
             case "CH":
@@ -231,7 +302,9 @@ export default function FieldBook() {
 
             case "IS":
               if (isChainage) {
-                const offsetsList = Array.isArray(updatedRow.intermediateOffsets)
+                const offsetsList = Array.isArray(
+                  updatedRow.intermediateOffsets,
+                )
                   ? [...updatedRow.intermediateOffsets]
                   : [];
                 if (offsetsList[nestedIndex]) {
@@ -252,7 +325,9 @@ export default function FieldBook() {
 
             case "Offset":
               if (isChainage) {
-                const offsetsList = Array.isArray(updatedRow.intermediateOffsets)
+                const offsetsList = Array.isArray(
+                  updatedRow.intermediateOffsets,
+                )
                   ? [...updatedRow.intermediateOffsets]
                   : [];
                 if (offsetsList[nestedIndex]) {
@@ -267,7 +342,9 @@ export default function FieldBook() {
 
             case "remarks":
               if (isChainage) {
-                const offsetsList = Array.isArray(updatedRow.intermediateOffsets)
+                const offsetsList = Array.isArray(
+                  updatedRow.intermediateOffsets,
+                )
                   ? [...updatedRow.intermediateOffsets]
                   : [];
                 if (offsetsList[nestedIndex]) {
@@ -350,7 +427,6 @@ export default function FieldBook() {
     }
   };
 
-  // --- Excel export (keeps your original style/formatting) ---
   const exportToExcel = useCallback(async () => {
     if (!purpose) return;
     const workbook = new ExcelJS.Workbook();
@@ -358,31 +434,119 @@ export default function FieldBook() {
       `${purposeCode[purpose.type] || "Survey"} AE`,
     );
 
-    // Title
+    sheet.views = [{ showGridLines: true }];
+
+    // --- 1. Project Title ---
     sheet.mergeCells("A1:H1");
-    const title = sheet.getCell("A1");
-    // project is on the survey object returned by backend
-    title.value = survey?.project || purpose?.surveyId?.project || "";
-    title.font = { size: 18, bold: true };
-    title.alignment = { vertical: "middle", horizontal: "center" };
-    sheet.getRow(1).height = 28;
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = (survey?.project || purpose?.surveyId?.project || "SURVEY PROJECT REPORT").toUpperCase();
+    titleCell.font = { name: "Calibri", size: 14, bold: true, italic: true };
+    titleCell.alignment = { vertical: "middle", horizontal: "center" };
+    sheet.getRow(1).height = 30;
 
-    // Header rows (simple)
-    sheet.addRow([]);
-    const headers = ["CH", "BS", "IS", "FS", "HI", "RL", "Offset", "Remarks"];
-    const headerRow = sheet.addRow(headers);
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.alignment = { horizontal: "center" };
+    // --- 2. Metadata Block ---
+    const dateStr = survey?.DateOfSurvey 
+      ? new Date(survey.DateOfSurvey).toLocaleDateString("en-IN") 
+      : "_____________________";
+    const designationStr = survey?.engineerSurveyor || "Assistant Engineer";
+    
+    const zoneStr = `"________________________"`;
+    const isInitialLevel = !purpose?.type || purpose?.type === "Initial Level";
+    const stageStr = purpose?.type ? `${purpose.type}s` : "Initial Levels";
+
+    // Row 3
+    sheet.getCell("A3").value = "Date of Survey";
+    sheet.getCell("A3").font = { name: "Calibri", italic: true, color: { argb: "FF666666" } };
+    sheet.getCell("B3").value = `: ${dateStr}`;
+    sheet.getCell("B3").font = { name: "Calibri", bold: true };
+    
+    sheet.getCell("G3").value = "Zone";
+    sheet.getCell("G3").font = { name: "Calibri", italic: true, color: { argb: "FF666666" } };
+    sheet.getCell("H3").value = `: ${zoneStr}`;
+    sheet.getCell("H3").font = { name: "Calibri", bold: true };
+
+    // Row 4
+    sheet.getCell("A4").value = "Designation";
+    sheet.getCell("A4").font = { name: "Calibri", italic: true, color: { argb: "FF666666" } };
+    sheet.getCell("B4").value = `: ${designationStr}`;
+    sheet.getCell("B4").font = { name: "Calibri", bold: true };
+    
+    sheet.getCell("G4").value = "Stage";
+    sheet.getCell("G4").font = { name: "Calibri", italic: true, color: { argb: "FF666666" } };
+    sheet.getCell("H4").value = `: ${stageStr}`;
+    sheet.getCell("H4").font = {
+      name: "Calibri",
+      bold: true,
+      color: { argb: isInitialLevel ? "FF10B981" : "FFEF4444" }
+    };
+
+    sheet.getRow(3).height = 20;
+    sheet.getRow(4).height = 20;
+
+    // --- 3. Table Headers ---
+    const headers = ["CH", "BS", "IS", "FS", "HI", "RL", "OFFSET", "REMARKS"];
+    const headerRow = sheet.getRow(6);
+    headers.forEach((h, colIndex) => {
+      const cell = headerRow.getCell(colIndex + 1);
+      cell.value = h;
+      cell.font = { name: "Calibri", bold: true, italic: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFD3D3D3" } },
+        left: { style: "thin", color: { argb: "FFD3D3D3" } },
+        bottom: { style: "thin", color: { argb: "FFD3D3D3" } },
+        right: { style: "thin", color: { argb: "FFD3D3D3" } },
+      };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFFFFF" },
+      };
     });
+    headerRow.height = 22;
 
-    // Table rows
-    tableData.forEach((r) => {
-      sheet.addRow([r.CH, r.BS, r.IS, r.FS, r.HI, r.RL, r.Offset, r.remarks]);
+    // --- 4. Table Body ---
+    let currentRowNum = 7;
+    tableData.forEach((row) => {
+      const excelRow = sheet.getRow(currentRowNum);
+      
+      const chVal = row.CH || "";
+      const bsVal = row.BS || "";
+      const isVal = row.IS || "";
+      const fsVal = row.FS || "";
+      const hiVal = row.HI || "";
+      const rlVal = row.RL || "";
+      const offsetVal = row.rowType === "Instrument setup" ? "▣" : (row.Offset || "");
+      const remarksVal = row.remarks || "";
+
+      const rowValues = [chVal, bsVal, isVal, fsVal, hiVal, rlVal, offsetVal, remarksVal];
+      
+      rowValues.forEach((val, colIndex) => {
+        const cell = excelRow.getCell(colIndex + 1);
+        cell.value = val;
+        
+        // remarks diff color
+        let textColor = "FF000000";
+        if (colIndex === 7 && row.diff !== undefined && row.diff !== null) {
+          textColor = row.diff === 0 ? "FF10B981" : "FFEF4444";
+        }
+        
+        cell.font = { name: "Calibri", bold: true, color: { argb: textColor } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFD3D3D3" } },
+          left: { style: "thin", color: { argb: "FFD3D3D3" } },
+          bottom: { style: "thin", color: { argb: "FFD3D3D3" } },
+          right: { style: "thin", color: { argb: "FFD3D3D3" } },
+        };
+      });
+      
+      excelRow.height = 20;
+      currentRowNum++;
     });
 
     // widths
-    [12, 12, 12, 12, 12, 12, 12, 36].forEach(
+    [15, 12, 12, 12, 12, 12, 12, 36].forEach(
       (w, i) => (sheet.getColumn(i + 1).width = w),
     );
 
@@ -391,7 +555,9 @@ export default function FieldBook() {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
     saveAs(blob, `Survey_${purpose?.type || "Report"}.xlsx`);
-  }, [purpose, tableData]);
+  }, [purpose, tableData, survey]);
+
+  const isInitialLevel = !purpose?.type || purpose?.type === "Initial Level";
 
   return (
     <Box p={2}>
@@ -437,7 +603,7 @@ export default function FieldBook() {
                 `/survey/road-survey/continue-survey/${
                   purpose?.surveyId?._id || purpose?.surveyId || survey?._id
                 }`,
-                { state: { fromPL: true } }
+                { state: { fromPL: true } },
               )
             }
             value={
@@ -459,14 +625,171 @@ export default function FieldBook() {
         </Stack>
       </Stack>
 
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <FieldBookTable
-          tableData={tableData}
-          isEditing={isEditing}
-          onFieldChange={handleFieldChange}
-          onRLChange={handleRLChange}
-        />
-      </TableContainer>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, sm: 4 },
+          mt: 2,
+          border: "1px solid #e0e0e0",
+          borderRadius: "8px",
+          backgroundColor: "#ffffff",
+        }}
+      >
+        {/* Title and Metadata Header exactly like image */}
+        <Box sx={{ mb: 4, px: 1 }}>
+          {/* Main Title */}
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: "bold",
+              fontStyle: "italic",
+              textAlign: "center",
+              textTransform: "uppercase",
+              mb: 3,
+              color: "#000000",
+              fontSize: { xs: "13px", sm: "15px", md: "17px" },
+              lineHeight: 1.4,
+              fontFamily: "Calibri, Arial, sans-serif",
+            }}
+          >
+            {survey?.project || "SURVEY PROJECT REPORT"}
+          </Typography>
+
+          {/* Metadata Grid */}
+          <Grid
+            container
+            spacing={2}
+            sx={{
+              fontFamily: "Calibri, Arial, sans-serif",
+              fontSize: "14px",
+              color: "#333333",
+            }}
+          >
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Stack spacing={1}>
+                <Box display="flex">
+                  <Typography
+                    sx={{
+                      minWidth: "120px",
+                      color: "#666666",
+                      fontStyle: "italic",
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    Date of Survey
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "#000000",
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    :{" "}
+                    {survey?.DateOfSurvey
+                      ? new Date(survey.DateOfSurvey).toLocaleDateString(
+                          "en-IN",
+                        )
+                      : "_____________________"}
+                  </Typography>
+                </Box>
+                <Box display="flex">
+                  <Typography
+                    sx={{
+                      minWidth: "120px",
+                      color: "#666666",
+                      fontStyle: "italic",
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    Designation
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "#666666",
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    : {survey?.engineerSurveyor || "Assistant Engineer"}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Grid>
+            <Grid
+              size={{ xs: 12, sm: 6 }}
+              sx={{ display: "flex", justifyContent: "end" }}
+            >
+              <Stack spacing={1} sx={{ width: "fit-content" }}>
+                <Box display="flex">
+                  <Typography
+                    sx={{
+                      minWidth: "80px",
+                      color: "#666666",
+                      fontStyle: "italic",
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    Zone
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "#000000",
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    : "________________________"
+                  </Typography>
+                </Box>
+                <Box display="flex">
+                  <Typography
+                    sx={{
+                      minWidth: "80px",
+                      color: "#666666",
+                      fontStyle: "italic",
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    Stage
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      fontFamily: "Calibri, Arial, sans-serif",
+                    }}
+                  >
+                    :{" "}
+                    <Box
+                      component="span"
+                      sx={{
+                        color: isInitialLevel ? "#10b981" : "#ef4444",
+                        fontWeight: "bold",
+                        fontFamily: "Calibri, Arial, sans-serif",
+                      }}
+                    >
+                      {purpose?.type ? `${purpose.type}s` : "Initial Levels"}
+                    </Box>
+                  </Typography>
+                </Box>
+              </Stack>
+            </Grid>
+          </Grid>
+        </Box>
+
+        <TableContainer sx={{ border: "none", boxShadow: "none" }}>
+          <FieldBookTable
+            tableData={tableData}
+            isEditing={isEditing}
+            onFieldChange={handleFieldChange}
+            onRLChange={handleRLChange}
+          />
+        </TableContainer>
+      </Paper>
     </Box>
   );
 }

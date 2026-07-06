@@ -24,9 +24,8 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import BasicMenu from "../../components/BasicMenu";
 import { BsThreeDots } from "react-icons/bs";
-import FieldBookTable, {
-  calculateTableData,
-} from "./components/FieldBookTable";
+import FieldBookTable from "./components/FieldBookTable";
+import { calculateTableData } from "./components/calculateTableData";
 import CrossSectionChartV2 from "./components/CrossSectionChartV2";
 import { v1ChartOptions } from "../../constants";
 import CrossSectionChart from "./components/CrossSectionChart";
