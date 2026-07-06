@@ -422,6 +422,7 @@ export default function ProjectsList() {
                           alignItems="center"
                           width="100%"
                           pr={1}
+                          sx={{ minWidth: 0, overflow: "hidden" }}
                         >
                           {/* Modern Avatar */}
                           <Box
@@ -493,6 +494,11 @@ export default function ProjectsList() {
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
+                                ".MuiAccordionSummary-root.Mui-expanded &": {
+                                  whiteSpace: "normal",
+                                  textOverflow: "clip",
+                                  overflowWrap: "anywhere",
+                                },
                               }}
                             >
                               {highlightText(survey.project, search)}
@@ -612,6 +618,7 @@ export default function ProjectsList() {
                           alignItems="center"
                           width="100%"
                           pr={1}
+                          sx={{ minWidth: 0, overflow: "hidden" }}
                         >
                           <Box
                             onClick={(e) => {
@@ -679,6 +686,11 @@ export default function ProjectsList() {
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
+                                ".MuiAccordionSummary-root.Mui-expanded &": {
+                                  whiteSpace: "normal",
+                                  textOverflow: "clip",
+                                  overflowWrap: "anywhere",
+                                },
                               }}
                             >
                               {highlightText(survey.project, search)}
@@ -837,6 +849,7 @@ export default function ProjectsList() {
                           alignItems="center"
                           width="100%"
                           pr={1}
+                          sx={{ minWidth: 0, overflow: "hidden" }}
                         >
                           <Box
                             onClick={(e) => {
@@ -904,6 +917,11 @@ export default function ProjectsList() {
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
+                                ".MuiAccordionSummary-root.Mui-expanded &": {
+                                  whiteSpace: "normal",
+                                  textOverflow: "clip",
+                                  overflowWrap: "anywhere",
+                                },
                               }}
                             >
                               {highlightText(survey.project, search)}

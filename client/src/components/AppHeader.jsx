@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import TemporaryDrawer from "./TemporaryDrawer";
 import DrawerList from "./DrawerList";
+import profileImage from "../assets/blank-profile-picture.webp";
 
 const PRIMARY_BRAND = "#6366f1";
 
@@ -121,7 +122,7 @@ const AppHeader = ({ sidebar = true }) => {
             <Stack direction="row" spacing={2} alignItems="center">
               <motion.div whileHover={{ scale: 1.05 }}>
                 <Avatar
-                  src={"/assets/blank-profile-picture.webp"}
+                  src={profileImage}
                   sx={{
                     width: { xs: 40, md: 48 },
                     height: { xs: 40, md: 48 },

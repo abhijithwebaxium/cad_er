@@ -227,6 +227,7 @@ const CrossSectionChart = ({ selectedCs, chartOptions, pdfRef }) => {
         component={Paper}
         sx={{
           mt: 0,
+          width: "100%",
           bgcolor: "transparent",
           overflowX: "auto",
         }}
@@ -236,7 +237,7 @@ const CrossSectionChart = ({ selectedCs, chartOptions, pdfRef }) => {
             {/* CHART ROW */}
             <TableRow>
               <TableCell sx={{ border: "none", p: 0 }}>
-                <Box maxWidth={`${calcWidth()}px`} height="250px">
+                <Box width="100%" height="250px">
                   <Plot
                     data={selectedCs?.series?.map((s) => ({
                       x: s?.data?.map((p) => p.x),
@@ -248,7 +249,8 @@ const CrossSectionChart = ({ selectedCs, chartOptions, pdfRef }) => {
                     }))}
                     config={chartOptions.config}
                     layout={chartOptions.layout}
-                    style={chartOptions.style}
+                    useResizeHandler
+                    style={{ ...chartOptions.style, width: "100%" }}
                   />
                 </Box>
 

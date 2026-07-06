@@ -28,7 +28,7 @@ import BasicInput from "../../components/BasicInput";
 import BasicButton from "../../components/BasicButton";
 import { MdDownload } from "react-icons/md";
 import { showAlert } from "../../redux/alertSlice";
-import { DxfWriter, point2d } from "@tarikjabiri/dxf";
+import { DxfWriter, Units, point2d } from "@tarikjabiri/dxf";
 import { saveAs } from "file-saver";
 import ExportLoader from "../../components/ExportLoader";
 import SmallHeader from "../../components/SmallHeader";
@@ -77,11 +77,11 @@ const menuItems = [
   {
     label: (
       <Stack direction={"row"} alignItems={"center"} gap={0.5}>
-        Export to DWG
+        Export to DXF
         <MdDownload />
       </Stack>
     ),
-    value: "exportToDWG",
+    value: "exportToDXF",
   },
 ];
 
@@ -130,6 +130,30 @@ const CrossSectionReport = () => {
 
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(null);
+
+  const interactiveChartOptions = useMemo(() => {
+    if (!chartOptions) return null;
+
+    return {
+      ...chartOptions,
+      config: {
+        ...chartOptions.config,
+        displayModeBar: true,
+        scrollZoom: true,
+        doubleClick: "reset",
+        modeBarButtonsToRemove: [
+          "select2d",
+          "lasso2d",
+          "toggleSpikelines",
+          "toImage",
+        ],
+      },
+      layout: {
+        ...chartOptions.layout,
+        dragmode: "pan",
+      },
+    };
+  }, [chartOptions]);
 
   const handleToggle = (rowId) => {
     setOpenRowId((prev) => (prev === rowId ? null : rowId));
@@ -238,46 +262,56 @@ const CrossSectionReport = () => {
     pdf.save("cross-section.pdf");
   };
 
-  const exportToDWG = () => {
-    if (!selectedCs?.series?.length) return;
-
-    const dxf = new DxfWriter();
-    const scale = 1000; // Adjust based on your units (e.g., meters to mm)
-
-    // 1. Calculate global offsets so the drawing starts near 0,0 in CAD
-    const allX = selectedCs.series.flatMap(
-      (s) => s.data?.map((p) => p.x) || [],
-    );
-    const allY = selectedCs.series.flatMap(
-      (s) => s.data?.map((p) => p.y) || [],
-    );
-    const minX = Math.min(...allX);
-    const minY = Math.min(...allY);
-
-    selectedCs.series.forEach((series, index) => {
-      // 2. Plotly data often separates X and Y, but your series.data seems
-      // to be an array of objects {x, y} based on your previous snippet.
-      if (!series.data || series.data.length < 2) return;
-
-      // Create a layer for each series using its name or index
-      const layerName = series.name?.replace(/\s+/g, "_") || `Series_${index}`;
-      dxf.addLayer(layerName, (index % 7) + 1); // Cycle through standard CAD colors
-
-      // 3. Map points to DXF vertex format
-      const cadPoints = series.data
-        .filter((p) => typeof p.x === "number" && typeof p.y === "number")
-        .map((p) => point2d((p.x - minX) * scale, (p.y - minY) * scale));
-
-      // 4. Add to DXF
-      if (cadPoints.length >= 2) {
-        dxf.addLWPolyline(cadPoints, { layerName });
+  const exportToDXF = () => {
+    try {
+      if (!selectedCs?.series?.length) {
+        throw new Error("No cross-section data is available to export");
       }
-    });
 
-    // 5. Generate and Download
-    const dxfString = dxf.stringify();
-    const blob = new Blob([dxfString], { type: "image/vnd.dxf" });
-    saveAs(blob, "plot-export.dxf");
+      const dxf = new DxfWriter();
+      dxf.setUnits(Units.Meters);
+      let exportedSeries = 0;
+
+      selectedCs.series.forEach((series, index) => {
+        const vertices = (series.data || [])
+          .map((point) => ({ x: Number(point.x), y: Number(point.y) }))
+          .filter(
+            (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
+          )
+          .map((point) => ({ point: point2d(point.x, point.y) }));
+
+        if (vertices.length < 2) return;
+
+        const layerName =
+          series.name?.replace(/[<>/\\":;?*|=,]/g, "_").trim() ||
+          `Series_${index + 1}`;
+
+        dxf.addLayer(layerName, (index % 7) + 1);
+        dxf.addLWPolyline(vertices, { layerName });
+        exportedSeries += 1;
+      });
+
+      if (!exportedSeries) {
+        throw new Error("The cross-section does not contain enough valid points");
+      }
+
+      const chainage = String(selectedCs.chainage || "cross-section").replace(
+        /[^a-zA-Z0-9_-]+/g,
+        "-",
+      );
+      const blob = new Blob([dxf.stringify()], {
+        type: "application/dxf;charset=utf-8",
+      });
+
+      saveAs(blob, `cross-section-${chainage}.dxf`);
+    } catch (error) {
+      dispatch(
+        showAlert({
+          type: "error",
+          message: error.message || "Failed to export the cross-section",
+        }),
+      );
+    }
   };
 
   const buildCsData = (row) => {
@@ -388,7 +422,7 @@ const CrossSectionReport = () => {
   const handleMenuSelect = (item) => {
     if (item.value === "download") return downloadPDF();
 
-    if (item.value === "exportToDWG") return exportToDWG();
+    if (item.value === "exportToDXF") return exportToDXF();
 
     if (item.value === "downloadAllChainage")
       return handleDownloadAllChainage();
@@ -866,10 +900,10 @@ const CrossSectionReport = () => {
           zIndex: 3,
         }}
       >
-        {selectedCs && selectedCs?.series && chartOptions && (
+        {selectedCs && selectedCs?.series && interactiveChartOptions && (
           <CrossSectionChart
             selectedCs={selectedCs}
-            chartOptions={chartOptions}
+            chartOptions={interactiveChartOptions}
             pdfRef={pdfRef}
           />
         )}

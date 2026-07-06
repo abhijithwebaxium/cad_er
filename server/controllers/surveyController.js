@@ -680,6 +680,12 @@ const createSurveyRow = async (req, res, next) => {
     const sortedOffsets = (intermediateOffsets || []).sort(
       (a, b) => Number(a.offset) - Number(b.offset),
     );
+    const soundingSavedAt =
+      basis === "Soundings"
+        ? new Date().toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+          })
+        : null;
 
     const newReading = {
       type,
@@ -701,7 +707,12 @@ const createSurveyRow = async (req, res, next) => {
             intermediateOffsets: sortedOffsets.map((entry) => ({
               is: isProposal ? "" : Number(entry.is || 0).toFixed(3),
               offset: Number(entry.offset || 0).toFixed(3),
-              remark: entry.remark || "",
+              remark:
+                soundingSavedAt
+                  ? entry.remark
+                    ? `${entry.remark} - ${soundingSavedAt}`
+                    : soundingSavedAt
+                  : entry.remark || "",
               mode: entry.mode || "S",
             })),
             reducedLevels: isProposal

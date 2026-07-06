@@ -31,6 +31,7 @@ import { logoutUser } from "../services/indexServices";
 import { IoSettingsOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
 import { BiSupport } from "react-icons/bi";
+import profileImage from "../assets/blank-profile-picture.webp";
 
 const menuListDetails = [
   {
@@ -169,14 +170,13 @@ const DrawerList = ({ toggleDrawer }) => {
             sx={{ position: "relative", zIndex: 1 }}
           >
             <Avatar
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || "Professional"}`}
+              src={profileImage}
               alt="User Avatar"
               sx={{
-                width: 76,
-                height: 76,
-                border: "3px solid rgba(255,255,255,0.9)",
-                boxShadow: "0 8px 16px rgba(0,0,0,0.15)",
-                bgcolor: "rgba(255,255,255,0.2)",
+                width: { xs: 40, md: 48 },
+                height: { xs: 40, md: 48 },
+                border: "2px solid rgba(255,255,255,0.3)",
+                bgcolor: "#6366f1",
               }}
             />
             <Box textAlign="center">
