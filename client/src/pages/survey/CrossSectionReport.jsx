@@ -28,7 +28,7 @@ import BasicInput from "../../components/BasicInput";
 import BasicButton from "../../components/BasicButton";
 import { MdDownload } from "react-icons/md";
 import { showAlert } from "../../redux/alertSlice";
-import { DxfWriter, Units, point2d } from "@tarikjabiri/dxf";
+import { DxfWriter, Units, point2d, point3d } from "@tarikjabiri/dxf";
 import { saveAs } from "file-saver";
 import ExportLoader from "../../components/ExportLoader";
 import SmallHeader from "../../components/SmallHeader";
@@ -272,22 +272,46 @@ const CrossSectionReport = () => {
       dxf.setUnits(Units.Meters);
       let exportedSeries = 0;
 
+      const allXValues = selectedCs.series
+        .flatMap((series) => series.data || [])
+        .map((point) => Number(point.x))
+        .filter(Number.isFinite);
+      const xSpan = allXValues.length
+        ? Math.max(...allXValues) - Math.min(...allXValues)
+        : 1;
+      const textHeight = Math.max(0.1, Math.min(xSpan / 25, 0.3));
+
       selectedCs.series.forEach((series, index) => {
-        const vertices = (series.data || [])
+        const validPoints = (series.data || [])
           .map((point) => ({ x: Number(point.x), y: Number(point.y) }))
           .filter(
             (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
-          )
-          .map((point) => ({ point: point2d(point.x, point.y) }));
+          );
+        const vertices = validPoints.map((point) => ({
+          point: point2d(point.x, point.y),
+        }));
 
         if (vertices.length < 2) return;
 
         const layerName =
           series.name?.replace(/[<>/\\":;?*|=,]/g, "_").trim() ||
           `Series_${index + 1}`;
+        const readingsLayerName = `${layerName}_Readings`;
+        const colorNumber = (index % 7) + 1;
 
-        dxf.addLayer(layerName, (index % 7) + 1);
+        dxf.addLayer(layerName, colorNumber);
+        dxf.addLayer(readingsLayerName, colorNumber);
         dxf.addLWPolyline(vertices, { layerName });
+
+        validPoints.forEach((point) => {
+          dxf.addText(
+            point3d(point.x + textHeight * 0.15, point.y + textHeight * 0.35),
+            textHeight,
+            point.y.toFixed(3),
+            { layerName: readingsLayerName },
+          );
+        });
+
         exportedSeries += 1;
       });
 

@@ -28,7 +28,7 @@ const getAllSurvey = async (req, res, next) => {
   try {
     const {
       user: { userId },
-      query: { status, project, purpose, type, rootBranch },
+      query: { status, project, purpose, type, rootBranch, page, limit },
     } = req;
 
     const filter = {
@@ -38,17 +38,30 @@ const getAllSurvey = async (req, res, next) => {
     };
 
     // 🔹 Flexible filters
-    if (status === "active") filter.isSurveyFinish = false;
-    else if (status === "finished") filter.isSurveyFinish = true;
+    if (status) {
+      if (status === "active") {
+        filter.isSurveyFinish = false;
+      } else if (status === "finished") {
+        filter.isSurveyFinish = true;
+      } else if (["Scheduled", "Active", "Completed"].includes(status)) {
+        filter.status = status;
+      }
+    }
 
-    if (project) filter.project = project;
+    if (project) {
+      filter.project = { $regex: project, $options: "i" };
+    }
     if (type) filter.type = type;
     if (rootBranch) {
       filter["branchDetails.isBranch"] = true;
       filter["branchDetails.rootBranch"] = rootBranch;
     }
 
-    const surveys = await Survey.find(filter)
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const skipNum = (pageNum - 1) * limitNum;
+
+    let queryBuilder = Survey.find(filter)
       .sort({ createdAt: -1 })
       .populate({
         path: "purposes",
@@ -58,13 +71,23 @@ const getAllSurvey = async (req, res, next) => {
           match: { deleted: false },
           options: { sort: { createdAt: 1 } },
         },
-      })
-      // .populate('createdBy', 'name email')
-      .lean();
+      });
+
+    if (page) {
+      queryBuilder = queryBuilder.skip(skipNum).limit(limitNum);
+    }
+
+    const [surveys, total] = await Promise.all([
+      queryBuilder.lean(),
+      Survey.countDocuments(filter),
+    ]);
 
     res.status(200).json({
       success: true,
       count: surveys.length,
+      total,
+      page: pageNum,
+      limit: limitNum,
       message:
         surveys.length > 0
           ? `${surveys.length} survey${surveys.length > 1 ? "s" : ""} found`

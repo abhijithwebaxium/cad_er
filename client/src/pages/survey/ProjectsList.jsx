@@ -159,11 +159,147 @@ export default function ProjectsList() {
 
   const [deleteId, setDeleteId] = useState("");
 
-  const handleChange = (newValue) => setTab(newValue);
+  const [pages, setPages] = useState({ queue: 1, in_progress: 1, wrapped: 1 });
+  const [totals, setTotals] = useState({ queue: 0, in_progress: 0, wrapped: 0 });
 
-  const filteredSurveys = list?.in_progress.filter((s) =>
-    s.project.toLowerCase().includes(search.toLowerCase()),
-  );
+  const handleChange = (newValue) => {
+    setTab(newValue);
+  };
+
+  const filteredSurveys = list?.in_progress;
+
+  const fetchSurveysForTab = async (tabName, pageToFetch, isAppend = false) => {
+    try {
+      if (pageToFetch === 1) {
+        setLoading(true);
+      }
+
+      const statusMap = {
+        queue: "Scheduled",
+        in_progress: "Active",
+        wrapped: "Completed",
+      };
+
+      const params = {
+        status: statusMap[tabName],
+        page: pageToFetch,
+        limit: 10,
+      };
+
+      if (search && tabName === "in_progress") {
+        params.project = search;
+      }
+
+      const { data } = await getAllSurvey(params);
+      if (data.success) {
+        const fetched = data?.surveys?.map((survey) => {
+          const lastPurposeDoc = survey?.purposes
+            ?.reverse()
+            ?.find((p) => p.phase === "Actual");
+
+          return {
+            ...survey,
+            lastPurpose: lastPurposeDoc?.type || "N/A",
+          };
+        }) || [];
+
+        // Update list
+        setList((prev) => {
+          const keyMap = {
+            queue: "todo",
+            in_progress: "in_progress",
+            wrapped: "finished",
+          };
+          const key = keyMap[tabName];
+          return {
+            ...prev,
+            [key]: isAppend ? [...prev[key], ...fetched] : fetched,
+          };
+        });
+
+        // Update surveys state for navigation/actions
+        setSurveys((prev) => {
+          if (isAppend) {
+            const existingIds = new Set(prev.map((s) => String(s._id)));
+            const uniqueNew = fetched.filter((s) => !existingIds.has(String(s._id)));
+            return [...prev, ...uniqueNew];
+          } else {
+            return fetched;
+          }
+        });
+
+        setTotals((prev) => ({
+          ...prev,
+          [tabName]: data.total || 0,
+        }));
+
+        setPages((prev) => ({
+          ...prev,
+          [tabName]: pageToFetch,
+        }));
+      } else {
+        throw Error("Failed to fetch surveys");
+      }
+    } catch (error) {
+      handleFormError(error, null, dispatch, navigate);
+    } finally {
+      setLoading(false);
+      dispatch(stopLoading());
+    }
+  };
+
+  const renderLoadMoreButton = (totalCount, visibleCount, onLoadMore) => {
+    if (totalCount <= visibleCount) return null;
+    const remaining = totalCount - visibleCount;
+    const nextCount = Math.min(10, remaining);
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        mt={4}
+        mb={2}
+        component={motion.div}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <BasicButton
+          variant="outlined"
+          onClick={onLoadMore}
+          value={
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <span>Show {nextCount} more surveys</span>
+              <Typography variant="caption" sx={{ opacity: 0.7, fontWeight: 700 }}>
+                ({remaining} remaining)
+              </Typography>
+            </Stack>
+          }
+          sx={{
+            borderRadius: "14px",
+            px: 4,
+            py: 1.5,
+            borderColor: "rgba(99, 102, 241, 0.3)",
+            color: PRIMARY_BRAND,
+            background: "rgba(99, 102, 241, 0.04)",
+            fontWeight: 700,
+            fontSize: "14px",
+            boxShadow: "0 4px 12px -5px rgba(99, 102, 241, 0.1)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            "&:hover": {
+              background: "rgba(99, 102, 241, 0.1)",
+              borderColor: PRIMARY_BRAND,
+              transform: "translateY(-1px)",
+              boxShadow: "0 6px 16px -4px rgba(99, 102, 241, 0.2)",
+            },
+            "&:active": {
+              transform: "translateY(1px)",
+            }
+          }}
+        />
+      </Box>
+    );
+  };
 
   const handleContinueSurvey = async (id) => {
     try {
@@ -225,6 +361,11 @@ export default function ProjectsList() {
       setList((prev) => ({
         ...prev,
         in_progress: updatedList,
+      }));
+
+      setTotals((prev) => ({
+        ...prev,
+        in_progress: Math.max(0, prev.in_progress - 1),
       }));
 
       if (data.success) {
@@ -321,64 +462,6 @@ export default function ProjectsList() {
     navigate(link);
   };
 
-  const fetchSurveys = async () => {
-    try {
-      const { data } = await getAllSurvey();
-      if (data.success) {
-        const updatedSurveys =
-          data?.surveys?.map((survey) => {
-            const lastPurposeDoc = survey?.purposes
-              ?.reverse()
-              ?.find((p) => p.phase === "Actual");
-
-            return {
-              ...survey,
-              lastPurpose: lastPurposeDoc?.type || "N/A",
-            };
-          }) || [];
-
-        setSurveys(updatedSurveys);
-
-        const grouped = updatedSurveys.reduce(
-          (acc, survey) => {
-            switch (survey.status) {
-              case "Scheduled":
-                acc.todo.push(survey);
-                break;
-
-              case "Active":
-                acc.in_progress.push(survey);
-                break;
-
-              case "Completed":
-                acc.finished.push(survey);
-                break;
-
-              default:
-                break;
-            }
-
-            return acc;
-          },
-          {
-            todo: [],
-            in_progress: [],
-            finished: [],
-          },
-        );
-
-        setList(grouped);
-      } else {
-        throw Error("Failed to fetch surveys");
-      }
-    } catch (error) {
-      handleFormError(error, null, dispatch, navigate);
-    } finally {
-      setLoading(false);
-      dispatch(stopLoading());
-    }
-  };
-
   useEffect(() => {
     const searchText = state?.search?.trim() || "";
     const selectedTab = state?.tab;
@@ -394,8 +477,8 @@ export default function ProjectsList() {
   }, [state]);
 
   useEffect(() => {
-    fetchSurveys();
-  }, []);
+    fetchSurveysForTab(tab, 1, false);
+  }, [tab, search]);
 
   // 🔥 Reusable motion variants
   const fadeSlide = {
@@ -588,6 +671,7 @@ export default function ProjectsList() {
                 }}
               />
             ))}
+            {renderLoadMoreButton(totals.queue, list?.todo?.length || 0, () => fetchSurveysForTab("queue", pages.queue + 1, true))}
           </Stack>
         ) : (
           <Box textAlign="center" mt={6}>
@@ -819,6 +903,7 @@ export default function ProjectsList() {
                 }}
               />
             ))}
+            {renderLoadMoreButton(totals.in_progress, filteredSurveys?.length || 0, () => fetchSurveysForTab("in_progress", pages.in_progress + 1, true))}
           </Stack>
         ) : (
           <Box textAlign="center" mt={6}>
@@ -1035,6 +1120,7 @@ export default function ProjectsList() {
                 }}
               />
             ))}
+            {renderLoadMoreButton(totals.wrapped, list?.finished?.length || 0, () => fetchSurveysForTab("wrapped", pages.wrapped + 1, true))}
           </Stack>
         ) : (
           <Box textAlign="center" mt={6}>
