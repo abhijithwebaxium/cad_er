@@ -64,20 +64,6 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
         finalRLArray = [rl.toFixed(3)];
         break;
 
-      case "Water Level":
-        if (
-          Array.isArray(row.intermediateOffsets) &&
-          row.intermediateOffsets.length
-        ) {
-          const rls = row.intermediateOffsets.map((entry) =>
-            (Number(hi) - Number(entry.is || 0)).toFixed(3),
-          );
-          rl = Number(rls[rls.length - 1]);
-          lastWaterLevelRL = rl;
-          finalRLArray = rls;
-        }
-        break;
-
       case "Chainage":
         // Use intermediateOffsets[i].is for cross-section rows
         if (
@@ -85,11 +71,11 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
           row.intermediateOffsets.length
         ) {
           const rls = row.intermediateOffsets.map((entry) => {
-            if (entry.mode === "S" && lastWaterLevelRL !== null) {
+            if (lastWaterLevelRL !== null) {
               return (Number(lastWaterLevelRL) - Number(entry.is || 0)).toFixed(3);
-            } else {
-              return (Number(hi) - Number(entry.is || 0)).toFixed(3);
             }
+
+            return (Number(hi) - Number(entry.is || 0)).toFixed(3);
           });
           rl = Number(rls[rls.length - 1]);
           finalRLArray = rls;
@@ -97,7 +83,8 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
         break;
 
       case "TBM":
-        // TBM still uses the scalar intermediateSight array (single value)
+      case "Water Level":
+        // TBM and Water Level use scalar intermediateSight arrays.
         if (
           Array.isArray(row.intermediateSight) &&
           row.intermediateSight.length
@@ -106,6 +93,7 @@ export const calculateReducedLevel = (survey, newReading, purposeId) => {
             (Number(hi) - Number(isVal || 0)).toFixed(3),
           );
           rl = Number(rls[rls.length - 1]);
+          if (row.type === "Water Level") lastWaterLevelRL = rl;
           finalRLArray = rls;
         }
         break;

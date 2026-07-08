@@ -51,22 +51,22 @@ export function calculateTableData(survey) {
         }
 
         case "Water Level": {
-          const offsetsList = row.intermediateOffsets || [];
-          offsetsList.forEach((entry, i) => {
-            const rlValue = (context.hi - Number(entry.is || 0)).toFixed(3);
+          const inter = row.intermediateSight || [];
+          inter.forEach((isVal, i) => {
+            const rlValue = (context.hi - Number(isVal || 0)).toFixed(3);
             lastWaterLevelRL = Number(rlValue);
             rows.push({
               rowIndex: pIndex,
               rowType: row.type,
               index: i,
-              CH: i === 0 ? (row.chainage ?? "") : "",
+              CH: "",
               BS: "",
-              IS: entry.is ?? "",
+              IS: isVal ?? "",
               FS: "",
               HI: "", // Hide HI to match image (empty on non-setup rows)
               RL: rlValue,
-              Offset: entry.offset ?? "",
-              remarks: entry.remark ?? "",
+              Offset: "",
+              remarks: row.remark ?? "",
               isBranch,
             });
           });
@@ -77,7 +77,7 @@ export function calculateTableData(survey) {
           const offsetsList = row.intermediateOffsets || [];
           offsetsList.forEach((entry, i) => {
             const rlValue =
-              entry.mode === "S" && lastWaterLevelRL !== null
+              lastWaterLevelRL !== null
                 ? (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3)
                 : (context.hi - Number(entry.is || 0)).toFixed(3);
             rows.push({

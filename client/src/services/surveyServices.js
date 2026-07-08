@@ -5,14 +5,30 @@ const normalizeRow = (row) => {
   
   // Normalize remarks for non-chainage rows (backward compatibility)
   const remarks = row.remarks || [];
-  if (row.type !== "Chainage" && row.type !== "Water Level") {
+  if (row.type !== "Chainage") {
     if (row.remark && remarks.length === 0) {
       remarks.push(row.remark);
     }
   }
 
-  // Populate parallel arrays for Chainage/WL rows if intermediateOffsets is present
-  if ((row.type === "Chainage" || row.type === "Water Level") && Array.isArray(row.intermediateOffsets)) {
+  // Populate parallel arrays for Chainage rows if intermediateOffsets is present
+  if (row.type === "Chainage" && Array.isArray(row.intermediateOffsets)) {
+    return {
+      ...row,
+      offsets: row.intermediateOffsets.map((e) => e.offset),
+      reducedLevels: row.reducedLevels || [],
+      intermediateSight: row.intermediateOffsets.map((e) => e.is),
+      remarks: row.intermediateOffsets.map((e) => e.remark),
+    };
+  }
+
+  // Backward compatibility for Water Level rows created before it became TBM-like.
+  if (
+    row.type === "Water Level" &&
+    Array.isArray(row.intermediateOffsets) &&
+    row.intermediateOffsets.length &&
+    !row.intermediateSight?.length
+  ) {
     return {
       ...row,
       offsets: row.intermediateOffsets.map((e) => e.offset),

@@ -14,6 +14,7 @@ const editableFields = {
   Chainage: ["CH", "IS", "Offset", "remarks"],
   CP: ["BS", "FS", "remarks"],
   TBM: ["IS", "remarks"],
+  "Water Level": ["IS", "remarks"],
 };
 
 export default function FieldBookTable({

@@ -3,7 +3,14 @@ import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 
-const BasicMenu = ({ label = "Menu", items = [], onSelect, sx = {} }) => {
+const BasicMenu = ({
+  label = "Menu",
+  items = [],
+  onSelect,
+  sx = {},
+  menuSx = {},
+  itemSx = {},
+}) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -48,8 +55,10 @@ const BasicMenu = ({ label = "Menu", items = [], onSelect, sx = {} }) => {
             elevation: 0,
             sx: {
               overflow: "visible",
-              filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+              filter: "drop-shadow(0px 14px 28px rgba(15, 23, 42, 0.14))",
               mt: 1.5,
+              borderRadius: "14px",
+              border: "1px solid rgba(226, 232, 240, 0.9)",
               "& .MuiAvatar-root": {
                 width: 32,
                 height: 32,
@@ -68,6 +77,7 @@ const BasicMenu = ({ label = "Menu", items = [], onSelect, sx = {} }) => {
                 transform: "translateY(-50%) rotate(45deg)",
                 zIndex: 0,
               },
+              ...menuSx,
             },
           },
         }}
@@ -78,7 +88,19 @@ const BasicMenu = ({ label = "Menu", items = [], onSelect, sx = {} }) => {
           <MenuItem
             key={index}
             onClick={() => handleClose(item)}
-            sx={{ fontSize: 12, minHeight: "auto", py: 1, px: 2 }}
+            sx={{
+              fontSize: 12,
+              minHeight: "auto",
+              py: 1,
+              px: 2,
+              fontWeight: 700,
+              color: "#334155",
+              "&:hover": {
+                bgcolor: "rgba(99, 102, 241, 0.08)",
+                color: "#4f46e5",
+              },
+              ...itemSx,
+            }}
           >
             {item.label || item}
           </MenuItem>

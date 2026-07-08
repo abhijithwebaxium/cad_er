@@ -640,7 +640,7 @@ const createSurveyRow = async (req, res, next) => {
     if (!survey || survey.deleted)
       throw createHttpError(404, "Survey not found or has been deleted");
 
-    if (type === "Chainage" || type === "Water Level") {
+    if (type === "Chainage") {
       const isChainageExist = await SurveyRow.findOne({
         purposeId: id,
         chainage: chainage?.trim(),
@@ -657,7 +657,7 @@ const createSurveyRow = async (req, res, next) => {
     // 🔹 Validate type and required fields (same as before)
     const types = {
       Chainage: ["chainage", "roadWidth", "spacing", "intermediateOffsets"],
-      "Water Level": ["chainage", "roadWidth", "spacing", "intermediateOffsets"],
+      "Water Level": ["intermediateSight"],
       CP: ["foreSight", "backSight"],
       TBM: ["intermediateSight"],
     };
@@ -679,10 +679,10 @@ const createSurveyRow = async (req, res, next) => {
       (p) => p.type === "Initial Level",
     );
 
-    if (isProposal) {
+    if (isProposal && type === "Chainage") {
       const filteredInitialSurvey =
         initialSurvey?.rows?.filter(
-          (entry) => entry.type === "Chainage" || entry.type === "Water Level",
+          (entry) => entry.type === "Chainage",
         ) || [];
 
       const totalReadings = filteredInitialSurvey.length;
@@ -703,39 +703,32 @@ const createSurveyRow = async (req, res, next) => {
     const sortedOffsets = (intermediateOffsets || []).sort(
       (a, b) => Number(a.offset) - Number(b.offset),
     );
-    const soundingSavedAt =
-      basis === "Soundings"
-        ? new Date().toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-          })
-        : null;
+    const waterLevelSavedAt = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+    });
 
     const newReading = {
       type,
       purposeId: purpose._id,
       createdBy: userId,
-      chainage:
-        type === "Chainage" || type === "Water Level" ? chainage : undefined,
-      spacing:
-        type === "Chainage" || type === "Water Level" ? spacing : undefined,
-      roadWidth: roadWidth ? Number(roadWidth).toFixed(3) : undefined,
+      chainage: type === "Chainage" ? chainage : undefined,
+      spacing: type === "Chainage" ? spacing : undefined,
+      roadWidth:
+        type === "Chainage" && roadWidth
+          ? Number(roadWidth).toFixed(3)
+          : undefined,
       basis: type === "Chainage" ? basis : undefined,
 
       backSight: backSight ? Number(backSight).toFixed(3) : undefined,
       foreSight: foreSight ? Number(foreSight).toFixed(3) : undefined,
 
-      // For Chainage/WL rows: store as intermediateOffsets array of objects
-      ...(type === "Chainage" || type === "Water Level"
+      // For Chainage rows: store as intermediateOffsets array of objects
+      ...(type === "Chainage"
         ? {
             intermediateOffsets: sortedOffsets.map((entry) => ({
               is: isProposal ? "" : Number(entry.is || 0).toFixed(3),
               offset: Number(entry.offset || 0).toFixed(3),
-              remark:
-                soundingSavedAt
-                  ? entry.remark
-                    ? `${entry.remark} - ${soundingSavedAt}`
-                    : soundingSavedAt
-                  : entry.remark || "",
+              remark: entry.remark || "",
               mode: entry.mode || "S",
             })),
             reducedLevels: isProposal
@@ -744,12 +737,23 @@ const createSurveyRow = async (req, res, next) => {
           }
         : {}),
 
-      // TBM uses scalar IS array
+      // TBM and Water Level use scalar IS arrays
       intermediateSight:
-        type === "TBM" && intermediateSight ? [intermediateSight] : undefined,
+        (type === "TBM" || type === "Water Level") && intermediateSight
+          ? [Number(intermediateSight).toFixed(3)]
+          : undefined,
 
-      // Non-Chainage rows use scalar remark
-      ...(type !== "Chainage" && type !== "Water Level" ? { remark } : {}),
+      // Non-Chainage rows use scalar remark. Water Level stores the entry time.
+      ...(type !== "Chainage"
+        ? {
+            remark:
+              type === "Water Level"
+                ? remark?.trim()
+                  ? `${remark.trim()} - ${waterLevelSavedAt}`
+                  : waterLevelSavedAt
+                : remark,
+          }
+        : {}),
 
       observation: observation || "",
     };
@@ -1404,17 +1408,25 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.remark = remark;
     }
 
-    if (type === "TBM") {
+    if (type === "TBM" || type === "Water Level") {
       const prevIS = Number(isRowExist.intermediateSight?.[0] ?? 0);
       const prevRL = Number(isRowExist.reducedLevels?.[0] ?? 0);
       const newIS = Number(intermediateSight);
 
       const diff = prevIS - newIS;
       const newRL = prevRL + diff;
+      const waterLevelSavedAt = new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+      });
 
-      isRowExist.reducedLevels[0] = newRL.toFixed(3);
-      isRowExist.intermediateSight[0] = newIS.toFixed(3);
-      isRowExist.remark = remark;
+      isRowExist.reducedLevels = [newRL.toFixed(3)];
+      isRowExist.intermediateSight = [newIS.toFixed(3)];
+      isRowExist.remark =
+        type === "Water Level"
+          ? remark?.trim()
+            ? `${remark.trim()} - ${waterLevelSavedAt}`
+            : waterLevelSavedAt
+          : remark;
     }
 
     if (type === "CP") {
@@ -1436,7 +1448,7 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.remark = remark;
     }
 
-    if (type === "Chainage" || type === "Water Level") {
+    if (type === "Chainage") {
       const isProposal = isPurposeExist.phase === "Proposal";
       const existingHI = Number(isRowExist.heightOfInstrument || 0);
 
@@ -1463,7 +1475,7 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.reducedLevels = isProposal
         ? (req.body.reducedLevels || []).map((n) => Number(n).toFixed(3))
         : sortedOffsets.map((entry) => {
-            if (type === "Chainage" && entry.mode === "S" && lastWaterLevelRL !== null) {
+            if (type === "Chainage" && lastWaterLevelRL !== null) {
               return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
             } else {
               return (existingHI - Number(entry.is || 0)).toFixed(3);
@@ -2406,6 +2418,52 @@ const editSurveyPurpose = async (req, res, next) => {
 
     let hi = 0;
     let rl = Number(startRl);
+    let lastWaterLevelRL = null;
+
+    for (let i = 0; i < changedIndex; i++) {
+      const row = rows[i];
+
+      switch (row.type) {
+        case "Instrument setup":
+          rl = Number(row.reducedLevels?.[0] ?? startRl);
+          hi = rl + Number(row.backSight || 0);
+          break;
+
+        case "Water Level": {
+          const waterLevelRl = (row.intermediateSight || []).map((is) =>
+            (hi - Number(is || 0)).toFixed(3),
+          );
+          if (waterLevelRl.length) {
+            rl = Number(waterLevelRl.at(-1));
+            lastWaterLevelRL = rl;
+          }
+          break;
+        }
+
+        case "TBM": {
+          const tbmRl = (row.intermediateSight || []).map((is) =>
+            (hi - Number(is || 0)).toFixed(3),
+          );
+          if (tbmRl.length) rl = Number(tbmRl.at(-1));
+          break;
+        }
+
+        case "Chainage": {
+          const chainageRl = (row.intermediateOffsets || []).map((entry) =>
+            lastWaterLevelRL !== null
+              ? (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3)
+              : (hi - Number(entry.is || 0)).toFixed(3),
+          );
+          if (chainageRl.length) rl = Number(chainageRl.at(-1));
+          break;
+        }
+
+        case "CP":
+          rl = hi - Number(row.foreSight || 0);
+          hi = rl + Number(row.backSight || 0);
+          break;
+      }
+    }
 
     // 6. Recalculate all rows beginning from changedIndex
     for (let i = changedIndex; i < rows.length; i++) {
@@ -2420,17 +2478,24 @@ const editSurveyPurpose = async (req, res, next) => {
           break;
 
         case "Chainage":
-        case "Water Level":
           // Recalculate top-level reducedLevels array
-          row.reducedLevels = (row.intermediateOffsets || []).map((entry) =>
-            (hi - Number(entry.is || 0)).toFixed(3)
-          );
+          row.reducedLevels = (row.intermediateOffsets || []).map((entry) => {
+            if (lastWaterLevelRL !== null) {
+              return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
+            }
+
+            return (hi - Number(entry.is || 0)).toFixed(3);
+          });
           break;
 
         case "TBM":
+        case "Water Level":
           row.reducedLevels = (row.intermediateSight || []).map((is) =>
             (hi - Number(is)).toFixed(3),
           );
+          if (row.type === "Water Level" && row.reducedLevels.length) {
+            lastWaterLevelRL = Number(row.reducedLevels.at(-1));
+          }
           break;
 
         case "CP":

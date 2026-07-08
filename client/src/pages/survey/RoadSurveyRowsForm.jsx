@@ -167,7 +167,7 @@ const initialFormValues = {
 
 const values = {
   Chainage: ["chainage", "basis", "roadWidth", "spacing", "intermediateOffsets"],
-  "Water Level": ["chainage", "roadWidth", "spacing", "intermediateOffsets"],
+  "Water Level": ["intermediateSight", "remark"],
   CP: ["foreSight", "backSight", "remark"],
   TBM: ["intermediateSight", "remark"],
 };
@@ -225,7 +225,7 @@ const RoadSurveyRowsForm = () => {
     type: Yup.string().required("Type is required"),
 
     chainage: Yup.string().when("type", {
-      is: (val) => val === "Chainage" || val === "Water Level",
+      is: "Chainage",
       then: (schema) =>
           schema
             .required("Chainage is required")
@@ -247,7 +247,7 @@ const RoadSurveyRowsForm = () => {
         originalValue === "" ? null : value,
       )
       .when("type", {
-        is: (val) => val === "Chainage" || val === "Water Level",
+        is: "Chainage",
         then: (schema) =>
           schema
             .typeError(
@@ -268,7 +268,7 @@ const RoadSurveyRowsForm = () => {
         originalValue === "" ? null : value,
       )
       .when("type", {
-        is: (val) => val === "Chainage" || val === "Water Level",
+        is: "Chainage",
         then: (schema) =>
           schema
             .typeError("Spacing is required")
@@ -308,7 +308,7 @@ const RoadSurveyRowsForm = () => {
         }),
       )
       .when("type", {
-        is: (val) => val === "Chainage" || val === "Water Level",
+        is: "Chainage",
         then: (schema) =>
           schema
             .min(1, "At least one row is required")
@@ -330,7 +330,7 @@ const RoadSurveyRowsForm = () => {
     intermediateSight: Yup.number()
       .transform((v, o) => (o === "" ? null : v))
       .when("type", {
-        is: "TBM",
+        is: (val) => ["TBM", "Water Level"].includes(val),
         then: (schema) =>
           schema
             .typeError("Intermediate sight is required")
@@ -352,7 +352,7 @@ const RoadSurveyRowsForm = () => {
     remark: Yup.string()
       .trim()
       .when("type", {
-        is: (val) => ["CP", "TBM"].includes(val),
+        is: (val) => ["CP", "TBM", "Water Level"].includes(val),
         then: (schema) => schema.required("Remark is required"),
         otherwise: (schema) => schema.nullable(),
       }),
@@ -590,7 +590,7 @@ const RoadSurveyRowsForm = () => {
         return values[rowType]?.includes(d.name);
       });
 
-    if (rowType === "TBM") {
+    if (rowType === "TBM" || rowType === "Water Level") {
       filteredInputData.unshift({
         label: "Intermediate sight*",
         name: "intermediateSight",
@@ -603,12 +603,15 @@ const RoadSurveyRowsForm = () => {
   };
 
   const handleChangeRowType = (type) => {
-    if (type === "CP" || type === "TBM") {
+    if (type === "CP" || type === "TBM" || type === "Water Level") {
       const length = purpose?.rows?.filter((r) => r.type === type)?.length || 0;
+      const remarkLabel = type === "Water Level" ? "WL" : type;
 
       setFormValues((prev) => ({
         ...prev,
-        remark: `${type} - ${length + (type === "TBM" && purpose.type === "Initial Level" ? 2 : 1)}`,
+        remark: `${remarkLabel} - ${
+          length + (type === "TBM" && purpose.type === "Initial Level" ? 2 : 1)
+        }`,
       }));
     }
 
@@ -781,7 +784,7 @@ const RoadSurveyRowsForm = () => {
 
           const filteredInitialSurvey =
             initialSurvey?.rows?.filter(
-              (r) => r.type === "Chainage" || r.type === "Water Level",
+              (r) => r.type === "Chainage",
             ) ?? [];
 
           const currentIndex = filteredInitialSurvey.findIndex(
@@ -805,7 +808,7 @@ const RoadSurveyRowsForm = () => {
           currentReading = nextReading;
         } else {
           currentReading = initialSurvey?.rows?.find(
-            (r) => r.type === "Chainage" || r.type === "Water Level",
+            (r) => r.type === "Chainage",
           );
         }
 
@@ -826,7 +829,6 @@ const RoadSurveyRowsForm = () => {
         const isFirstChainage = purpose?.rows?.find(
           (r) =>
             r.type === "Chainage" ||
-            r.type === "Water Level" ||
             r.type === "Break",
         );
 
@@ -840,16 +842,12 @@ const RoadSurveyRowsForm = () => {
             ?.filter(
               (r) =>
                 r.type === "Chainage" ||
-                r.type === "Water Level" ||
                 r.type === "Break",
             )
             ?.at(-1);
 
           const lastChainageDigit =
-            lastChainage.type === "Chainage" ||
-            lastChainage.type === "Water Level"
-              ? lastChainage.chainage
-              : lastChainage.to;
+            lastChainage.type === "Chainage" ? lastChainage.chainage : lastChainage.to;
 
           const chainageMultiple = purpose?.surveyId?.chainageMultiple;
           const lastDigit = Number(
@@ -885,7 +883,7 @@ const RoadSurveyRowsForm = () => {
   const handleSubmit = async () => {
     setBtnLoading(true);
     try {
-      if ((rowType === "Chainage" || rowType === "Water Level") && page === 0) {
+      if (rowType === "Chainage" && page === 0) {
         const pickItems = ["chainage", "roadWidth", "spacing"];
 
         const isProposal = purpose.phase === "Proposal";
@@ -940,7 +938,7 @@ const RoadSurveyRowsForm = () => {
 
       let payload = null;
 
-      if (rowType === "Chainage" || rowType === "Water Level") {
+      if (rowType === "Chainage") {
         const sortedOffsets = [...(formValues.intermediateOffsets || [])].sort(
           (a, b) => Number(a.offset) - Number(b.offset),
         );
@@ -986,7 +984,7 @@ const RoadSurveyRowsForm = () => {
 
         getNewChainage(purposeDoc);
 
-        if (rowType === "Chainage" || rowType === "Water Level") {
+        if (rowType === "Chainage") {
           setPage(0);
         }
 
@@ -1419,7 +1417,7 @@ const RoadSurveyRowsForm = () => {
 
       {/* Main Form Layout Container */}
       <Container maxWidth="md">
-        {(rowType === "Chainage" || rowType === "Water Level") &&
+        {rowType === "Chainage" &&
           page === 1 &&
           selectedCs &&
           selectedCs?.series && (
@@ -1827,7 +1825,7 @@ const RoadSurveyRowsForm = () => {
 
                 {/* ✅ Dynamic Intermediate + Offset Rows */}
                 {page === 1 &&
-                  (rowType === "Chainage" || rowType === "Water Level") && (
+                  rowType === "Chainage" && (
                     <Grid size={{ xs: 12 }}>
                       {/* <Stack direction={'row'} alignItems={'center'}>
                   <BasicCheckbox
@@ -2176,10 +2174,7 @@ const RoadSurveyRowsForm = () => {
                       </Stack>
                     </Grid>
                   )}
-                {((page === 0 &&
-                  rowType !== "Chainage" &&
-                  rowType !== "Water Level") ||
-                  page === 1) && (
+                {((page === 0 && rowType !== "Chainage") || page === 1) && (
                   <Grid width={"100%"}>
                     <ObservationNotes
                       value={formValues.observation}

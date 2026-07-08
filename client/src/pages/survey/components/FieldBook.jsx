@@ -19,8 +19,6 @@ import {
   Stack,
   Paper,
   TableContainer,
-  Grid,
-  Typography,
 } from "@mui/material";
 
 import FieldBookTable from "./FieldBookTable";
@@ -32,6 +30,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { TbReportSearch } from "react-icons/tb";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { BiSave } from "react-icons/bi";
+import SmallHeader from "../../../components/SmallHeader";
 
 const menuItems = [
   {
@@ -286,8 +285,7 @@ export default function FieldBook() {
           if (i !== rowIndex) return r;
 
           let updatedRow = { ...r };
-          const isChainage =
-            updatedRow.type === "Chainage" || updatedRow.type === "Water Level";
+          const isChainage = updatedRow.type === "Chainage";
 
           switch (fieldKey) {
             case "CH":
@@ -557,230 +555,147 @@ export default function FieldBook() {
     saveAs(blob, `Survey_${purpose?.type || "Report"}.xlsx`);
   }, [purpose, tableData, survey]);
 
-  const isInitialLevel = !purpose?.type || purpose?.type === "Initial Level";
-
   return (
-    <Box p={2}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        spacing={2}
-        mb={2}
-      >
-        <BasicButtons
-          variant="outlined"
-          sx={{ height: 40, width: 40, minWidth: 40 }}
-          onClick={() => navigate(-1)}
-          value={<MdArrowBackIosNew fontSize={16} />}
-        />
+    <Box sx={{ bgcolor: "#f8fafc", minHeight: "100vh", pb: 4 }}>
+      <SmallHeader />
 
-        <Stack direction="row" alignItems="center" spacing={1}>
+      <Box p={2}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={2}
+          mb={2}
+        >
           <BasicButtons
-            variant="outlined"
-            sx={{ py: 1, px: 2, fontSize: 12 }}
-            onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
-            value={
-              isEditing ? (
-                <Stack direction="row" gap={0.5} alignItems="center">
-                  <BiSave fontSize={16} />
-                  {saving ? "Saving..." : "Save"}
-                </Stack>
-              ) : (
-                <Stack direction="row" gap={0.5} alignItems="center">
-                  <MdOutlineModeEdit fontSize={16} />
-                  Edit
-                </Stack>
-              )
-            }
-            loading={saving}
-          />
-          <BasicButtons
-            variant="outlined"
-            sx={{ py: 1, px: 2, fontSize: 12, minWidth: "78px" }}
-            onClick={() =>
-              navigate(
-                `/survey/road-survey/continue-survey/${
-                  purpose?.surveyId?._id || purpose?.surveyId || survey?._id
-                }`,
-                { state: { fromPL: true } },
-              )
-            }
-            value={
-              <Stack direction="row" gap={0.5} alignItems="center">
-                <IoIosAddCircleOutline fontSize={16} />
-                PL
-              </Stack>
-            }
+            variant="text"
+            sx={{
+              height: 48,
+              width: 48,
+              minWidth: 48,
+              borderRadius: "14px",
+              color: "#334155",
+              bgcolor: "#f1f5f9",
+              border: "none",
+              boxShadow: "none",
+              "&:hover": {
+                bgcolor: "#e2e8f0",
+                color: "#1e293b",
+              },
+            }}
+            onClick={() => navigate(-1)}
+            value={<MdArrowBackIosNew fontSize={22} />}
           />
 
-          <Box textAlign={"end"}>
-            <BasicMenu
-              label={<BsThreeDots />}
-              items={menuItems}
-              onSelect={handleMenuSelect}
-              sx={{ minWidth: "fit-content", p: 1 }}
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <BasicButtons
+              variant="contained"
+              sx={{
+                py: 1,
+                px: 2,
+                fontSize: 12,
+                borderRadius: "14px",
+                bgcolor: "#6366f1",
+                color: "#ffffff",
+                boxShadow: "0 10px 24px -12px rgba(99, 102, 241, 0.8)",
+                "&:hover": { bgcolor: "#4f46e5" },
+              }}
+              onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+              value={
+                isEditing ? (
+                  <Stack direction="row" gap={0.5} alignItems="center">
+                    <BiSave fontSize={16} />
+                    {saving ? "Saving..." : "Save"}
+                  </Stack>
+                ) : (
+                  <Stack direction="row" gap={0.5} alignItems="center">
+                    <MdOutlineModeEdit fontSize={16} />
+                    Edit
+                  </Stack>
+                )
+              }
+              loading={saving}
             />
-          </Box>
+            <BasicButtons
+              variant="outlined"
+              sx={{
+                py: 1,
+                px: 2,
+                fontSize: 12,
+                height: 40,
+                minWidth: "76px",
+                borderRadius: "14px",
+                borderColor: "rgba(99, 102, 241, 0.28)",
+                color: "#4f46e5",
+                bgcolor: "#ffffff",
+                fontWeight: 800,
+                boxShadow: "0 8px 20px -14px rgba(79, 70, 229, 0.55)",
+                "&:hover": {
+                  bgcolor: "rgba(99, 102, 241, 0.08)",
+                  borderColor: "#6366f1",
+                },
+              }}
+              onClick={() =>
+                navigate(
+                  `/survey/road-survey/continue-survey/${
+                    purpose?.surveyId?._id || purpose?.surveyId || survey?._id
+                  }`,
+                  { state: { fromPL: true } },
+                )
+              }
+              value={
+                <Stack direction="row" gap={0.5} alignItems="center">
+                  <IoIosAddCircleOutline fontSize={16} />
+                  PL
+                </Stack>
+              }
+            />
+
+            <Box textAlign={"end"}>
+              <BasicMenu
+                label={<BsThreeDots />}
+                items={menuItems}
+                onSelect={handleMenuSelect}
+                sx={{
+                  minWidth: "40px",
+                  height: 40,
+                  p: 1,
+                  borderRadius: "14px",
+                  border: "1px solid rgba(99, 102, 241, 0.28)",
+                  color: "#4f46e5",
+                  bgcolor: "#ffffff",
+                  boxShadow: "0 8px 20px -14px rgba(79, 70, 229, 0.55)",
+                  "&:hover": { bgcolor: "rgba(99, 102, 241, 0.08)" },
+                }}
+                menuSx={{
+                  minWidth: 150,
+                  py: 0.75,
+                  "&::before": {
+                    bgcolor: "#ffffff",
+                    borderLeft: "1px solid rgba(226, 232, 240, 0.9)",
+                    borderTop: "1px solid rgba(226, 232, 240, 0.9)",
+                  },
+                }}
+                itemSx={{
+                  mx: 0.75,
+                  my: 0.25,
+                  borderRadius: "10px",
+                }}
+              />
+            </Box>
+          </Stack>
         </Stack>
-      </Stack>
 
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2, sm: 4 },
-          mt: 2,
-          border: "1px solid #e0e0e0",
-          borderRadius: "8px",
-          backgroundColor: "#ffffff",
-        }}
-      >
-        {/* Title and Metadata Header exactly like image */}
-        <Box sx={{ mb: 4, px: 1 }}>
-          {/* Main Title */}
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: "bold",
-              fontStyle: "italic",
-              textAlign: "center",
-              textTransform: "uppercase",
-              mb: 3,
-              color: "#000000",
-              fontSize: { xs: "13px", sm: "15px", md: "17px" },
-              lineHeight: 1.4,
-              fontFamily: "Calibri, Arial, sans-serif",
-            }}
-          >
-            {survey?.project || "SURVEY PROJECT REPORT"}
-          </Typography>
-
-          {/* Metadata Grid */}
-          <Grid
-            container
-            spacing={2}
-            sx={{
-              fontFamily: "Calibri, Arial, sans-serif",
-              fontSize: "14px",
-              color: "#333333",
-            }}
-          >
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Stack spacing={1}>
-                <Box display="flex">
-                  <Typography
-                    sx={{
-                      minWidth: "120px",
-                      color: "#666666",
-                      fontStyle: "italic",
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    Date of Survey
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: "#000000",
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    :{" "}
-                    {survey?.DateOfSurvey
-                      ? new Date(survey.DateOfSurvey).toLocaleDateString(
-                          "en-IN",
-                        )
-                      : "_____________________"}
-                  </Typography>
-                </Box>
-                <Box display="flex">
-                  <Typography
-                    sx={{
-                      minWidth: "120px",
-                      color: "#666666",
-                      fontStyle: "italic",
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    Designation
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: "#666666",
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    : {survey?.engineerSurveyor || "Assistant Engineer"}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-            <Grid
-              size={{ xs: 12, sm: 6 }}
-              sx={{ display: "flex", justifyContent: "end" }}
-            >
-              <Stack spacing={1} sx={{ width: "fit-content" }}>
-                <Box display="flex">
-                  <Typography
-                    sx={{
-                      minWidth: "80px",
-                      color: "#666666",
-                      fontStyle: "italic",
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    Zone
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: "#000000",
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    : "________________________"
-                  </Typography>
-                </Box>
-                <Box display="flex">
-                  <Typography
-                    sx={{
-                      minWidth: "80px",
-                      color: "#666666",
-                      fontStyle: "italic",
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    Stage
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "14px",
-                      fontFamily: "Calibri, Arial, sans-serif",
-                    }}
-                  >
-                    :{" "}
-                    <Box
-                      component="span"
-                      sx={{
-                        color: isInitialLevel ? "#10b981" : "#ef4444",
-                        fontWeight: "bold",
-                        fontFamily: "Calibri, Arial, sans-serif",
-                      }}
-                    >
-                      {purpose?.type ? `${purpose.type}s` : "Initial Levels"}
-                    </Box>
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-          </Grid>
-        </Box>
-
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 1.5, sm: 2 },
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            backgroundColor: "#ffffff",
+            overflowX: "auto",
+          }}
+        >
         <TableContainer sx={{ border: "none", boxShadow: "none" }}>
           <FieldBookTable
             tableData={tableData}
@@ -789,7 +704,8 @@ export default function FieldBook() {
             onRLChange={handleRLChange}
           />
         </TableContainer>
-      </Paper>
+        </Paper>
+      </Box>
     </Box>
   );
 }

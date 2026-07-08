@@ -293,31 +293,17 @@ export const getLastRlAndHi = (survey, newReading, purposeId) => {
         finalRLArray = [rl.toFixed(3)];
         break;
 
-      case "Water Level":
-        if (
-          Array.isArray(row.intermediateOffsets) &&
-          row.intermediateOffsets.length
-        ) {
-          const rls = row.intermediateOffsets.map((entry) =>
-            (Number(hi) - Number(entry.is || 0)).toFixed(3),
-          );
-          rl = Number(rls[rls.length - 1]);
-          lastWaterLevelRL = rl;
-          finalRLArray = rls;
-        }
-        break;
-
       case "Chainage":
         if (
           Array.isArray(row.intermediateOffsets) &&
           row.intermediateOffsets.length
         ) {
           const rls = row.intermediateOffsets.map((entry) => {
-            if (entry.mode === "S" && lastWaterLevelRL !== null) {
+            if (lastWaterLevelRL !== null) {
               return (Number(lastWaterLevelRL) - Number(entry.is || 0)).toFixed(3);
-            } else {
-              return (Number(hi) - Number(entry.is || 0)).toFixed(3);
             }
+
+            return (Number(hi) - Number(entry.is || 0)).toFixed(3);
           });
 
           rl = Number(rls[rls.length - 1]);
@@ -326,6 +312,7 @@ export const getLastRlAndHi = (survey, newReading, purposeId) => {
         break;
 
       case "TBM":
+      case "Water Level":
         if (
           Array.isArray(row.intermediateSight) &&
           row.intermediateSight.length
@@ -335,6 +322,7 @@ export const getLastRlAndHi = (survey, newReading, purposeId) => {
           );
 
           rl = Number(rls[rls.length - 1]);
+          if (row.type === "Water Level") lastWaterLevelRL = rl;
           finalRLArray = rls;
         }
         break;
