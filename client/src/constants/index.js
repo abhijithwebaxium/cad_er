@@ -299,7 +299,7 @@ export const getLastRlAndHi = (survey, newReading, purposeId) => {
           row.intermediateOffsets.length
         ) {
           const rls = row.intermediateOffsets.map((entry) => {
-            if (lastWaterLevelRL !== null) {
+            if (entry.mode === "S" && lastWaterLevelRL !== null) {
               return (Number(lastWaterLevelRL) - Number(entry.is || 0)).toFixed(3);
             }
 

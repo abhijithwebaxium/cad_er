@@ -1475,7 +1475,7 @@ const updateSurveyRow = async (req, res, next) => {
       isRowExist.reducedLevels = isProposal
         ? (req.body.reducedLevels || []).map((n) => Number(n).toFixed(3))
         : sortedOffsets.map((entry) => {
-            if (type === "Chainage" && lastWaterLevelRL !== null) {
+            if (type === "Chainage" && entry.mode === "S" && lastWaterLevelRL !== null) {
               return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
             } else {
               return (existingHI - Number(entry.is || 0)).toFixed(3);
@@ -2450,7 +2450,7 @@ const editSurveyPurpose = async (req, res, next) => {
 
         case "Chainage": {
           const chainageRl = (row.intermediateOffsets || []).map((entry) =>
-            lastWaterLevelRL !== null
+            entry.mode === "S" && lastWaterLevelRL !== null
               ? (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3)
               : (hi - Number(entry.is || 0)).toFixed(3),
           );
@@ -2480,7 +2480,7 @@ const editSurveyPurpose = async (req, res, next) => {
         case "Chainage":
           // Recalculate top-level reducedLevels array
           row.reducedLevels = (row.intermediateOffsets || []).map((entry) => {
-            if (lastWaterLevelRL !== null) {
+            if (entry.mode === "S" && lastWaterLevelRL !== null) {
               return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
             }
 

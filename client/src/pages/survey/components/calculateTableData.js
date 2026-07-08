@@ -77,7 +77,7 @@ export function calculateTableData(survey) {
           const offsetsList = row.intermediateOffsets || [];
           offsetsList.forEach((entry, i) => {
             const rlValue =
-              lastWaterLevelRL !== null
+              entry.mode === "S" && lastWaterLevelRL !== null
                 ? (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3)
                 : (context.hi - Number(entry.is || 0)).toFixed(3);
             rows.push({
