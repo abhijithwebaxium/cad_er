@@ -3170,6 +3170,7 @@ const updateReducedLevels = async (req, res, next) => {
 
       const newReducedLevels = [];
       const newIntermediateSight = [];
+      let hasReducedLevelChanges = false;
 
       for (let i = 0; i < s.data.length; i++) {
         const newValue = s.data[i]?.y;
@@ -3186,6 +3187,7 @@ const updateReducedLevels = async (req, res, next) => {
         }
 
         const delta = newRLNum - oldRLNum;
+        if (delta !== 0) hasReducedLevelChanges = true;
         newReducedLevels.push(newRLNum.toFixed(3));
 
         if (hasIS) {
@@ -3196,9 +3198,12 @@ const updateReducedLevels = async (req, res, next) => {
               "Intermediate sight must be a valid number",
             );
           }
-          newIntermediateSight.push((oldISNum + delta).toFixed(3));
+          // RL = HI - IS, so an RL increase requires an equal IS decrease.
+          newIntermediateSight.push((oldISNum - delta).toFixed(3));
         }
       }
+
+      if (!hasReducedLevelChanges) continue;
 
       if (isChainage) {
         // Update is inside each intermediateOffsets entry, but save reducedLevels top-level
@@ -3235,10 +3240,13 @@ const updateReducedLevels = async (req, res, next) => {
     }
 
     // 6️⃣ Execute bulk update
-    await SurveyRow.bulkWrite(bulkOps, { ordered: true });
+    if (bulkOps.length) {
+      await SurveyRow.bulkWrite(bulkOps, { ordered: true });
+    }
 
     res.status(200).json({
       success: true,
+      updated: bulkOps.length,
       message: "Reduced levels and intermediate sights updated successfully",
     });
   } catch (err) {
