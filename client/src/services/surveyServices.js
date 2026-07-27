@@ -1,4 +1,5 @@
 import { axiosInstance } from "../utils/config";
+import { calculateSurveyRows } from "../constants";
 
 const normalizeRow = (row) => {
   if (!row) return row;
@@ -44,10 +45,17 @@ const normalizeRow = (row) => {
   };
 };
 
-const normalizePurpose = (purpose) => {
+const normalizePurpose = (purpose, startingReducedLevel) => {
   if (!purpose) return purpose;
   if (Array.isArray(purpose.rows)) {
-    purpose.rows = purpose.rows.map(normalizeRow);
+    const normalizedRows = purpose.rows.map(normalizeRow);
+    purpose.rows = calculateSurveyRows(
+      normalizedRows,
+      purpose.startingReducedLevel ??
+        startingReducedLevel ??
+        purpose.surveyId?.reducedLevel,
+      purpose.phase,
+    );
   }
   return purpose;
 };
@@ -55,11 +63,20 @@ const normalizePurpose = (purpose) => {
 const normalizeSurvey = (survey) => {
   if (!survey) return survey;
   if (Array.isArray(survey.purposes)) {
-    survey.purposes = survey.purposes.map(normalizePurpose);
+    survey.purposes = survey.purposes.map((purpose) =>
+      normalizePurpose(purpose, survey.reducedLevel),
+    );
   }
   if (Array.isArray(survey.branches)) {
     survey.branches = survey.branches.map((b) => {
-      if (b.purposes) b.purposes = b.purposes.map(normalizePurpose);
+      if (b.purposes) {
+        b.purposes = b.purposes.map((purpose) =>
+          normalizePurpose(
+            purpose,
+            b.reducedLevel ?? b.surveyId?.reducedLevel,
+          ),
+        );
+      }
       return b;
     });
   }

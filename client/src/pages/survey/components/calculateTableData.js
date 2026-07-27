@@ -1,3 +1,5 @@
+import { calculateSurveyRows } from "../../../constants";
+
 export function calculateTableData(survey) {
   if (!survey) return [];
 
@@ -16,10 +18,9 @@ export function calculateTableData(survey) {
     surveyContext,
     isBranch = false,
     branchName = "",
+    phase = "Actual",
   ) => {
     if (!purposeRows) return;
-    let lastWaterLevelRL = null;
-
     if (isBranch) {
       rows.push({
         // non-editable header for branch
@@ -36,16 +37,20 @@ export function calculateTableData(survey) {
       });
     }
 
-    purposeRows.forEach((row, pIndex) => {
+    const calculatedRows = calculateSurveyRows(
+      purposeRows,
+      surveyContext?.reducedLevel ?? surveyContext?.surveyId?.reducedLevel,
+      phase,
+    );
+
+    calculatedRows.forEach((row, pIndex) => {
       if (!row) return;
 
       switch (row.type) {
         case "Instrument setup": {
           // If it's a branch, we might use a specific RL, otherwise continue from current
-          context.rl = isBranch
-            ? surveyContext?.reducedLevel || context.rl
-            : context.rl;
-          context.hi = Number(context.rl) + Number(row.backSight || 0);
+          context.rl = Number(row.reducedLevels?.[0] ?? context.rl);
+          context.hi = Number(row.heightOfInstrument || 0);
           rows.push(createRowObject(row, context, "BS", isBranch, pIndex));
           break;
         }
@@ -53,8 +58,7 @@ export function calculateTableData(survey) {
         case "Water Level": {
           const inter = row.intermediateSight || [];
           inter.forEach((isVal, i) => {
-            const rlValue = (context.hi - Number(isVal || 0)).toFixed(3);
-            lastWaterLevelRL = Number(rlValue);
+            const rlValue = row.reducedLevels?.[i] || "";
             rows.push({
               rowIndex: pIndex,
               rowType: row.type,
@@ -76,10 +80,7 @@ export function calculateTableData(survey) {
         case "Chainage": {
           const offsetsList = row.intermediateOffsets || [];
           offsetsList.forEach((entry, i) => {
-            const rlValue =
-              entry.mode === "S" && lastWaterLevelRL !== null
-                ? (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3)
-                : (context.hi - Number(entry.is || 0)).toFixed(3);
+            const rlValue = row.reducedLevels?.[i] || "";
             rows.push({
               rowIndex: pIndex,
               rowType: row.type,
@@ -101,7 +102,7 @@ export function calculateTableData(survey) {
         case "TBM": {
           const inter = row.intermediateSight || [];
           inter.forEach((isVal, i) => {
-            const rlValue = (context.hi - Number(isVal || 0)).toFixed(3);
+            const rlValue = row.reducedLevels?.[i] || "";
             rows.push({
               rowIndex: pIndex,
               rowType: row.type,
@@ -121,8 +122,8 @@ export function calculateTableData(survey) {
         }
 
         case "CP": {
-          context.rl = Number(context.hi) - Number(row.foreSight || 0);
-          context.hi = context.rl + Number(row.backSight || 0);
+          context.rl = Number(row.reducedLevels?.[0] ?? context.rl);
+          context.hi = Number(row.heightOfInstrument || context.hi);
           rows.push(createRowObject(row, context, "CP", isBranch, pIndex));
           break;
         }
@@ -152,9 +153,15 @@ export function calculateTableData(survey) {
             branchCounter++;
             processRows(
               branch.purposes[0].rows,
-              branch.surveyId,
+              {
+                ...branch.surveyId,
+                reducedLevel:
+                  branch.purposes[0].startingReducedLevel ??
+                  branch.surveyId?.reducedLevel,
+              },
               true,
               branch.name,
+              branch.purposes[0].phase,
             );
           }
         });
@@ -180,7 +187,17 @@ export function calculateTableData(survey) {
 
   // Start the process with the main survey
   const mainPurpose = survey.purposes?.[0];
-  processRows(mainPurpose?.rows, survey);
+  processRows(
+    mainPurpose?.rows,
+    {
+      ...survey,
+      reducedLevel:
+        mainPurpose?.startingReducedLevel ?? survey.reducedLevel,
+    },
+    false,
+    "",
+    mainPurpose?.phase,
+  );
 
   // Final closure row (Logic remains similar)
   if (mainPurpose) {

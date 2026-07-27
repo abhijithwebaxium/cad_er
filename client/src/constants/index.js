@@ -175,7 +175,7 @@ export const v2ChartOptions = {
   style: { width: "100%", height: "100px" },
 };
 
-export const getAllRlAndHi = (purpose) => {
+const getAllRlAndHiLegacy = (purpose) => {
   if (!purpose) return [];
 
   const survey = purpose.surveyId || {};
@@ -236,7 +236,7 @@ export const getAllRlAndHi = (purpose) => {
   });
 };
 
-export const getLastRlAndHi = (survey, newReading, purposeId) => {
+const getLastRlAndHiLegacy = (survey, newReading, purposeId) => {
   const purpose = survey.purposes?.find(
     (p) => String(p._id) === String(purposeId),
   );
@@ -342,6 +342,106 @@ export const getLastRlAndHi = (survey, newReading, purposeId) => {
   return {
     hi: hi ? Number(hi).toFixed(3) : null,
     rl: finalRLArray,
+  };
+};
+
+const fixedSurveyValue = (value) =>
+  Number.isFinite(Number(value)) ? Number(value).toFixed(3) : null;
+
+export const calculateSurveyRows = (
+  rows = [],
+  startingReducedLevel = 0,
+  phase = "Actual",
+) => {
+  if (phase === "Proposal") return rows.map((row) => ({ ...row }));
+
+  let hi = 0;
+  let rl = Number(startingReducedLevel || 0);
+  let lastWaterLevelRL = null;
+
+  return rows.map((row) => {
+    let reducedLevels = [];
+    let intermediateOffsets = row.intermediateOffsets || [];
+
+    switch (row.type) {
+      case "Instrument setup":
+        rl = Number(startingReducedLevel || 0);
+        hi = rl + Number(row.backSight || 0);
+        reducedLevels = [fixedSurveyValue(rl)];
+        break;
+
+      case "Chainage":
+        reducedLevels = (row.intermediateOffsets || []).map((entry) =>
+          fixedSurveyValue(
+            entry.mode === "S" && lastWaterLevelRL !== null
+              ? lastWaterLevelRL - Number(entry.is || 0)
+              : hi - Number(entry.is || 0),
+          ),
+        );
+        if (reducedLevels.length) rl = Number(reducedLevels.at(-1));
+        intermediateOffsets = intermediateOffsets.map((entry, index) => ({
+          ...entry,
+          rl: reducedLevels[index],
+        }));
+        break;
+
+      case "TBM":
+      case "Water Level":
+        reducedLevels = (row.intermediateSight || []).map((is) =>
+          fixedSurveyValue(hi - Number(is || 0)),
+        );
+        if (reducedLevels.length) {
+          rl = Number(reducedLevels.at(-1));
+          if (row.type === "Water Level") lastWaterLevelRL = rl;
+        }
+        break;
+
+      case "CP":
+        rl = hi - Number(row.foreSight || 0);
+        hi = rl + Number(row.backSight || 0);
+        reducedLevels = [fixedSurveyValue(rl)];
+        break;
+
+      default:
+        break;
+    }
+
+    return {
+      ...row,
+      intermediateOffsets,
+      reducedLevels: reducedLevels.filter((value) => value !== null),
+      heightOfInstrument: fixedSurveyValue(hi),
+    };
+  });
+};
+
+export const getAllRlAndHi = (purpose) =>
+  calculateSurveyRows(
+    purpose?.rows || [],
+    purpose?.startingReducedLevel ?? purpose?.surveyId?.reducedLevel,
+    purpose?.phase,
+  );
+
+export const getLastRlAndHi = (survey, newReading, purposeId) => {
+  const purpose = survey?.purposes?.find(
+    (entry) => String(entry._id) === String(purposeId),
+  );
+  if (!purpose) return { hi: null, rl: [] };
+
+  const existingRows =
+    purpose.status === "Paused"
+      ? (purpose.rows || []).slice(0, -1)
+      : purpose.rows || [];
+  const calculatedRows = calculateSurveyRows(
+    [...existingRows, newReading],
+    purpose.startingReducedLevel ?? survey.reducedLevel,
+    purpose.phase,
+  );
+  const calculatedReading = calculatedRows.at(-1);
+
+  return {
+    hi: calculatedReading?.heightOfInstrument || null,
+    rl: calculatedReading?.reducedLevels || [],
   };
 };
 

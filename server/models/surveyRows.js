@@ -40,10 +40,14 @@ const SurveyRowSchema = new Schema(
 
     // ── Scalar fields (Instrument setup / CP / TBM) ────────────────────────
     backSight: { type: String, trim: true },
+    // Derived at read time for Actual purposes; retained in the schema for
+    // Proposal and backward compatibility during migration.
     heightOfInstrument: { type: String, trim: true },
     foreSight: { type: String, trim: true },
 
     // Single-element RL array — used by Instrument setup / CP / TBM rows
+    // Persisted for Proposal purposes. Actual-purpose RLs are calculated from
+    // observations and are not stored.
     reducedLevels: [{ type: String, trim: true }],
 
     // Single-element IS array — used by TBM rows only

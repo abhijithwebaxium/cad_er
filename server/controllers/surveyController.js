@@ -3,7 +3,12 @@ import SurveyPurpose from "../models/surveyPurpose.js";
 import SurveyRow from "../models/surveyRows.js";
 import History from "../models/history.js";
 import Branch from "../models/branch.js";
-import { isValidObjectId, calculateReducedLevel } from "../helper/index.js";
+import {
+  isValidObjectId,
+  calculatePurposeRows,
+  calculateSurveyData,
+  calculateSurveyRows,
+} from "../helper/index.js";
 import createHttpError from "http-errors";
 import mongoose from "mongoose";
 
@@ -92,7 +97,7 @@ const getAllSurvey = async (req, res, next) => {
         surveys.length > 0
           ? `${surveys.length} survey${surveys.length > 1 ? "s" : ""} found`
           : "No surveys found",
-      surveys,
+      surveys: surveys.map(calculateSurveyData),
     });
   } catch (err) {
     next(err);
@@ -220,6 +225,7 @@ const createSurvey = async (req, res, next) => {
           createdBy: userId,
           type: purpose,
           isSurveyFinish: false,
+          startingReducedLevel: Number(reducedLevel).toFixed(3),
         },
       ],
       { session },
@@ -237,10 +243,6 @@ const createSurvey = async (req, res, next) => {
           type: "Instrument setup",
           backSight: Number(backSight).toFixed(3),
           remark: remark || "TBM - 1",
-          reducedLevels: [Number(reducedLevel).toFixed(3)],
-          heightOfInstrument: Number(
-            Number(reducedLevel) + Number(backSight),
-          ).toFixed(3),
         },
       ],
       { session },
@@ -444,6 +446,7 @@ const completeSurvey = async (req, res, next) => {
           createdBy: userId,
           type: purpose,
           isSurveyFinish: false,
+          startingReducedLevel: Number(reducedLevel).toFixed(3),
         },
       ],
       { session },
@@ -461,10 +464,6 @@ const completeSurvey = async (req, res, next) => {
           type: "Instrument setup",
           backSight: Number(backSight).toFixed(3),
           remark: remark || "TBM - 1",
-          reducedLevels: [Number(reducedLevel).toFixed(3)],
-          heightOfInstrument: Number(
-            Number(reducedLevel) + Number(backSight),
-          ).toFixed(3),
         },
       ],
       { session },
@@ -541,7 +540,7 @@ const getSurvey = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Survey retrieved successfully",
-      survey,
+      survey: calculateSurveyData(survey),
     });
   } catch (err) {
     next(err);
@@ -756,13 +755,6 @@ const createSurveyRow = async (req, res, next) => {
       observation: observation || "",
     };
 
-    if (!isProposal) {
-      const { hi, rl } = calculateReducedLevel(survey, newReading, purpose._id);
-
-      newReading.reducedLevels = rl;
-      newReading.heightOfInstrument = hi;
-    }
-
     let newRow = null;
 
     if (isSurveyPaused) {
@@ -780,8 +772,6 @@ const createSurveyRow = async (req, res, next) => {
         {
           backSight: backSight ? Number(backSight).toFixed(3) : undefined,
           foreSight: foreSight ? Number(foreSight).toFixed(3) : undefined,
-          reducedLevels: newReading.reducedLevels,
-          heightOfInstrument: newReading.heightOfInstrument,
           remarks,
         },
         { new: true, session },
@@ -814,15 +804,24 @@ const createSurveyRow = async (req, res, next) => {
     session.endSession();
 
     const plainPurpose = purpose.toObject();
+    const responseRows = isSurveyPaused
+      ? plainPurpose.rows.map((row) =>
+          String(row._id) === String(newRow._id) ? newRow : row,
+        )
+      : [...plainPurpose.rows, newRow];
+    const calculatedPurpose = calculatePurposeRows(
+      { ...plainPurpose, rows: responseRows },
+      survey.reducedLevel,
+    );
+    const calculatedRow = calculatedPurpose.rows.find(
+      (row) => String(row._id) === String(newRow._id),
+    );
 
     res.status(201).json({
       success: true,
       message: "Survey row added successfully",
-      row: newRow,
-      purpose: {
-        ...plainPurpose,
-        rows: [...plainPurpose.rows, newRow],
-      },
+      row: calculatedRow,
+      purpose: calculatedPurpose,
     });
   } catch (err) {
     await session.abortTransaction();
@@ -904,10 +903,16 @@ const getSurveyPurpose = async (req, res, next) => {
       });
     }
 
+    const calculatedPurpose = calculatePurposeRows(
+      purpose,
+      purpose.surveyId?.reducedLevel,
+    );
+    calculatedPurpose.surveyId = calculateSurveyData(purpose.surveyId);
+
     res.status(200).json({
       success: true,
       message: "Survey purpose retrieved successfully",
-      purpose,
+      purpose: calculatedPurpose,
     });
   } catch (err) {
     next(err);
@@ -959,6 +964,10 @@ const getFieldBook = async (req, res, next) => {
       rootBranch: purpose.surveyId,
     })
       .populate({
+        path: "surveyId",
+        match: { deleted: false },
+      })
+      .populate({
         path: "purposes",
         match: { deleted: false, type: purpose.type },
         populate: {
@@ -969,13 +978,15 @@ const getFieldBook = async (req, res, next) => {
       })
       .lean();
 
+    const calculatedSurvey = calculateSurveyData({
+      ...survey,
+      branches,
+    });
+
     res.status(200).json({
       success: true,
       message: "Survey purpose retrieved successfully",
-      survey: {
-        ...survey,
-        branches,
-      },
+      survey: calculatedSurvey,
     });
   } catch (err) {
     next(err);
@@ -1113,6 +1124,9 @@ const createSurveyPurpose = async (req, res, next) => {
           type,
           createdBy: userId,
           phase: proposal ? "Proposal" : "Actual",
+          ...(!proposal && {
+            startingReducedLevel: Number(reducedLevel).toFixed(3),
+          }),
           ...(proposal && {
             proposedLevel,
             // lSection,
@@ -1138,10 +1152,6 @@ const createSurveyPurpose = async (req, res, next) => {
             type: "Instrument setup",
             backSight: Number(backSight).toFixed(3),
             remark: "TBM - 1",
-            reducedLevels: [Number(reducedLevel).toFixed(3)],
-            heightOfInstrument: Number(
-              Number(reducedLevel) + Number(backSight),
-            ).toFixed(3),
           },
         ],
         { session },
@@ -1199,7 +1209,9 @@ const getAllSurveyPurpose = async (req, res, next) => {
       message: `${purposes.length} survey purpose${
         purposes.length > 1 ? "s" : ""
       } found`,
-      purposes,
+      purposes: purposes.map((purpose) =>
+        calculatePurposeRows(purpose, purpose.surveyId?.reducedLevel),
+      ),
     });
   } catch (err) {
     next(err);
@@ -1400,24 +1412,15 @@ const updateSurveyRow = async (req, res, next) => {
 
     if (type === "Instrument setup") {
       isRowExist.backSight = Number(backSight).toFixed(3);
-      isRowExist.heightOfInstrument = Number(
-        Number(isRowExist.reducedLevels[0]) + Number(backSight),
-      ).toFixed(3);
       isRowExist.remark = remark;
     }
 
     if (type === "TBM" || type === "Water Level") {
-      const prevIS = Number(isRowExist.intermediateSight?.[0] ?? 0);
-      const prevRL = Number(isRowExist.reducedLevels?.[0] ?? 0);
       const newIS = Number(intermediateSight);
-
-      const diff = prevIS - newIS;
-      const newRL = prevRL + diff;
       const waterLevelSavedAt = new Date().toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
       });
 
-      isRowExist.reducedLevels = [newRL.toFixed(3)];
       isRowExist.intermediateSight = [newIS.toFixed(3)];
       isRowExist.remark =
         type === "Water Level"
@@ -1428,19 +1431,9 @@ const updateSurveyRow = async (req, res, next) => {
     }
 
     if (type === "CP") {
-      const prevRL = Number(isRowExist.reducedLevels?.[0] ?? 0);
-      const prevFS = Number(isRowExist.foreSight ?? 0);
-
-      const prevRowHI = prevRL + prevFS;
-
       const newFS = Number(foreSight);
       const newBS = Number(backSight);
 
-      const newRL = prevRowHI - newFS;
-      const newHI = newRL + newBS;
-
-      isRowExist.reducedLevels[0] = newRL.toFixed(3);
-      isRowExist.heightOfInstrument = newHI.toFixed(3);
       isRowExist.backSight = newBS.toFixed(3);
       isRowExist.foreSight = newFS.toFixed(3);
       isRowExist.remark = remark;
@@ -1448,45 +1441,19 @@ const updateSurveyRow = async (req, res, next) => {
 
     if (type === "Chainage") {
       const isProposal = isPurposeExist.phase === "Proposal";
-      const existingHI = Number(isRowExist.heightOfInstrument || 0);
 
       const sortedOffsets = (intermediateOffsets || []).sort(
         (a, b) => Number(a.offset) - Number(b.offset),
       );
 
-      // Find the last Water Level row before this row
-      const currentRowIndex = isPurposeExist.rows.findIndex(
-        (r) => String(r._id) === String(isRowExist._id),
-      );
-      const rowsBeforeCurrent = isPurposeExist.rows.slice(0, currentRowIndex);
-      const lastWaterLevelRow = [...rowsBeforeCurrent]
-        .filter((r) => r.type === "Water Level")
-        .pop();
-      const lastWaterLevelRL = lastWaterLevelRow
-        ? Number(
-            lastWaterLevelRow.reducedLevels[
-              lastWaterLevelRow.reducedLevels.length - 1
-            ] || 0,
-          )
-        : null;
-
       isRowExist.chainage = chainage;
       isRowExist.basis = type === "Chainage" ? basis : undefined;
 
-      // Update top-level reducedLevels array
-      isRowExist.reducedLevels = isProposal
-        ? (req.body.reducedLevels || []).map((n) => Number(n).toFixed(3))
-        : sortedOffsets.map((entry) => {
-            if (
-              type === "Chainage" &&
-              entry.mode === "S" &&
-              lastWaterLevelRL !== null
-            ) {
-              return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
-            } else {
-              return (existingHI - Number(entry.is || 0)).toFixed(3);
-            }
-          });
+      if (isProposal) {
+        isRowExist.reducedLevels = (req.body.reducedLevels || []).map((n) =>
+          Number(n).toFixed(3),
+        );
+      }
 
       isRowExist.intermediateOffsets = sortedOffsets.map((entry) => ({
         is: isProposal ? "" : Number(entry.is || 0).toFixed(3),
@@ -1496,11 +1463,27 @@ const updateSurveyRow = async (req, res, next) => {
       }));
     }
 
+    if (isPurposeExist.phase === "Actual") {
+      isRowExist.reducedLevels = undefined;
+      isRowExist.heightOfInstrument = undefined;
+    }
+
     await isRowExist.save();
+
+    const purposeRows = await SurveyRow.find({
+      purposeId: isPurposeExist._id,
+      deleted: false,
+    }).sort({ createdAt: 1, _id: 1 });
+    const calculatedRow = calculateSurveyRows(
+      purposeRows,
+      isPurposeExist.startingReducedLevel ??
+        isPurposeExist.surveyId.reducedLevel,
+      isPurposeExist.phase,
+    ).find((row) => String(row._id) === String(isRowExist._id));
 
     return res.status(200).json({
       success: true,
-      row: isRowExist,
+      row: calculatedRow,
       message: "Row updated successfully",
     });
   } catch (err) {
@@ -1719,9 +1702,11 @@ const generateSurveyPurpose = async (req, res, next) => {
     const relation = basePurpose._id;
 
     // 🔹 Filter chainage rows from base purpose
-    const readingsToCreate = basePurpose.rows?.filter(
-      (r) => r.type === "Chainage",
-    );
+    const readingsToCreate = calculateSurveyRows(
+      basePurpose.rows || [],
+      basePurpose.startingReducedLevel ?? survey.reducedLevel,
+      basePurpose.phase,
+    ).filter((r) => r.type === "Chainage");
 
     if (!readingsToCreate?.length) {
       throw createHttpError(
@@ -2518,9 +2503,11 @@ const generateWaterWayProposalPurpose = async (req, res, next) => {
       throw createHttpError(404, `Survey purpose "${purpose}" not found.`);
     }
 
-    const readingsToCreate = basePurpose.rows?.filter(
-      (r) => r.type === "Chainage",
-    );
+    const readingsToCreate = calculateSurveyRows(
+      basePurpose.rows || [],
+      basePurpose.startingReducedLevel ?? survey.reducedLevel,
+      basePurpose.phase,
+    ).filter((r) => r.type === "Chainage");
 
     if (!readingsToCreate?.length) {
       throw createHttpError(
@@ -2897,25 +2884,6 @@ const editSurveyPurpose = async (req, res, next) => {
       .sort({ createdAt: 1 })
       .session(session);
 
-    const persistedRowFields = [
-      "chainage",
-      "reducedLevels",
-      "heightOfInstrument",
-      "backSight",
-      "foreSight",
-      "intermediateSight",
-      "intermediateOffsets",
-      "remark",
-    ];
-    const getPersistedRowState = (row) =>
-      persistedRowFields.reduce((state, field) => {
-        state[field] = row[field];
-        return state;
-      }, {});
-    const originalRowStates = rows.map((row) =>
-      JSON.stringify(getPersistedRowState(row)),
-    );
-
     // validate payload
     if (!Array.isArray(updatedRows) || !updatedRows.length)
       throw new Error("No updated rows provided");
@@ -2928,146 +2896,64 @@ const editSurveyPurpose = async (req, res, next) => {
     if (invalidIndex !== undefined)
       throw new Error("One or more updated row indices are invalid");
 
-    // apply all user edits in-memory to their respective rows
-    updatedRows.forEach((u) => {
-      const idx = Number(u.index);
-      const changes = u.data || {};
-      Object.assign(rows[idx], changes);
-    });
+    const purpose = survey.purposes.find(
+      (entry) => String(entry._id) === String(purposeId),
+    );
+    if (!purpose || purpose.deleted) throw new Error("Purpose not found");
 
-    // determine recalculation starting point (earliest changed index)
-    const changedIndex = Math.min(...changedIndices);
+    const editableFields = [
+      "chainage",
+      "backSight",
+      "foreSight",
+      "intermediateSight",
+      "intermediateOffsets",
+      "remark",
+    ];
+    const ops = updatedRows.map(({ index, data = {} }) => {
+      const row = rows[Number(index)];
+      const values = Object.fromEntries(
+        editableFields
+          .filter((field) => data[field] !== undefined)
+          .map((field) => [field, data[field]]),
+      );
 
-    // 4. get starting RL from (possibly updated) rows
-    const startRl = rows.find((r) => r.type === "Instrument setup")
-      ?.reducedLevels?.[0];
-
-    if (!startRl) throw Error("Something went wrong!");
-
-    // 5. sync survey reducedLevel if mismatched
-    if (Number(survey.reducedLevel) !== Number(startRl)) {
-      if (survey.purposes.length > 1)
-        throw new Error(
-          "Cannot update the survey reduced level because this survey has multiple purposes. " +
-            "Reduced level can only be updated when the survey has a single purpose.",
-        );
-
-      survey.reducedLevel = Number(startRl);
-      await survey.save({ session });
-    }
-
-    let hi = 0;
-    let rl = Number(startRl);
-    let lastWaterLevelRL = null;
-
-    for (let i = 0; i < changedIndex; i++) {
-      const row = rows[i];
-
-      switch (row.type) {
-        case "Instrument setup":
-          rl = Number(row.reducedLevels?.[0] ?? startRl);
-          hi = rl + Number(row.backSight || 0);
-          break;
-
-        case "Water Level": {
-          const waterLevelRl = (row.intermediateSight || []).map((is) =>
-            (hi - Number(is || 0)).toFixed(3),
-          );
-          if (waterLevelRl.length) {
-            rl = Number(waterLevelRl.at(-1));
-            lastWaterLevelRL = rl;
-          }
-          break;
-        }
-
-        case "TBM": {
-          const tbmRl = (row.intermediateSight || []).map((is) =>
-            (hi - Number(is || 0)).toFixed(3),
-          );
-          if (tbmRl.length) rl = Number(tbmRl.at(-1));
-          break;
-        }
-
-        case "Chainage": {
-          const chainageRl = (row.intermediateOffsets || []).map((entry) =>
-            entry.mode === "S" && lastWaterLevelRL !== null
-              ? (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3)
-              : (hi - Number(entry.is || 0)).toFixed(3),
-          );
-          if (chainageRl.length) rl = Number(chainageRl.at(-1));
-          break;
-        }
-
-        case "CP":
-          rl = hi - Number(row.foreSight || 0);
-          hi = rl + Number(row.backSight || 0);
-          break;
-      }
-    }
-
-    // 6. Recalculate all rows beginning from changedIndex
-    for (let i = changedIndex; i < rows.length; i++) {
-      const row = rows[i];
-
-      switch (row.type) {
-        case "Instrument setup":
-          rl = Number(startRl);
-          hi = rl + Number(row.backSight);
-          row.reducedLevels = [rl.toFixed(3)];
-          row.heightOfInstrument = hi.toFixed(3);
-          break;
-
-        case "Chainage":
-          // Recalculate top-level reducedLevels array
-          row.reducedLevels = (row.intermediateOffsets || []).map((entry) => {
-            if (entry.mode === "S" && lastWaterLevelRL !== null) {
-              return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
-            }
-
-            return (hi - Number(entry.is || 0)).toFixed(3);
-          });
-          break;
-
-        case "TBM":
-        case "Water Level":
-          row.reducedLevels = (row.intermediateSight || []).map((is) =>
-            (hi - Number(is)).toFixed(3),
-          );
-          if (row.type === "Water Level" && row.reducedLevels.length) {
-            lastWaterLevelRL = Number(row.reducedLevels.at(-1));
-          }
-          break;
-
-        case "CP":
-          rl = hi - Number(row.foreSight);
-          hi = rl + Number(row.backSight);
-          row.reducedLevels = [rl.toFixed(3)];
-          row.heightOfInstrument = hi.toFixed(3);
-          break;
-      }
-    }
-
-    // 7. Recalculation still covers the dependency range, but only rows whose
-    // persisted state actually changed are written back to MongoDB.
-    const ops = rows.slice(changedIndex).flatMap((row, offset) => {
-      const rowIndex = changedIndex + offset;
-      const persistedState = getPersistedRowState(row);
-
-      if (JSON.stringify(persistedState) === originalRowStates[rowIndex]) {
-        return [];
+      if (purpose.phase === "Proposal" && data.reducedLevels !== undefined) {
+        values.reducedLevels = data.reducedLevels;
       }
 
-      return [
-        {
-          updateOne: {
-            filter: { _id: row._id },
-            update: {
-              $set: persistedState,
-            },
-          },
+      return {
+        updateOne: {
+          filter: { _id: row._id, purposeId, deleted: false },
+          update:
+            purpose.phase === "Actual"
+              ? {
+                  $set: values,
+                  $unset: { reducedLevels: "", heightOfInstrument: "" },
+                }
+              : { $set: values },
         },
-      ];
+      };
     });
+
+    const updatedInstrument = updatedRows.find(
+      ({ index }) => rows[Number(index)]?.type === "Instrument setup",
+    );
+    const requestedStartRl = updatedInstrument?.data?.reducedLevels?.[0];
+
+    if (
+      purpose.phase === "Actual" &&
+      requestedStartRl !== undefined &&
+      Number(purpose.startingReducedLevel ?? survey.reducedLevel) !==
+        Number(requestedStartRl)
+    ) {
+      purpose.startingReducedLevel = Number(requestedStartRl).toFixed(3);
+      await purpose.save({ session });
+
+      if (purpose.type === "Initial Level") {
+        survey.reducedLevel = Number(requestedStartRl).toFixed(3);
+        await survey.save({ session });
+      }
+    }
 
     if (ops.length) {
       await SurveyRow.bulkWrite(ops, { session });
@@ -3079,7 +2965,7 @@ const editSurveyPurpose = async (req, res, next) => {
     return res.json({
       success: true,
       updated: ops.length,
-      message: "Rows recalculated and updated",
+      message: "Survey observations updated",
     });
   } catch (err) {
     await session.abortTransaction();
@@ -3116,27 +3002,42 @@ const updateReducedLevels = async (req, res, next) => {
     const purposeIds = payload.series.map((s) => s.purpose);
 
     // 4️⃣ Validate purposes & rows existence
-    const [purposesCount, rows] = await Promise.all([
-      SurveyPurpose.countDocuments({
+    const [purposes, purposeRows] = await Promise.all([
+      SurveyPurpose.find({
         _id: { $in: purposeIds },
         deleted: false,
-      }),
+      }).lean(),
       SurveyRow.find({
-        _id: { $in: rowIds },
+        purposeId: { $in: purposeIds },
         deleted: false,
-      }).select("_id reducedLevels intermediateSight intermediateOffsets"),
+      })
+        .sort({ createdAt: 1, _id: 1 })
+        .lean(),
     ]);
 
-    if (purposesCount !== new Set(purposeIds).size) {
+    if (purposes.length !== new Set(purposeIds.map(String)).size) {
       throw createHttpError(404, "One or more purposes not found");
     }
 
-    if (rows.length !== rowIds.length) {
-      throw createHttpError(404, "One or more survey readings not found");
+    const purposeMap = new Map(
+      purposes.map((purpose) => [String(purpose._id), purpose]),
+    );
+    const rowMap = new Map();
+    for (const purpose of purposes) {
+      const rows = purposeRows.filter(
+        (row) => String(row.purposeId) === String(purpose._id),
+      );
+      const calculatedRows = calculateSurveyRows(
+        rows,
+        purpose.startingReducedLevel ?? survey.reducedLevel,
+        purpose.phase,
+      );
+      calculatedRows.forEach((row) => rowMap.set(String(row._id), row));
     }
 
-    // Create lookup map
-    const rowMap = new Map(rows.map((r) => [String(r._id), r]));
+    if (rowIds.some((rowId) => !rowMap.has(String(rowId)))) {
+      throw createHttpError(404, "One or more survey readings not found");
+    }
 
     // 5️⃣ Prepare bulk updates with delta logic
     const bulkOps = [];
@@ -3147,9 +3048,11 @@ const updateReducedLevels = async (req, res, next) => {
       }
 
       const existingRow = rowMap.get(String(s._id));
+      const purpose = purposeMap.get(String(s.purpose));
       if (!existingRow) {
         throw createHttpError(404, "Survey row not found");
       }
+      if (!purpose) throw createHttpError(404, "Survey purpose not found");
 
       const isChainage = (existingRow.intermediateOffsets || []).length > 0;
 
@@ -3158,7 +3061,7 @@ const updateReducedLevels = async (req, res, next) => {
         ? (existingRow.intermediateOffsets || []).map((e) => e.is)
         : existingRow.intermediateSight || [];
 
-      const hasIS = oldIS.length > 0;
+      const hasIS = purpose.phase === "Actual" && oldIS.length > 0;
 
       if (oldRL.length !== s.data.length) {
         throw createHttpError(400, "Reduced levels length mismatch");
@@ -3206,34 +3109,47 @@ const updateReducedLevels = async (req, res, next) => {
       if (!hasReducedLevelChanges) continue;
 
       if (isChainage) {
-        // Update is inside each intermediateOffsets entry, but save reducedLevels top-level
         const updatedOffsets = (existingRow.intermediateOffsets || []).map(
           (entry, i) => ({
-            ...(entry.toObject ? entry.toObject() : entry),
+            ...entry,
             ...(hasIS ? { is: newIntermediateSight[i] ?? entry.is } : {}),
           }),
         );
         bulkOps.push({
           updateOne: {
             filter: { _id: s._id, deleted: false },
-            update: {
-              $set: {
-                reducedLevels: newReducedLevels,
-                intermediateOffsets: updatedOffsets,
-              },
-            },
+            update:
+              purpose.phase === "Actual"
+                ? {
+                    $set: { intermediateOffsets: updatedOffsets },
+                    $unset: { reducedLevels: "", heightOfInstrument: "" },
+                  }
+                : {
+                    $set: {
+                      reducedLevels: newReducedLevels,
+                      intermediateOffsets: updatedOffsets,
+                    },
+                  },
           },
         });
       } else {
         bulkOps.push({
           updateOne: {
             filter: { _id: s._id, deleted: false },
-            update: {
-              $set: {
-                reducedLevels: newReducedLevels,
-                ...(hasIS && { intermediateSight: newIntermediateSight }),
-              },
-            },
+            update:
+              purpose.phase === "Actual"
+                ? {
+                    $set: {
+                      ...(hasIS && { intermediateSight: newIntermediateSight }),
+                    },
+                    $unset: { reducedLevels: "", heightOfInstrument: "" },
+                  }
+                : {
+                    $set: {
+                      reducedLevels: newReducedLevels,
+                      ...(hasIS && { intermediateSight: newIntermediateSight }),
+                    },
+                  },
           },
         });
       }
@@ -3293,11 +3209,19 @@ const createBranch = async (req, res, next) => {
       deleted: false,
     }).sort({ createdAt: -1, _id: -1 });
 
-    const lastCpReading = await SurveyRow.findOne({
-      purposeId,
-      type: "CP",
-      deleted: false,
-    }).sort({ createdAt: -1, _id: -1 });
+    const [parentPurpose, parentRows] = await Promise.all([
+      SurveyPurpose.findById(purposeId).lean(),
+      SurveyRow.find({ purposeId, deleted: false })
+        .sort({ createdAt: 1, _id: 1 })
+        .lean(),
+    ]);
+    const lastCpReading = calculateSurveyRows(
+      parentRows,
+      parentPurpose?.startingReducedLevel ?? parentSurvey.reducedLevel,
+      parentPurpose?.phase,
+    )
+      .filter((row) => row.type === "CP")
+      .at(-1);
 
     let reducedLevel = 0;
 
@@ -3397,6 +3321,7 @@ const createBranch = async (req, res, next) => {
           type: "Initial Level",
           isSurveyFinish: false,
           status: foreSight ? "Paused" : "Active",
+          startingReducedLevel: Number(reducedLevel).toFixed(3),
         },
       ],
       { session },
@@ -3564,6 +3489,9 @@ const enterBranch = async (req, res, next) => {
           type: purpose.type,
           createdBy: userId,
           phase: isProposal ? "Proposal" : "Actual",
+          ...(!isProposal && {
+            startingReducedLevel: Number(reducedLevel).toFixed(3),
+          }),
           ...(isProposal && {
             proposedLevel,
             csCamper: crossSectionCamper,
@@ -3585,10 +3513,6 @@ const enterBranch = async (req, res, next) => {
             type: "Instrument setup",
             backSight: Number(backSight).toFixed(3),
             remark: "TBM - 1",
-            reducedLevels: [Number(reducedLevel).toFixed(3)],
-            heightOfInstrument: Number(
-              Number(reducedLevel) + Number(backSight),
-            ).toFixed(3),
           },
         ],
         { session },

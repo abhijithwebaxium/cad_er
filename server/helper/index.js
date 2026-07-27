@@ -7,111 +7,154 @@ export const isValidObjectId = (id) => {
   return mongoose.Types.ObjectId.isValid(id);
 };
 
-export const calculateReducedLevel = (survey, newReading, purposeId) => {
-  const purpose = survey.purposes?.find(
-    (p) => String(p._id) === String(purposeId),
-  );
+const asPlainObject = (value) =>
+  value?.toObject ? value.toObject({ virtuals: true }) : value;
 
-  if (!purpose) return { hi: null, rl: [] };
+const fixed = (value) =>
+  Number.isFinite(Number(value)) ? Number(value).toFixed(3) : null;
 
-  if (purpose.status === "Paused") {
-    purpose.rows?.pop();
+/**
+ * Calculates the derived levelling state for a purpose in row order.
+ * Actual-purpose RL/HI values are always derived from observations. Proposal
+ * RL values are design inputs and are therefore returned unchanged.
+ */
+export const calculateSurveyRows = (
+  rows = [],
+  startingReducedLevel = 0,
+  phase = "Actual",
+) => {
+  if (phase === "Proposal") {
+    return rows.map((row) => asPlainObject(row));
   }
 
-  // STEP 1: Find last CP
-  const lastCPIndex =
-    [...purpose.rows]
-      .map((r, i) => (r.type === "CP" ? i : -1))
-      .filter((i) => i >= 0)
-      .pop() ?? -1;
+  let hi = 0;
+  let rl = Number(startingReducedLevel || 0);
+  let lastWaterLevelRL = null;
 
-  // STEP 2: Start slice
-  const startIndex = lastCPIndex === -1 ? 0 : lastCPIndex;
-  const rowsToProcess = [...purpose.rows.slice(startIndex + 1), newReading]; // +1 is used to remove the CP itself
+  return rows.map((sourceRow) => {
+    const row = asPlainObject(sourceRow);
+    let reducedLevels = [];
+    let intermediateOffsets = row.intermediateOffsets || [];
 
-  let hi = null;
-  let rl = null;
-  let finalRLArray = [];
-
-  const first = purpose.rows[0];
-  // If no CP and slice starts from 0, ensure instrument setup starts RL
-  if (!first || first?.type === "CP") {
-    rl = Number(survey.reducedLevel || 0);
-    hi = 0;
-  } else if (startIndex === 0 && purpose.rows.length > 0) {
-    if (first.type === "Instrument setup") {
-      rl = Number(survey.reducedLevel || 0);
-      hi = rl + Number(first.backSight || 0);
-    }
-  } else {
-    rl = Number(purpose?.rows[startIndex]?.reducedLevels[0] || 0);
-    hi = Number(purpose?.rows[startIndex]?.heightOfInstrument || 0);
-  }
-  // Find the last Water Level row in the purpose's existing rows
-  const lastWaterLevelRow = [...purpose.rows]
-    .filter((r) => r.type === "Water Level")
-    .pop();
-  let lastWaterLevelRL = lastWaterLevelRow
-    ? Number(lastWaterLevelRow.reducedLevels[lastWaterLevelRow.reducedLevels.length - 1] || 0)
-    : null;
-
-  // STEP 3: Loop only CP→end or whole thing if no CP
-  for (const row of rowsToProcess) {
     switch (row.type) {
-      case "Instrument setup": // Does not need these
-        rl = Number(survey.reducedLevel || 0);
+      case "Instrument setup":
+        rl = Number(startingReducedLevel || 0);
         hi = rl + Number(row.backSight || 0);
-        finalRLArray = [rl.toFixed(3)];
+        reducedLevels = [fixed(rl)];
         break;
 
       case "Chainage":
-        // Use intermediateOffsets[i].is for cross-section rows
-        if (
-          Array.isArray(row.intermediateOffsets) &&
-          row.intermediateOffsets.length
-        ) {
-          const rls = row.intermediateOffsets.map((entry) => {
-            if (entry.mode === "S" && lastWaterLevelRL !== null) {
-              return (Number(lastWaterLevelRL) - Number(entry.is || 0)).toFixed(3);
-            }
-
-            return (Number(hi) - Number(entry.is || 0)).toFixed(3);
-          });
-          rl = Number(rls[rls.length - 1]);
-          finalRLArray = rls;
+        reducedLevels = (row.intermediateOffsets || []).map((entry) =>
+          fixed(
+            entry.mode === "S" && lastWaterLevelRL !== null
+              ? lastWaterLevelRL - Number(entry.is || 0)
+              : hi - Number(entry.is || 0),
+          ),
+        );
+        if (reducedLevels.length) {
+          rl = Number(reducedLevels.at(-1));
         }
+        intermediateOffsets = intermediateOffsets.map((entry, index) => ({
+          ...entry,
+          rl: reducedLevels[index],
+        }));
         break;
 
       case "TBM":
       case "Water Level":
-        // TBM and Water Level use scalar intermediateSight arrays.
-        if (
-          Array.isArray(row.intermediateSight) &&
-          row.intermediateSight.length
-        ) {
-          const rls = row.intermediateSight.map((isVal) =>
-            (Number(hi) - Number(isVal || 0)).toFixed(3),
-          );
-          rl = Number(rls[rls.length - 1]);
+        reducedLevels = (row.intermediateSight || []).map((is) =>
+          fixed(hi - Number(is || 0)),
+        );
+        if (reducedLevels.length) {
+          rl = Number(reducedLevels.at(-1));
           if (row.type === "Water Level") lastWaterLevelRL = rl;
-          finalRLArray = rls;
         }
         break;
 
-      case "CP": // Does not need these
-        rl = Number(hi) - Number(row.foreSight || 0);
+      case "CP":
+        rl = hi - Number(row.foreSight || 0);
         hi = rl + Number(row.backSight || 0);
-        finalRLArray = [rl.toFixed(3)];
+        reducedLevels = [fixed(rl)];
         break;
 
       default:
         break;
     }
-  }
 
-  // STEP 4: Return values FOR NEW READING ONLY
+    return {
+      ...row,
+      intermediateOffsets,
+      reducedLevels: reducedLevels.filter((value) => value !== null),
+      heightOfInstrument: fixed(hi),
+    };
+  });
+};
+
+export const calculatePurposeRows = (purpose, startingReducedLevel) => {
+  if (!purpose) return purpose;
+
+  const plainPurpose = asPlainObject(purpose);
   return {
-    hi: hi ? Number(hi).toFixed(3) : null,
-    rl: finalRLArray,
+    ...plainPurpose,
+    rows: calculateSurveyRows(
+      plainPurpose.rows || [],
+      plainPurpose.startingReducedLevel ?? startingReducedLevel,
+      plainPurpose.phase,
+    ),
+  };
+};
+
+/**
+ * Decorates populated survey data without persisting derived actual RL/HI.
+ * Branch surveys use their own starting reduced level.
+ */
+export const calculateSurveyData = (survey) => {
+  if (!survey) return survey;
+
+  const plainSurvey = asPlainObject(survey);
+  const decorate = (surveyData) => {
+    if (!surveyData) return surveyData;
+
+    const plain = asPlainObject(surveyData);
+    const startingReducedLevel =
+      plain.reducedLevel ?? plain.surveyId?.reducedLevel ?? 0;
+    return {
+      ...plain,
+      purposes: (plain.purposes || []).map((purpose) =>
+        calculatePurposeRows(purpose, startingReducedLevel),
+      ),
+      ...(Array.isArray(plain.branches)
+        ? { branches: plain.branches.map((branch) => decorate(branch)) }
+        : {}),
+    };
+  };
+
+  return decorate(plainSurvey);
+};
+
+/**
+ * Backward-compatible helper for the create-row preview path.
+ */
+export const calculateReducedLevel = (survey, newReading, purposeId) => {
+  const purpose = survey?.purposes?.find(
+    (entry) => String(entry._id) === String(purposeId),
+  );
+
+  if (!purpose) return { hi: null, rl: [] };
+
+  const existingRows =
+    purpose.status === "Paused"
+      ? (purpose.rows || []).slice(0, -1)
+      : purpose.rows || [];
+  const calculatedRows = calculateSurveyRows(
+    [...existingRows, newReading],
+    purpose.startingReducedLevel ?? survey.reducedLevel,
+    purpose.phase,
+  );
+  const calculatedReading = calculatedRows.at(-1);
+
+  return {
+    hi: calculatedReading?.heightOfInstrument || null,
+    rl: calculatedReading?.reducedLevels || [],
   };
 };

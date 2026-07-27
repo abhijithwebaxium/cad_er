@@ -53,6 +53,9 @@ const SurveyPurposeSchema = new Schema(
       default: "Active",
     },
     finalForesight: Number,
+    // Authoritative starting RL for Actual purposes. Proposal rows retain their
+    // own design reducedLevels.
+    startingReducedLevel: { type: String, trim: true },
     proposedLevel: Number,
     lSection: Number,
     lsSlop: Number,
