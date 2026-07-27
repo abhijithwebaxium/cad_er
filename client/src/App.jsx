@@ -39,6 +39,7 @@ import ImpactStats from "./pages/public/ImpactStats";
 import PlottingAndQuantityReport from "./pages/survey/PlottingAndQuantityReport";
 import Settings from "./pages/settings";
 import Trash from "./pages/trash";
+import ProposeLevel from "./pages/survey/ProposeLevel";
 
 function App() {
   return (
@@ -98,6 +99,7 @@ function App() {
                     element={<SelectEquipment />}
                   />
                   <Route path="add-survey" element={<SurveyLanding />} />
+                  <Route path=":id/propose-level" element={<ProposeLevel />} />
                   <Route path="report" element={<Report />} />
                   <Route path=":id/report" element={<Report />} />
                   <Route path="road-survey">

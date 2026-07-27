@@ -21,6 +21,7 @@ import {
   createSurveyPurpose,
   pauseSurveyPurpose,
   generateSurveyPurpose,
+  generateWaterWayProposalPurpose,
   editSurveyPurpose,
   updateReducedLevels,
   createBranch,
@@ -56,6 +57,7 @@ router.delete("/:purposeId/purposes", deleteSurveyPurpose);
 router.patch("/:id/purposes/end", endSurveyPurpose);
 router.patch("/:id/purposes/pause", pauseSurveyPurpose);
 router.post("/:id/purposes/generate", generateSurveyPurpose);
+router.post("/:id/purposes/generate-water-way", generateWaterWayProposalPurpose);
 router.put("/:id/purposes/:purposeId/edit", editSurveyPurpose);
 
 // 🔹 Row routes (nested under a survey)

@@ -854,7 +854,7 @@ const PlottingAndQuantityReport = () => {
       if (!initialEntry?.rows?.length) return;
 
       const allFormattedData = initialEntry.rows
-        ?.filter((row) => row.type === "Chainage" || row.type === "Water Level")
+        ?.filter((row) => row.type === "Chainage")
         .map((row) => buildCsData(row))
         .filter(Boolean);
 
@@ -868,7 +868,7 @@ const PlottingAndQuantityReport = () => {
     const initialEntry = lsTableData[0];
     if (!initialEntry?.rows?.length) return;
 
-    const row = initialEntry.rows.filter((row) => row.type === "Chainage" || row.type === "Water Level");
+    const row = initialEntry.rows.filter((row) => row.type === "Chainage");
     if (!row.length) return;
 
     const pls = Number(initialEntry.pls || 0);
@@ -912,7 +912,7 @@ const PlottingAndQuantityReport = () => {
       for (let i = 1; i < lsTableData.length; i++) {
         const table = lsTableData[i];
 
-        const newRow = table?.rows?.filter((r) => r.type === "Chainage" || r.type === "Water Level") || [];
+        const newRow = table?.rows?.filter((r) => r.type === "Chainage") || [];
         if (!newRow.length) continue;
 
         const safeProposal = newRow.map((r) => {
@@ -1076,9 +1076,9 @@ const PlottingAndQuantityReport = () => {
       totalFillingVolume: 0,
     };
 
-    // Process only "Chainage" and "Water Level" rows
+    // Process only Chainage section rows. Water Level is a point reading, not a CS row.
     const filteredInitialRows = initialRows.filter(
-      (row) => row.type === "Chainage" || row.type === "Water Level",
+      (row) => row.type === "Chainage",
     );
 
     const areaReport = [];

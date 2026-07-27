@@ -681,9 +681,7 @@ const createSurveyRow = async (req, res, next) => {
 
     if (isProposal && type === "Chainage") {
       const filteredInitialSurvey =
-        initialSurvey?.rows?.filter(
-          (entry) => entry.type === "Chainage",
-        ) || [];
+        initialSurvey?.rows?.filter((entry) => entry.type === "Chainage") || [];
 
       const totalReadings = filteredInitialSurvey.length;
       const currentIndex = filteredInitialSurvey.findIndex(
@@ -1465,17 +1463,25 @@ const updateSurveyRow = async (req, res, next) => {
         .filter((r) => r.type === "Water Level")
         .pop();
       const lastWaterLevelRL = lastWaterLevelRow
-        ? Number(lastWaterLevelRow.reducedLevels[lastWaterLevelRow.reducedLevels.length - 1] || 0)
+        ? Number(
+            lastWaterLevelRow.reducedLevels[
+              lastWaterLevelRow.reducedLevels.length - 1
+            ] || 0,
+          )
         : null;
 
       isRowExist.chainage = chainage;
       isRowExist.basis = type === "Chainage" ? basis : undefined;
-      
+
       // Update top-level reducedLevels array
       isRowExist.reducedLevels = isProposal
         ? (req.body.reducedLevels || []).map((n) => Number(n).toFixed(3))
         : sortedOffsets.map((entry) => {
-            if (type === "Chainage" && entry.mode === "S" && lastWaterLevelRL !== null) {
+            if (
+              type === "Chainage" &&
+              entry.mode === "S" &&
+              lastWaterLevelRL !== null
+            ) {
               return (lastWaterLevelRL - Number(entry.is || 0)).toFixed(3);
             } else {
               return (existingHI - Number(entry.is || 0)).toFixed(3);
@@ -1714,7 +1720,7 @@ const generateSurveyPurpose = async (req, res, next) => {
 
     // 🔹 Filter chainage rows from base purpose
     const readingsToCreate = basePurpose.rows?.filter(
-      (r) => r.type === "Chainage" || r.type === "Water Level",
+      (r) => r.type === "Chainage",
     );
 
     if (!readingsToCreate?.length) {
@@ -2236,14 +2242,13 @@ const generateSurveyPurpose = async (req, res, next) => {
           });
         }
       } else {
-        const totalReadingReducedLevel = (reading.intermediateOffsets || []).reduce(
-          (acc, e) => acc + Number(e.rl),
-          0,
-        );
-        const avgReadingReducedLevel =
-          (reading.intermediateOffsets || []).length
-            ? totalReadingReducedLevel / reading.intermediateOffsets.length
-            : 0;
+        const totalReadingReducedLevel = (
+          reading.intermediateOffsets || []
+        ).reduce((acc, e) => acc + Number(e.rl), 0);
+        const avgReadingReducedLevel = (reading.intermediateOffsets || [])
+          .length
+          ? totalReadingReducedLevel / reading.intermediateOffsets.length
+          : 0;
 
         // Find centerline OGL for the current reading
         const centerlineEntry = (reading.intermediateOffsets || []).find(
@@ -2287,7 +2292,8 @@ const generateSurveyPurpose = async (req, res, next) => {
 
             if (
               doHaveCamper &&
-              (idx === 0 || idx === (reading.intermediateOffsets || []).length - 1)
+              (idx === 0 ||
+                idx === (reading.intermediateOffsets || []).length - 1)
             ) {
               value -= (avgProposalTotalWidth / 2) * (doHaveCamper / 100);
             }
@@ -2347,6 +2353,521 @@ const generateSurveyPurpose = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: `Survey proposal "${proposal}" generated successfully.`,
+      purpose: purposeDoc,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
+
+const generateWaterWayProposalPurpose = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const {
+      params: { id },
+      user: { userId },
+      body: {
+        purpose,
+        proposal,
+        proposalMethod,
+        proposedLevel,
+        quantity,
+        bottomWidth,
+        startRL,
+        endRL,
+        slope,
+        buffer,
+        bufferDirection,
+        length,
+      },
+    } = req;
+
+    if (!purpose || !proposal || !id) {
+      throw createHttpError(400, "Purpose, proposal and surveyId are required.");
+    }
+
+    const waterWayMethods = [
+      "Bottom Width Fixed",
+      "Slope End-to-End Type",
+      "With Respect to Buffer",
+    ];
+
+    if (!waterWayMethods.includes(proposalMethod)) {
+      throw createHttpError(400, "Invalid Water Way proposal method.");
+    }
+
+    if (
+      proposalMethod === "Bottom Width Fixed" &&
+      (bottomWidth === undefined || bottomWidth === null || bottomWidth === "")
+    ) {
+      throw createHttpError(400, "Bottom width is required.");
+    }
+
+    if (
+      proposalMethod === "Bottom Width Fixed" &&
+      (quantity === undefined || quantity === null || quantity === "")
+    ) {
+      throw createHttpError(400, "Quantity is required.");
+    }
+
+    if (
+      proposalMethod === "Bottom Width Fixed" &&
+      Number(quantity) <= 0
+    ) {
+      throw createHttpError(400, "Quantity must be greater than zero.");
+    }
+
+    if (
+      ["Bottom Width Fixed", "Slope End-to-End Type"].includes(proposalMethod) &&
+      (slope === undefined || slope === null || slope === "")
+    ) {
+      throw createHttpError(400, "Side slope ratio is required.");
+    }
+
+    const parseSlopeRatio = (value) => {
+      const match = String(value || "")
+        .trim()
+        .match(/^(-?\d+(?:\.\d+)?)\s*(?::|\/|∶)\s*(\d+(?:\.\d+)?)$/);
+
+      if (!match) return null;
+
+      const horizontal = Number(match[1]);
+      const vertical = Number(match[2]);
+
+      if (
+        !Number.isFinite(horizontal) ||
+        !Number.isFinite(vertical) ||
+        horizontal <= 0 ||
+        vertical <= 0
+      ) {
+        return null;
+      }
+
+      return vertical / horizontal;
+    };
+
+    const numericSlopeRatio =
+      ["Bottom Width Fixed", "Slope End-to-End Type"].includes(proposalMethod)
+        ? parseSlopeRatio(slope)
+        : null;
+
+    if (
+      ["Bottom Width Fixed", "Slope End-to-End Type"].includes(proposalMethod) &&
+      numericSlopeRatio === null
+    ) {
+      throw createHttpError(
+        400,
+        "Slope must be in H:V ratio format, e.g. 0.75:1.",
+      );
+    }
+
+    if (
+      proposalMethod === "With Respect to Buffer" &&
+      (buffer === undefined || buffer === null || buffer === "")
+    ) {
+      throw createHttpError(400, "Buffer is required.");
+    }
+
+    const survey = await Survey.findOne({
+      _id: id,
+      type: "Water Way",
+      isSurveyFinish: false,
+      deleted: false,
+    })
+      .populate({
+        path: "purposes",
+        match: { deleted: false },
+        populate: [
+          { path: "rows", match: { deleted: false } },
+          { path: "relation", match: { deleted: false } },
+        ],
+      })
+      .session(session);
+
+    if (!survey) {
+      throw createHttpError(404, "Active Water Way survey not found.");
+    }
+
+    const isProposalExist = survey.purposes?.find((p) => p.type === proposal);
+
+    if (isProposalExist) {
+      throw createHttpError(
+        409,
+        `A survey with the name "${proposal}" already exists.`,
+      );
+    }
+
+    const existingProposal = survey.purposes?.find(
+      (p) => p.relation?.type === purpose && p.type === proposal,
+    );
+
+    if (existingProposal) {
+      throw createHttpError(
+        409,
+        `A proposal between "${purpose}" and "${proposal}" already exists.`,
+      );
+    }
+
+    const basePurpose = survey.purposes?.find((p) => p.type === purpose);
+
+    if (!basePurpose) {
+      throw createHttpError(404, `Survey purpose "${purpose}" not found.`);
+    }
+
+    const readingsToCreate = basePurpose.rows?.filter(
+      (r) => r.type === "Chainage",
+    );
+
+    if (!readingsToCreate?.length) {
+      throw createHttpError(
+        409,
+        `No chainage readings found to generate "${proposal}".`,
+      );
+    }
+
+    const parseChainage = (str) => {
+      const [km, m] = String(str || "0/0").split(survey.separator || "/").map(Number);
+      return (Number(km) || 0) * 1000 + (Number(m) || 0);
+    };
+
+    const numericBuffer = Number(buffer || 0);
+    const numericBottomWidth = Number(bottomWidth || 0);
+    const numericQuantity = Number(quantity || 0);
+    const bufferSign = bufferDirection === "above" ? 1 : -1;
+    // Convert the parsed V/H gradient back to horizontal run per unit vertical
+    // rise for the fixed-bottom side-batter geometry.
+    const bottomWidthSideSlope =
+      proposalMethod === "Bottom Width Fixed" ? 1 / numericSlopeRatio : null;
+
+    const getCenterLevel = (reading) => {
+      const levels = (reading.reducedLevels || []).map(Number).filter(Number.isFinite);
+      if (!levels.length) return 0;
+
+      const plsVal = Number(basePurpose?.pls || 0);
+      const centerIndex = (reading.intermediateOffsets || []).findIndex(
+        (e) => Number(e.offset) === plsVal,
+      );
+
+      return centerIndex >= 0 && Number.isFinite(levels[centerIndex])
+        ? levels[centerIndex]
+        : levels[Math.floor(levels.length / 2)] || levels[0];
+    };
+
+    const interpolateLevel = (x, points) => {
+      if (!points.length) return "0.000";
+      if (x <= points[0].offset) return points[0].rl.toFixed(3);
+      if (x >= points.at(-1).offset) return points.at(-1).rl.toFixed(3);
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const left = points[i];
+        const right = points[i + 1];
+
+        if (x >= left.offset && x <= right.offset) {
+          const ratio = (x - left.offset) / (right.offset - left.offset || 1);
+          return (left.rl + (right.rl - left.rl) * ratio).toFixed(3);
+        }
+      }
+
+      return points[0].rl.toFixed(3);
+    };
+
+    const getGroundPoints = (reading) =>
+      (reading.intermediateOffsets || [])
+        .map((entry, index) => ({
+          offset: Number(entry.offset),
+          rl: Number(reading.reducedLevels?.[index]),
+          source: entry,
+        }))
+        .filter((point) => Number.isFinite(point.offset) && Number.isFinite(point.rl))
+        .sort((a, b) => a.offset - b.offset);
+
+    const buildBottomWidthGeometry = (reading, bedLevel) => {
+      const configuredCenter = Number(basePurpose?.pls);
+      const points = getGroundPoints(reading);
+      const centerOffset = Number.isFinite(configuredCenter)
+        ? configuredCenter
+        : points.length
+          ? (points[0].offset + points.at(-1).offset) / 2
+          : 0;
+      const halfWidth = numericBottomWidth / 2;
+      // The entered fixed width is the distance between the two outer tie
+      // points. The side slopes descend inward from those limits, so the flat
+      // bed is narrower than the entered width.
+      const leftTieOffset = centerOffset - halfWidth;
+      const rightTieOffset = centerOffset + halfWidth;
+      const leftTieLevel = Number(interpolateLevel(leftTieOffset, points));
+      const rightTieLevel = Number(interpolateLevel(rightTieOffset, points));
+      const leftRun = Math.min(
+        Math.max(leftTieLevel - bedLevel, 0) * bottomWidthSideSlope,
+        halfWidth,
+      );
+      const rightRun = Math.min(
+        Math.max(rightTieLevel - bedLevel, 0) * bottomWidthSideSlope,
+        halfWidth,
+      );
+      const leftBed = leftTieOffset + leftRun;
+      const rightBed = rightTieOffset - rightRun;
+      const leftTie = { offset: leftTieOffset, rl: leftTieLevel };
+      const rightTie = { offset: rightTieOffset, rl: rightTieLevel };
+
+      const geometry = [
+        { offset: leftTie.offset, rl: leftTie.rl },
+        { offset: leftBed, rl: bedLevel },
+        { offset: rightBed, rl: bedLevel },
+        { offset: rightTie.offset, rl: rightTie.rl },
+      ].sort((a, b) => a.offset - b.offset);
+
+      // Quantity for a fixed-bottom water way is based on its centerline
+      // excavation depth multiplied by the supplied bottom width. Averaging
+      // the higher outer ground readings would incorrectly raise the solved
+      // bed RL (for example 8.667 instead of the required 8.625).
+      const centerGroundLevel = Number(
+        interpolateLevel(centerOffset, points),
+      );
+      const area =
+        numericBottomWidth * Math.max(centerGroundLevel - bedLevel, 0);
+
+      return { geometry, area };
+    };
+
+    const buildBottomWidthOffsets = (reading, bedLevel) => {
+      const points = (reading.intermediateOffsets || [])
+        .map((entry, index) => ({
+          offset: Number(entry.offset),
+          rl: Number(reading.reducedLevels?.[index]),
+          source: entry,
+        }))
+        .filter((point) => Number.isFinite(point.offset) && Number.isFinite(point.rl))
+        .sort((a, b) => a.offset - b.offset);
+
+      if (!numericBottomWidth || points.length < 2) {
+        return {
+          offsets: reading.intermediateOffsets || [],
+          initialLevels: reading.reducedLevels || [],
+          proposedLevels: (reading.reducedLevels || []).map(() =>
+            Number(bedLevel || 0).toFixed(3),
+          ),
+        };
+      }
+
+      const { geometry } = buildBottomWidthGeometry(reading, bedLevel);
+
+      return {
+        offsets: geometry.map((point) => ({
+          is: "",
+          offset: point.offset.toFixed(3),
+          remark: "",
+          mode: "S",
+        })),
+        initialLevels: geometry.map((point) =>
+          Number(interpolateLevel(point.offset, points)).toFixed(3),
+        ),
+        proposedLevels: geometry.map((point) => point.rl.toFixed(3)),
+      };
+    };
+
+    const bottomWidthSections =
+      proposalMethod === "Bottom Width Fixed"
+        ? readingsToCreate.map((reading) => ({
+            chainage: parseChainage(reading.chainage),
+            reading,
+          })).sort((a, b) => a.chainage - b.chainage)
+        : [];
+
+    if (
+      proposalMethod === "Bottom Width Fixed" &&
+      (bottomWidthSections.length < 2 ||
+        bottomWidthSections.at(-1).chainage === bottomWidthSections[0].chainage)
+    ) {
+      throw createHttpError(
+        409,
+        "At least two distinct chainages are required to calculate proposal quantity.",
+      );
+    }
+
+    const calculateBottomWidthVolume = (proposedRL) => {
+      const areas = bottomWidthSections.map(({ reading }) =>
+        buildBottomWidthGeometry(reading, proposedRL).area,
+      );
+
+      let totalVolume = 0;
+      for (let i = 0; i < bottomWidthSections.length - 1; i++) {
+        const distance =
+          bottomWidthSections[i + 1].chainage - bottomWidthSections[i].chainage;
+        totalVolume += distance * ((areas[i] + areas[i + 1]) / 2);
+      }
+
+      return totalVolume;
+    };
+
+    const solveBottomWidthProposedRL = () => {
+      const allLevels = bottomWidthSections.flatMap(({ reading }) =>
+        getGroundPoints(reading).map((point) => point.rl),
+      );
+
+      if (!allLevels.length) return Number(proposedLevel || 0);
+
+      let hi = Math.max(...allLevels);
+      let lo = Math.min(...allLevels) - 1;
+
+      while (calculateBottomWidthVolume(lo) < numericQuantity) {
+        lo -= Math.max(1, hi - lo);
+      }
+
+      let bestRL = (lo + hi) / 2;
+      const tolerance = 0.01;
+      const maxIterations = 120;
+
+      for (let i = 0; i < maxIterations; i++) {
+        bestRL = (lo + hi) / 2;
+        const volume = calculateBottomWidthVolume(bestRL);
+
+        if (Math.abs(volume - numericQuantity) <= tolerance) break;
+
+        if (volume < numericQuantity) {
+          hi = bestRL;
+        } else {
+          lo = bestRL;
+        }
+      }
+
+      return bestRL;
+    };
+
+    const bottomWidthProposedRL =
+      proposalMethod === "Bottom Width Fixed"
+        ? solveBottomWidthProposedRL()
+        : null;
+
+    const calculateSlopeEndToEndLevels = (offsets, initialLevels) => {
+      const points = (offsets || [])
+        .map((entry, index) => ({
+          offset: Number(entry.offset),
+          rl: Number(initialLevels?.[index]),
+        }))
+        .filter((point) => Number.isFinite(point.offset) && Number.isFinite(point.rl))
+        .sort((a, b) => a.offset - b.offset);
+
+      if (!points.length) return [];
+
+      const configuredCenter = Number(basePurpose?.pls);
+      const centerOffset = Number.isFinite(configuredCenter)
+        ? configuredCenter
+        : (points[0].offset + points.at(-1).offset) / 2;
+      const leftEdge = points[0];
+      const rightEdge = points.at(-1);
+
+      return (offsets || []).map((entry) => {
+        const offset = Number(entry.offset);
+        if (!Number.isFinite(offset)) return "0.000";
+
+        const sideEdge = offset <= centerOffset ? leftEdge : rightEdge;
+        const distanceFromEdge = Math.abs(offset - sideEdge.offset);
+        const level = sideEdge.rl - distanceFromEdge * numericSlopeRatio;
+
+        return level.toFixed(3);
+      });
+    };
+
+    const [purposeDoc] = await SurveyPurpose.create(
+      [
+        {
+          surveyId: id,
+          type: proposal,
+          phase: "Proposal",
+          createdBy: userId,
+          relation: basePurpose._id,
+          status: "Finished",
+          isPurposeFinish: true,
+          purposeFinishDate: new Date(),
+          pls: basePurpose?.pls,
+          length: length || "All",
+          quantity,
+          proposalMethod,
+          proposedLevel,
+          bottomWidth,
+          startRL,
+          endRL,
+          slope,
+          buffer,
+          bufferDirection: bufferDirection || "below",
+          width:
+            proposalMethod === "Bottom Width Fixed"
+              ? Number(bottomWidth)
+              : undefined,
+        },
+      ],
+      { session },
+    );
+
+    const bulkOps = readingsToCreate.map((reading) => {
+      const bottomWidthData =
+        proposalMethod === "Bottom Width Fixed"
+          ? buildBottomWidthOffsets(reading, bottomWidthProposedRL)
+          : null;
+      const intermediateOffsets =
+        bottomWidthData?.offsets ||
+        (reading.intermediateOffsets || []).map((entry) => ({
+          is: "",
+          offset: String(entry.offset),
+          remark: entry.remark || "",
+          mode: entry.mode || "S",
+        }));
+      const initialLevels = bottomWidthData?.initialLevels || reading.reducedLevels || [];
+      const centerLevel = getCenterLevel(reading);
+
+      let fixedRL = Number(proposedLevel);
+
+      if (proposalMethod === "Bottom Width Fixed") {
+        fixedRL = bottomWidthProposedRL || centerLevel;
+      }
+
+      const reducedLevels =
+        proposalMethod === "Slope End-to-End Type"
+          ? calculateSlopeEndToEndLevels(intermediateOffsets, initialLevels)
+          : proposalMethod === "With Respect to Buffer"
+          ? initialLevels.map((level) =>
+              (Number(level || 0) + bufferSign * numericBuffer).toFixed(3),
+            )
+          : bottomWidthData?.proposedLevels ||
+            intermediateOffsets.map(() => Number(fixedRL || 0).toFixed(3));
+
+      return {
+        insertOne: {
+          document: {
+            surveyId: id,
+            createdBy: userId,
+            purposeId: purposeDoc._id,
+            type: "Chainage",
+            chainage: reading.chainage,
+            spacing: reading.spacing,
+            roadWidth:
+              proposalMethod === "Bottom Width Fixed"
+                ? String(bottomWidth)
+                : reading.roadWidth,
+            reducedLevels,
+            intermediateOffsets,
+            heightOfInstrument: reading.heightOfInstrument,
+            interpolatedReducedLevels:
+              proposalMethod === "Bottom Width Fixed" ? initialLevels : [],
+            remark: reading.remark,
+          },
+        },
+      };
+    });
+
+    await SurveyRow.bulkWrite(bulkOps, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      success: true,
+      message: `Water Way proposal "${proposal}" generated successfully.`,
       purpose: purposeDoc,
     });
   } catch (err) {
@@ -2660,7 +3181,7 @@ const updateReducedLevels = async (req, res, next) => {
         // Update is inside each intermediateOffsets entry, but save reducedLevels top-level
         const updatedOffsets = (existingRow.intermediateOffsets || []).map(
           (entry, i) => ({
-            ...entry.toObject ? entry.toObject() : entry,
+            ...(entry.toObject ? entry.toObject() : entry),
             ...(hasIS ? { is: newIntermediateSight[i] ?? entry.is } : {}),
           }),
         );
@@ -3181,6 +3702,7 @@ export {
   deleteSurveyRow,
   pauseSurveyPurpose,
   generateSurveyPurpose,
+  generateWaterWayProposalPurpose,
   editSurveyPurpose,
   updateReducedLevels,
   createBranch,

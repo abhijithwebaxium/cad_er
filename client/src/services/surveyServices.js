@@ -162,6 +162,17 @@ export const generateSurveyPurpose = async (id, formData) => {
   return response;
 };
 
+export const generateWaterWayProposalPurpose = async (id, formData) => {
+  const response = await axiosInstance.post(
+    `surveys/${id}/purposes/generate-water-way`,
+    formData,
+  );
+  if (response.data && response.data.purpose) {
+    response.data.purpose = normalizePurpose(response.data.purpose);
+  }
+  return response;
+};
+
 export const getSurveyPurpose = async (id) => {
   const response = await axiosInstance.get(`surveys/${id}/purposes`);
   if (response.data && response.data.purpose) {

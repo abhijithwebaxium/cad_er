@@ -339,9 +339,9 @@ const AreaReport = () => {
     const proposedRows = secondaryEntry?.rows ?? [];
     const rows = [];
 
-    // Process only "Chainage" type rows
+    // Process only Chainage section rows. Water Level is a point reading, not a CS row.
     initialRows
-      .filter((row) => row.type === "Chainage" || row.type === "Water Level" || row.type === "Break")
+      .filter((row) => row.type === "Chainage" || row.type === "Break")
       .forEach((row) => {
         const proposedRow = proposedRows?.find(
           (p) => p.chainage === row.chainage,

@@ -335,7 +335,7 @@ const VolumeReport = () => {
     sortedEntries.sort(
       (a, b) => LEVEL_ORDER.indexOf(a.type) - LEVEL_ORDER.indexOf(b.type),
     );
-    console.log(sortedEntries[1]);
+
     initialEntry = sortedEntries[0];
     secondaryEntry = sortedEntries[1];
 
@@ -349,6 +349,11 @@ const VolumeReport = () => {
 
     const initialRows = initialEntry?.rows ?? [];
     const secondaryRows = secondaryEntry?.rows ?? [];
+    const isBottomWidthFixed =
+      secondaryEntry?.proposalMethod === "Bottom Width Fixed";
+    const fixedBottomWidth = Number(
+      secondaryEntry?.bottomWidth ?? secondaryEntry?.width,
+    );
     const rows = [];
 
     let prevSection = null;
@@ -363,9 +368,9 @@ const VolumeReport = () => {
       totalFillingVolume: 0,
     };
 
-    // Process only "Chainage" and "Water Level" rows
+    // Process only Chainage section rows. Water Level is a point reading, not a CS row.
     const filteredInitialRows = initialRows.filter(
-      (row) => row.type === "Chainage" || row.type === "Water Level" || row.type === "Break",
+      (row) => row.type === "Chainage" || row.type === "Break",
     );
 
     filteredInitialRows.forEach((row) => {
@@ -445,14 +450,44 @@ const VolumeReport = () => {
       });
 
       // --- Total area for this section ---
-      const cuttingAreaSqMtr = data.reduce(
+      let cuttingAreaSqMtr = data.reduce(
         (acc, curr) => acc + Number(curr.cuttingAreaSqMtr || 0),
         0,
       );
-      const fillingAreaSqMtr = data.reduce(
+      let fillingAreaSqMtr = data.reduce(
         (acc, curr) => acc + Number(curr.fillingAreaSqMtr || 0),
         0,
       );
+
+      if (isBottomWidthFixed && Number.isFinite(fixedBottomWidth)) {
+        const centerOffset = Number(
+          secondaryEntry?.pls ?? initialEntry?.pls ?? 0,
+        );
+        const initialOffsets = row?.offsets ?? [];
+        const centerIndex = initialOffsets.reduce(
+          (closestIndex, offset, index) =>
+            Math.abs(Number(offset) - centerOffset) <
+            Math.abs(Number(initialOffsets[closestIndex] ?? 0) - centerOffset)
+              ? index
+              : closestIndex,
+          0,
+        );
+        const centerInitialRL = Number(row?.reducedLevels?.[centerIndex]);
+        const proposalLevels = (secondaryRow?.reducedLevels ?? [])
+          .map(Number)
+          .filter(Number.isFinite);
+        const bedRL = proposalLevels.length
+          ? Math.min(...proposalLevels)
+          : Number.NaN;
+
+        if (Number.isFinite(centerInitialRL) && Number.isFinite(bedRL)) {
+          const levelDifference = centerInitialRL - bedRL;
+          cuttingAreaSqMtr =
+            Math.max(levelDifference, 0) * fixedBottomWidth;
+          fillingAreaSqMtr =
+            Math.max(-levelDifference, 0) * fixedBottomWidth;
+        }
+      }
 
       // --- Compute chainage difference ---
       const currentChainage = Number(chainage) || 0;
@@ -529,16 +564,20 @@ const VolumeReport = () => {
         Number(difference) * Number(fillingAvgSqrMtr)
       ).toFixed(3);
 
-      const roadWidth =
+      const initialRoadWidth =
         Math.abs(Number(row?.offsets[0])) +
         Number(row?.offsets[row?.offsets?.length - 1]);
+      const reportWidth =
+        isBottomWidthFixed && Number.isFinite(fixedBottomWidth)
+          ? fixedBottomWidth
+          : initialRoadWidth;
 
       // --- Push row ---
       rows.push({
         section: currentChainage.toFixed(3),
         prevSection: prevSection ? prevChainage.toFixed(3) : "-",
         difference,
-        width: Number(roadWidth).toFixed(3),
+        width: Number(reportWidth).toFixed(3),
         cuttingAreaSqMtr: cuttingAreaSqMtr.toFixed(3),
         data,
         cuttingPrevArea,

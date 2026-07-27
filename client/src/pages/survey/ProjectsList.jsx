@@ -101,6 +101,11 @@ const fieldsToMap = [
   },
   {
     key: <IoIosArrowForward fontSize={20} color="rgba(0, 111, 253, 1)" />,
+    value: "Propose Level",
+    type: "Icon",
+  },
+  {
+    key: <IoIosArrowForward fontSize={20} color="rgba(0, 111, 253, 1)" />,
     value: "Reports",
     type: "Icon",
   },
@@ -109,6 +114,10 @@ const fieldsToMap = [
 const getLink = (survey, target, type) => {
   if (target === "reports") {
     return `/survey/${survey._id}/report`;
+  }
+
+  if (target === "Propose Level") {
+    return `/survey/${survey._id}/propose-level`;
   }
 
   const level = survey?.purposes?.find(

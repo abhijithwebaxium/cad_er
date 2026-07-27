@@ -165,10 +165,34 @@ const CrossSectionReport = () => {
     setLoading(true);
     setProgress({ percent: 0, message: "Initializing PDF document...", estimatedTimeLeft: null });
 
-    const pdf = new jsPDF("p", "mm", "a4");
-    const margin = 10;
-    const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
-    const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "mm",
+      format: "a4",
+      compress: true,
+    });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const pageBorder = 5;
+    const contentMargin = 10;
+    const chartGap = 6;
+    const chartAreaWidth = pageWidth - contentMargin * 2;
+    const chartAreaHeight = pageHeight - contentMargin * 2;
+    const chartSlotHeight = (chartAreaHeight - chartGap) / 2;
+    const chartPadding = 2;
+
+    const drawPageLayout = () => {
+      pdf.setDrawColor(35, 35, 35);
+      pdf.setLineWidth(0.4);
+      pdf.rect(
+        pageBorder,
+        pageBorder,
+        pageWidth - pageBorder * 2,
+        pageHeight - pageBorder * 2,
+      );
+    };
+
+    drawPageLayout();
 
     const items = allCsRef.current.querySelectorAll(".pdf-chart-item");
     const totalSteps = items.length;
@@ -193,7 +217,7 @@ const CrossSectionReport = () => {
         estimatedTimeLeft,
       });
 
-      await new Promise((res) => setTimeout(res, 500));
+      await new Promise((res) => setTimeout(res, 250));
 
       const canvas = await html2canvas(el, {
         scale: 3, // 🔥 Increase this for more sharpness (2–4)
@@ -203,18 +227,56 @@ const CrossSectionReport = () => {
 
       const imgData = canvas.toDataURL("image/png"); // 🔥 PNG = no quality loss
 
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      void imgData;
+      const exportCanvas = document.createElement("canvas");
+      exportCanvas.width = Math.max(1, Math.round(canvas.width * 0.5));
+      exportCanvas.height = Math.max(1, Math.round(canvas.height * 0.5));
+      const exportContext = exportCanvas.getContext("2d");
+      exportContext.drawImage(
+        canvas,
+        0,
+        0,
+        exportCanvas.width,
+        exportCanvas.height,
+      );
+      const compressedImgData = exportCanvas.toDataURL("image/jpeg", 0.8);
+      const slotIndex = i % 2;
 
-      let y = margin;
-
-      if (i !== 0) pdf.addPage();
-
-      if (imgHeight < pageHeight) {
-        y = (pdf.internal.pageSize.getHeight() - imgHeight) / 2;
+      if (i > 0 && slotIndex === 0) {
+        pdf.addPage();
+        drawPageLayout();
       }
 
-      pdf.addImage(imgData, "PNG", margin, y, imgWidth, imgHeight);
+      const slotY =
+        contentMargin + slotIndex * (chartSlotHeight + chartGap);
+      const availableWidth = chartAreaWidth - chartPadding * 2;
+      const availableHeight = chartSlotHeight - chartPadding * 2;
+      const imageRatio = exportCanvas.width / exportCanvas.height;
+
+      let imgWidth = availableWidth;
+      let imgHeight = imgWidth / imageRatio;
+
+      if (imgHeight > availableHeight) {
+        imgHeight = availableHeight;
+        imgWidth = imgHeight * imageRatio;
+      }
+
+      const x = (pageWidth - imgWidth) / 2;
+      const y = slotY + (chartSlotHeight - imgHeight) / 2;
+
+      pdf.setDrawColor(55, 55, 55);
+      pdf.setLineWidth(0.25);
+      pdf.rect(contentMargin, slotY, chartAreaWidth, chartSlotHeight);
+      pdf.addImage(
+        compressedImgData,
+        "JPEG",
+        x,
+        y,
+        imgWidth,
+        imgHeight,
+        undefined,
+        "FAST",
+      );
     }
 
     setProgress({ percent: 100, message: "Saving PDF document...", estimatedTimeLeft: 0 });
@@ -432,7 +494,7 @@ const CrossSectionReport = () => {
       setProgress({ percent: 0, message: "Preparing report data...", estimatedTimeLeft: null });
 
       const allFormattedData = initialEntry.rows
-        ?.filter((row) => row.type === "Chainage" || row.type === "Water Level")
+        ?.filter((row) => row.type === "Chainage")
         .map((row) => buildCsData(row))
         .filter(Boolean);
 
@@ -850,7 +912,7 @@ const CrossSectionReport = () => {
 
   useEffect(() => {
     if (tableData.length) {
-      const row = tableData[0].rows?.find((row) => row.type === "Chainage" || row.type === "Water Level");
+      const row = tableData[0].rows?.find((row) => row.type === "Chainage");
 
       if (row) handleClickCs(row._id, "initial");
     }
@@ -996,7 +1058,7 @@ const CrossSectionReport = () => {
             <TableBody>
               {tableData[0]?.rows?.map(
                 (row, index) =>
-                  (row.type === "Chainage" || row.type === "Water Level") && (
+                  row.type === "Chainage" && (
                     <Fragment key={index}>
                       <TableRow>
                         <TableCell

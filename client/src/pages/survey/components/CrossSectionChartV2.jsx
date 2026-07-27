@@ -58,7 +58,10 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
         <Typography fontSize="12px" textAlign={"center"}>
           CHAINAGE {selectedCs?.chainage}
         </Typography>
-        <Stack alignItems={"end"}>
+        <Stack
+          alignItems={"end"}
+          sx={{ width: `${calcWidth()}px`, mx: "auto" }}
+        >
           <Typography fontSize="8px">SCALE X- 1:100</Typography>
           <Typography fontSize="8px">SCALE Y- 1:100</Typography>
         </Stack>
@@ -68,7 +71,14 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
               {/* CHART ROW */}
               <TableRow>
                 <TableCell sx={{ border: "none", p: 0 }}>
-                  <Box maxWidth={`${calcWidth()}px`} height="250px" mb={2}>
+                  <Box
+                    sx={{
+                      width: `${calcWidth()}px`,
+                      height: "250px",
+                      mb: 2,
+                      mx: "auto",
+                    }}
+                  >
                     <Plot
                       data={selectedCs?.series?.map((s) => ({
                         x: s?.data?.map((p) => p.x),
@@ -83,7 +93,12 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
                         displayModeBar: false,
                       }}
                       layout={chartOptions.layout}
-                      style={chartOptions.style}
+                      useResizeHandler
+                      style={{
+                        ...chartOptions.style,
+                        width: "100%",
+                        height: "250px",
+                      }}
                     />
                   </Box>
                 </TableCell>
@@ -104,14 +119,17 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
                 return (
                   <TableRow key={idx}>
                     <TableCell sx={{ border: "none", px: "6px", py: 0 }}>
-                      <Stack direction="row" width="fit-content">
+                      <Stack
+                        direction="row"
+                        sx={{ width: `${calcWidth()}px`, mx: "auto" }}
+                      >
                         {/* Name column */}
                         <Typography
                           color={color}
                           fontSize="12px"
                           sx={{
-                            minWidth: "35px",
-                            maxWidth: "35px",
+                            minWidth: "50px",
+                            maxWidth: "50px",
                             textAlign: "right",
                             pr: 1,
                             flexShrink: 0,
@@ -125,9 +143,9 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
                           sx={{
                             position: "relative",
                             height: "65px",
-                            flexShrink: 0,
-                            minWidth: `
-                          ${calcWidth() - 74}px`,
+                            flex: 1,
+                            minWidth: 0,
+                            mr: "20px",
                           }}
                         >
                           <Box
@@ -176,14 +194,17 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
 
               <TableRow>
                 <TableCell sx={{ border: "none", px: "6px", py: 0 }}>
-                  <Stack direction="row" width="fit-content">
+                  <Stack
+                    direction="row"
+                    sx={{ width: `${calcWidth()}px`, mx: "auto" }}
+                  >
                     {/* Name column */}
                     <Typography
                       color="#000"
                       fontSize="12px"
                       sx={{
-                        minWidth: "35px",
-                        maxWidth: "35px",
+                        minWidth: "50px",
+                        maxWidth: "50px",
                         textAlign: "right",
                         pr: 1,
                         flexShrink: 0,
@@ -197,9 +218,9 @@ const CrossSectionChartV2 = ({ selectedCs, chartOptions }) => {
                       sx={{
                         position: "relative",
                         height: "65px",
-                        flexShrink: 0,
-                        minWidth: `
-                          ${calcWidth() - 74}px`,
+                        flex: 1,
+                        minWidth: 0,
+                        mr: "20px",
                       }}
                     >
                       <Box
