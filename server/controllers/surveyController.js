@@ -2897,6 +2897,25 @@ const editSurveyPurpose = async (req, res, next) => {
       .sort({ createdAt: 1 })
       .session(session);
 
+    const persistedRowFields = [
+      "chainage",
+      "reducedLevels",
+      "heightOfInstrument",
+      "backSight",
+      "foreSight",
+      "intermediateSight",
+      "intermediateOffsets",
+      "remark",
+    ];
+    const getPersistedRowState = (row) =>
+      persistedRowFields.reduce((state, field) => {
+        state[field] = row[field];
+        return state;
+      }, {});
+    const originalRowStates = rows.map((row) =>
+      JSON.stringify(getPersistedRowState(row)),
+    );
+
     // validate payload
     if (!Array.isArray(updatedRows) || !updatedRows.length)
       throw new Error("No updated rows provided");
@@ -3028,23 +3047,27 @@ const editSurveyPurpose = async (req, res, next) => {
       }
     }
 
-    // 7. Write only rows from changedIndex
-    const ops = rows.slice(changedIndex).map((r) => ({
-      updateOne: {
-        filter: { _id: r._id },
-        update: {
-          $set: {
-            reducedLevels: r.reducedLevels,
-            heightOfInstrument: r.heightOfInstrument,
-            backSight: r.backSight,
-            foreSight: r.foreSight,
-            intermediateSight: r.intermediateSight,
-            intermediateOffsets: r.intermediateOffsets,
-            remark: r.remark,
+    // 7. Recalculation still covers the dependency range, but only rows whose
+    // persisted state actually changed are written back to MongoDB.
+    const ops = rows.slice(changedIndex).flatMap((row, offset) => {
+      const rowIndex = changedIndex + offset;
+      const persistedState = getPersistedRowState(row);
+
+      if (JSON.stringify(persistedState) === originalRowStates[rowIndex]) {
+        return [];
+      }
+
+      return [
+        {
+          updateOne: {
+            filter: { _id: row._id },
+            update: {
+              $set: persistedState,
+            },
           },
         },
-      },
-    }));
+      ];
+    });
 
     if (ops.length) {
       await SurveyRow.bulkWrite(ops, { session });
